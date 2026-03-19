@@ -12,25 +12,25 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --void: #111318;
-      --base: #171a21;
-      --sf: #1d2028;
-      --sf2: #242730;
-      --sf3: #2c303a;
-      --raised: #363a46;
-      --w1: #4db8c2;
-      --w2: #c75878;
-      --w3: #5cb87a;
-      --w4: #c9a040;
-      --w1sub: rgba(77,184,194,0.10);
-      --w2sub: rgba(199,88,120,0.10);
-      --w3sub: rgba(92,184,122,0.10);
-      --w4sub: rgba(201,160,64,0.10);
-      --tx: #e4e1da;
-      --tx2: #9e9b92;
-      --tx3: #626059;
-      --line: rgba(255,255,255,0.06);
-      --line2: rgba(255,255,255,0.10);
+      --void: #151820;
+      --base: #1b1e28;
+      --sf: #222632;
+      --sf2: #2a2e3a;
+      --sf3: #343844;
+      --raised: #40444f;
+      --w1: #5ec4ce;
+      --w2: #d4688a;
+      --w3: #6cc88a;
+      --w4: #d4ac4e;
+      --w1sub: rgba(94,196,206,0.12);
+      --w2sub: rgba(212,104,138,0.12);
+      --w3sub: rgba(108,200,138,0.12);
+      --w4sub: rgba(212,172,78,0.12);
+      --tx: #f0eee8;
+      --tx2: #b8b5ac;
+      --tx3: #7e7c74;
+      --line: rgba(255,255,255,0.09);
+      --line2: rgba(255,255,255,0.15);
       --r: 6px;
       --rl: 10px;
       --t: 120ms ease-out;
@@ -175,10 +175,11 @@
     .tab:hover .tab-close { opacity: 0.6; }
     .tab-close:hover { opacity: 1; color: var(--w2); }
     .tab-add {
-      width: 42px; background: none; border: none; border-left: 1px solid var(--line);
-      color: var(--tx3); font-size: 20px; cursor: pointer; transition: all var(--t); flex-shrink: 0;
+      padding: 0 16px; background: var(--w1sub); border: none; border-left: 1px solid var(--line);
+      color: var(--w1); font-family: var(--sans); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all var(--t); flex-shrink: 0; display: flex; align-items: center; gap: 6px;
     }
-    .tab-add:hover { color: var(--w1); background: var(--sf2); }
+    .tab-add:hover { background: var(--w1); color: var(--void); }
 
     .tw { flex: 1; position: relative; overflow: hidden; }
     .ti { position: absolute; inset: 0; padding: 4px 6px; }
@@ -326,16 +327,16 @@
       <div class="term-panel">
         <div class="tabs">
           <div id="tab-list" style="display:flex;"></div>
-          <button class="tab-add" id="btn-tab" title="New session (Ctrl+T)">+</button>
+          <button class="tab-add" id="btn-tab" title="New session">+ New</button>
         </div>
         <div class="tw" id="tw">
           <div class="term-empty" id="term-empty">
             <div class="te-title">Ready to go</div>
             <div class="te-sub">Create a session to start Claude Code on a project. Clone a GitHub repo or pick one that's already on the server.</div>
             <div class="te-shortcuts">
-              <div class="te-shortcut"><span class="te-kbd">Ctrl T</span> New session</div>
-              <div class="te-shortcut"><span class="te-kbd">Ctrl W</span> Close tab</div>
-              <div class="te-shortcut"><span class="te-kbd">Ctrl Tab</span> Switch</div>
+              <div class="te-shortcut"><span class="te-kbd">Alt N</span> New session</div>
+              <div class="te-shortcut"><span class="te-kbd">Alt W</span> Close tab</div>
+              <div class="te-shortcut"><span class="te-kbd">Alt 1-9</span> Switch tab</div>
             </div>
           </div>
         </div>
@@ -385,9 +386,9 @@
     <div class="mo-box">
       <h3>New Session</h3>
       <form id="f-session">
-        <div class="ff"><label>Project</label><select id="i-proj"><option value="">Select a project...</option></select></div>
-        <div class="ff" style="font-size:13px;color:var(--tx3);text-align:center;padding:4px 0;">&mdash; or clone from GitHub &mdash;</div>
-        <div class="ff" style="display:flex;gap:6px;"><input id="i-clone" placeholder="owner/repo" style="flex:1" /><button type="button" class="btn" id="btn-clone" style="padding:8px 14px;">Clone</button></div>
+        <div class="ff"><label>On server</label><select id="i-proj" style="font-family:var(--sans);font-size:13px;"><option value="">Select cloned project...</option></select></div>
+        <div class="ff"><label>From GitHub</label><select id="i-ghrepo" style="font-family:var(--sans);font-size:13px;"><option value="">Select a repo to clone...</option></select></div>
+        <div class="ff" style="display:flex;gap:6px;align-items:center;"><span style="font-size:12px;color:var(--tx3);">or</span><input id="i-clone" placeholder="owner/repo" style="flex:1" /><button type="button" class="btn" id="btn-clone" style="padding:8px 14px;">Clone</button></div>
         <div class="ff"><label>Session name</label><input id="i-sn" required placeholder="my-project" pattern="[a-zA-Z0-9\-_]+" /></div>
         <div class="ff" style="display:none;"><input id="i-sd" required /></div>
         <div class="mo-act">
@@ -437,7 +438,7 @@
 
     /* ═ Terminal ═ */
     const TH={
-      background:'#171a21',foreground:'#e4e1da',cursor:'#4db8c2',cursorAccent:'#171a21',
+      background:'#1b1e28',foreground:'#f0eee8',cursor:'#5ec4ce',cursorAccent:'#1b1e28',
       selectionBackground:'rgba(77,184,194,0.2)',selectionForeground:'#fff',
       black:'#2c303a',red:'#c75878',green:'#5cb87a',yellow:'#c9a040',
       blue:'#4db8c2',magenta:'#b07cc2',cyan:'#4db8c2',white:'#e4e1da',
@@ -538,7 +539,7 @@
       $('login').style.display='none';$('app').style.display='grid';
       if(currentUser)$('hd-user').innerHTML=`${currentUser.avatar?`<img class="hd-avatar" src="${esc(currentUser.avatar)}">`:''}
         <span class="hd-name">${esc(currentUser.sub)}</span>
-        <button class="hd-out" onclick="fetch('/auth/logout',{method:'POST'}).then(()=>location.reload())">Logout</button>`;
+        <a class="hd-out" href="/auth/logout">Logout</a>`;
       loadSkills();loadCrons();loadSessions();
     }
 
@@ -558,17 +559,23 @@
     /* ═ Events ═ */
     // Project picker
     async function loadProjects(){
-      const sel=$('i-proj');sel.innerHTML='<option value="">Select a project...</option>';
+      const sel=$('i-proj');sel.innerHTML='<option value="">Select cloned project...</option>';
       if(DEV){['loop','clawdbot','seafin-hq'].forEach(n=>{const o=document.createElement('option');o.value='/home/claude/projects/'+n;o.textContent=n;sel.appendChild(o)});return}
       try{const ps=await api('/api/projects');ps.forEach(p=>{const o=document.createElement('option');o.value=p.path;o.textContent=p.name;sel.appendChild(o)})}catch(e){}
     }
-    $('i-proj').addEventListener('change',e=>{const v=e.target.value;if(v){$('i-sd').value=v;$('i-sn').value=v.split('/').pop()}});
+    async function loadGHRepos(){
+      const sel=$('i-ghrepo');sel.innerHTML='<option value="">Select a repo to clone...</option>';
+      if(DEV){['loop','project-a','project-b'].forEach(n=>{const o=document.createElement('option');o.value='user/'+n;o.textContent=n;sel.appendChild(o)});return}
+      try{const repos=await api('/api/repos');repos.forEach(r=>{const o=document.createElement('option');o.value=r.full_name;o.textContent=`${r.name}${r.private?' (private)':''}`;sel.appendChild(o)})}catch(e){sel.innerHTML='<option value="">Re-login to see repos</option>'}
+    }
+    $('i-proj').addEventListener('change',e=>{const v=e.target.value;if(v){$('i-sd').value=v;$('i-sn').value=v.split('/').pop();$('i-ghrepo').value=''}});
+    $('i-ghrepo').addEventListener('change',e=>{const v=e.target.value;if(v){$('i-clone').value=v;$('i-sn').value=v.split('/').pop();$('i-proj').value=''}});
     $('btn-clone').addEventListener('click',async()=>{
-      const repo=$('i-clone').value.trim();if(!repo){toast('Enter owner/repo');return}toast('Cloning...');
+      const repo=$('i-clone').value.trim()||$('i-ghrepo').value.trim();if(!repo){toast('Select or enter a repo');return}toast('Cloning '+repo.split('/').pop()+'...');
       try{const r=await api('/api/projects/clone',{method:'POST',body:{repo}});toast(`Cloned ${r.name}`);$('i-sd').value=r.path;$('i-sn').value=r.name;loadProjects()}catch(e){toast(e.message)}
     });
 
-    $('btn-tab').addEventListener('click',()=>{loadProjects();openMo('mo-session')});
+    $('btn-tab').addEventListener('click',()=>{loadProjects();loadGHRepos();openMo('mo-session')});
     $('btn-cron').addEventListener('click',()=>openMo('mo-cron'));
     $('sk-search').addEventListener('input',e=>renderSk(e.target.value));
     document.querySelectorAll('.sb-head[data-toggle]').forEach(h=>{h.addEventListener('click',()=>{h.classList.toggle('shut');const g=$(h.dataset.toggle);if(g)g.classList.toggle('shut')})});
@@ -583,18 +590,31 @@
     $('tw').addEventListener('drop',e=>{e.preventDefault();const sk=e.dataTransfer.getData('text/plain');if(sk&&activeId)fire(activeId,sk)});
 
     $('f-session').addEventListener('submit',async e=>{
-      e.preventDefault();closeMo('mo-session');const name=$('i-sn').value.trim(),dir=$('i-sd').value.trim();
-      if(DEV){demo(name);return}
+      e.preventDefault();closeMo('mo-session');
+      let name=$('i-sn').value.trim(), dir=$('i-sd').value.trim();
+      const ghRepo=$('i-ghrepo').value.trim()||$('i-clone').value.trim();
+      if(DEV){demo(name||'session');return}
+      // If GitHub repo selected but not cloned yet, clone first
+      if(ghRepo&&!dir){
+        toast('Cloning '+ghRepo.split('/').pop()+'...');
+        try{const r=await api('/api/projects/clone',{method:'POST',body:{repo:ghRepo}});dir=r.path;if(!name)name=r.name;}catch(e){
+          // Already cloned? Use existing path
+          if(e.message.includes('already exists')){dir='/home/claude/projects/'+ghRepo.split('/').pop();if(!name)name=ghRepo.split('/').pop();}
+          else{toast(e.message);return}
+        }
+      }
+      if(!name||!dir){toast('Pick a project or enter a name');return}
       try{const s=await api('/api/sessions',{method:'POST',body:{name,directory:dir}});mkTerm(s.id||name,name,dir);toast(`"${name}" started`)}catch(e){toast(e.message)}
     });
     $('f-cron').addEventListener('submit',async e=>{e.preventDefault();closeMo('mo-cron');await mkCr({name:$('i-cn').value.trim(),skill:$('i-cs').value.trim(),schedule:$('i-cc').value.trim(),directory:$('i-cd').value.trim()})});
 
     document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
     document.addEventListener('keydown',e=>{
-      if(e.ctrlKey&&e.key==='t'){e.preventDefault();loadProjects();openMo('mo-session')}
+      if(e.altKey&&e.key==='n'){e.preventDefault();loadProjects();loadGHRepos();openMo('mo-session')}
       if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));
-      if(e.ctrlKey&&e.key==='w'&&activeId){e.preventDefault();killSess(activeId)}
-      if(e.ctrlKey&&e.key==='Tab'){e.preventDefault();const ids=[...sess.keys()];if(ids.length<2)return;switchTo(ids[(ids.indexOf(activeId)+(e.shiftKey?-1:1)+ids.length)%ids.length])}
+      if(e.altKey&&e.key==='w'&&activeId){e.preventDefault();killSess(activeId)}
+      // Alt+1 through Alt+9 to switch tabs
+      if(e.altKey&&e.key>='1'&&e.key<='9'){e.preventDefault();const ids=[...sess.keys()];const idx=parseInt(e.key)-1;if(idx<ids.length)switchTo(ids[idx])}
     });
 
     /* ═ Boot ═ */

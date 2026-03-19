@@ -54,10 +54,24 @@ app.use('/auth', authRouter);
 app.use('/api', requireAuth);
 
 // ---------------------------------------------------------------------------
-// REST API — Projects (GitHub repos)
+// REST API — GitHub Repos + Projects
 // ---------------------------------------------------------------------------
 
 const { execSync } = require('child_process');
+
+// List user's GitHub repos using their OAuth token from JWT
+app.get('/api/repos', async (req, res, next) => {
+  try {
+    const ghToken = req.user && req.user.gh;
+    if (!ghToken) return res.status(400).json({ error: 'No GitHub token — re-login to enable repo listing' });
+    const resp = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated&affiliation=owner', {
+      headers: { 'Authorization': `token ${ghToken}`, 'User-Agent': 'LoopTerminal/1.0' }
+    });
+    if (!resp.ok) return res.status(resp.status).json({ error: 'GitHub API error' });
+    const repos = await resp.json();
+    res.json(repos.map(r => ({ name: r.name, full_name: r.full_name, url: r.clone_url, private: r.private, updated: r.updated_at, description: r.description })));
+  } catch (err) { next(err); }
+});
 
 app.get('/api/projects', async (_req, res, next) => {
   try {
