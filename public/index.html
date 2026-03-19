@@ -6,55 +6,55 @@
   <title>Claude Terminal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      /* Base — brighter dark mode */
-      --void: #0a0c16;
-      --base: #0f1220;
-      --sf: #151828;
-      --sf2: #1a1e32;
-      --sf3: #222840;
-      --raised: #2a3050;
+      /* Base — warm dark, not cold blue */
+      --void: #111316;
+      --base: #16181d;
+      --sf: #1c1f25;
+      --sf2: #23262e;
+      --sf3: #2b2f38;
+      --raised: #343842;
 
-      /* 4 Wire Colors */
-      --w1: #00e5ff;  /* Cyan — primary */
-      --w2: #ff2d78;  /* Magenta — primary */
-      --w3: #39ff14;  /* Neon Green — accent */
-      --w4: #ffb300;  /* Amber — accent */
+      /* 4 Wire Colors — muted, sophisticated, not neon */
+      --w1: #4db8c2;  /* Teal — primary */
+      --w2: #c75878;  /* Dusty rose — primary */
+      --w3: #5cb87a;  /* Sage green — accent */
+      --w4: #c9a040;  /* Gold — accent */
 
-      /* Derived */
-      --w1sub: rgba(0,229,255,0.12);
-      --w2sub: rgba(255,45,120,0.12);
-      --w3sub: rgba(57,255,20,0.12);
-      --w4sub: rgba(255,179,0,0.12);
-      --w1glow: 0 0 10px rgba(0,229,255,0.35);
-      --w2glow: 0 0 10px rgba(255,45,120,0.35);
-      --w3glow: 0 0 10px rgba(57,255,20,0.35);
-      --w4glow: 0 0 10px rgba(255,179,0,0.35);
+      /* Derived — subtle tints, no glow */
+      --w1sub: rgba(77,184,194,0.10);
+      --w2sub: rgba(199,88,120,0.10);
+      --w3sub: rgba(92,184,122,0.10);
+      --w4sub: rgba(201,160,64,0.10);
+      --w1glow: none;
+      --w2glow: none;
+      --w3glow: none;
+      --w4glow: none;
 
-      /* Text — brighter */
-      --tx: #e4e7f0;
-      --tx2: #9498b0;
-      --tx3: #5a5f78;
+      /* Text — warm, readable */
+      --tx: #e2dfd8;
+      --tx2: #9a978e;
+      --tx3: #5e5c56;
 
-      /* Border — brighter */
-      --line: rgba(0,229,255,0.12);
-      --line2: rgba(0,229,255,0.22);
+      /* Borders — warm, visible */
+      --line: rgba(255,255,255,0.07);
+      --line2: rgba(255,255,255,0.12);
 
       --r: 4px;
       --rl: 8px;
       --t: 120ms ease-out;
       --mono: 'JetBrains Mono', monospace;
-      --sans: 'DM Sans', system-ui, sans-serif;
+      --sans: 'Space Grotesk', system-ui, sans-serif;
     }
 
     html, body { height: 100%; overflow: hidden; }
     body {
-      font-family: var(--mono);
+      font-family: var(--sans);
       background: var(--void);
       color: var(--tx);
       -webkit-font-smoothing: antialiased;
@@ -78,15 +78,15 @@
     }
     .login h1 {
       font-size: 24px; font-weight: 300; letter-spacing: 6px;
-      text-transform: uppercase; color: var(--w1); margin-bottom: 4px;
+      text-transform: none; color: var(--w1); margin-bottom: 4px;
     }
-    .login p { font-size: 11px; color: var(--tx3); margin-bottom: 36px; letter-spacing: 2px; text-transform: uppercase; }
+    .login p { font-size: 11px; color: var(--tx3); margin-bottom: 36px; letter-spacing: 2px; text-transform: none; }
     .login-btn {
       display: inline-flex; align-items: center; gap: 10px;
       background: transparent; color: var(--w1); border: 1px solid var(--w1);
       border-radius: var(--r); padding: 11px 28px; font-family: var(--mono);
       font-size: 12px; font-weight: 500; cursor: pointer; letter-spacing: 1px;
-      text-transform: uppercase; transition: all var(--t);
+      text-transform: none; transition: all var(--t);
     }
     .login-btn:hover { background: var(--w1); color: var(--void); box-shadow: var(--w1glow); }
     .login-btn svg { width: 18px; height: 18px; }
@@ -107,10 +107,10 @@
       background: rgba(8,10,18,0.9); backdrop-filter: blur(8px); z-index: 10;
     }
     .hd-brand {
-      font-size: 13px; font-weight: 300; color: var(--w1);
-      letter-spacing: 3px; text-transform: uppercase;
+      font-size: 15px; font-weight: 600; color: var(--w1);
+      letter-spacing: 0.5px;
     }
-    .hd-brand b { font-weight: 600; }
+    .hd-brand span { font-weight: 400; color: var(--tx2); }
     .hd-sep { width: 1px; height: 18px; background: var(--line2); }
     .hd-stat {
       font-size: 12px; color: var(--tx3); display: flex; align-items: center; gap: 5px;
@@ -133,7 +133,7 @@
     .hd-out {
       font-size: 11px; color: var(--tx3); background: none; border: 1px solid var(--line);
       cursor: pointer; font-family: var(--mono); padding: 3px 10px; border-radius: var(--r);
-      letter-spacing: 0.5px; text-transform: uppercase; transition: all var(--t);
+      letter-spacing: 0.5px; text-transform: none; transition: all var(--t);
     }
     .hd-out:hover { color: var(--w2); border-color: var(--w2); }
 
@@ -145,8 +145,8 @@
       padding: 8px 0;
     }
     .sb-head {
-      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;
-      padding: 12px 14px 6px; display: flex; align-items: center;
+      font-size: 13px; font-weight: 600; letter-spacing: 0.3px;
+      padding: 14px 14px 6px; display: flex; align-items: center;
       justify-content: space-between; cursor: pointer; user-select: none;
       transition: color var(--t);
     }
@@ -181,7 +181,7 @@
     .sk-wire.w1 { background: var(--w1); box-shadow: var(--w1glow); }
     .sk-wire.w3 { background: var(--w3); box-shadow: var(--w3glow); }
     .sk-name {
-      font-size: 13px; font-weight: 400; flex: 1;
+      font-family: var(--sans); font-size: 13px; font-weight: 500; flex: 1;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tx2);
     }
     .sk:hover .sk-name { color: var(--tx); }
@@ -224,7 +224,7 @@
 
     .sb-foot {
       margin-top: auto; padding: 10px 12px;
-      font-size: 11px; color: var(--tx3); letter-spacing: 2px; text-transform: uppercase;
+      font-size: 11px; color: var(--tx3); letter-spacing: 2px; text-transform: none;
       border-top: 1px solid var(--line);
     }
 
@@ -246,8 +246,8 @@
     .tabs::-webkit-scrollbar { height: 0; }
     .tab {
       display: flex; align-items: center; gap: 8px;
-      padding: 0 16px; font-size: 13px; font-weight: 500;
-      color: var(--tx3); border-right: 1px solid var(--line);
+      padding: 0 18px; font-family: var(--sans); font-size: 14px; font-weight: 500;
+      color: var(--tx2); border-right: 1px solid var(--line);
       cursor: pointer; transition: all var(--t); white-space: nowrap; position: relative;
     }
     .tab:hover { color: var(--tx2); background: rgba(255,255,255,0.015); }
@@ -290,8 +290,8 @@
     }
     .rp-sec { padding: 10px 12px; border-bottom: 1px solid var(--line); }
     .rp-title {
-      font-size: 11px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 1.5px; margin-bottom: 8px;
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.3px; margin-bottom: 10px;
     }
     .rp-title.w1 { color: var(--w1); }
     .rp-title.w2 { color: var(--w2); }
@@ -312,7 +312,7 @@
     .skd.vis { display: block; }
     .skd-name { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
     .skd-type {
-      font-size: 8px; font-weight: 600; text-transform: uppercase;
+      font-size: 8px; font-weight: 600; text-transform: none;
       letter-spacing: 0.8px; padding: 1px 6px; border-radius: 2px;
       display: inline-block; margin-bottom: 6px;
     }
@@ -325,8 +325,8 @@
       display: grid; grid-template-columns: 1fr 1fr; gap: 3px;
     }
     .qa button {
-      padding: 6px 4px; background: var(--sf); border: 1px solid var(--line);
-      border-radius: var(--r); font-family: var(--mono); font-size: 11px;
+      padding: 8px 6px; background: var(--sf); border: 1px solid var(--line);
+      border-radius: var(--r); font-family: var(--sans); font-size: 13px;
       color: var(--tx3); cursor: pointer; transition: all var(--t);
       text-align: center; letter-spacing: 0.3px;
     }
@@ -361,12 +361,12 @@
     }
     .mo-box h3 {
       font-size: 12px; font-weight: 400; letter-spacing: 2px;
-      text-transform: uppercase; color: var(--w1); margin-bottom: 16px;
+      text-transform: none; color: var(--w1); margin-bottom: 16px;
     }
     .ff { margin-bottom: 10px; }
     .ff label {
       display: block; font-size: 11px; color: var(--tx3); margin-bottom: 3px;
-      letter-spacing: 1px; text-transform: uppercase;
+      letter-spacing: 1px; text-transform: none;
     }
     .ff input {
       width: 100%; background: var(--void); border: 1px solid var(--line);
@@ -380,7 +380,7 @@
       font-family: var(--mono); font-size: 12px; font-weight: 500;
       padding: 6px 14px; border: 1px solid var(--line); border-radius: var(--r);
       background: transparent; color: var(--tx2); cursor: pointer;
-      transition: all var(--t); letter-spacing: 0.5px; text-transform: uppercase;
+      transition: all var(--t); letter-spacing: 0.5px; text-transform: none;
     }
     .btn:hover { border-color: var(--tx2); color: var(--tx); }
     .btn-go { border-color: var(--w1); color: var(--w1); }
@@ -417,9 +417,9 @@
 
   <div class="app" id="app" style="display:none">
     <header class="hd">
-      <div class="hd-brand"><b>CLAUDE</b> TERMINAL</div>
+      <div class="hd-brand">Loop <span>Terminal</span></div>
       <div class="hd-sep"></div>
-      <div class="hd-stat"><div class="hd-live"></div> ONLINE</div>
+      <div class="hd-stat"><div class="hd-live"></div> Online</div>
       <div class="hd-sep"></div>
       <div class="hd-wires">
         <div class="hd-wire" style="background:var(--w1)"></div>
@@ -432,19 +432,19 @@
     </header>
 
     <aside class="sb">
-      <input class="sb-search" id="sk-search" type="search" placeholder="FILTER..." spellcheck="false" />
+      <input class="sb-search" id="sk-search" type="search" placeholder="Filter skills..." spellcheck="false" />
 
-      <div class="sb-head w1" data-toggle="sk-skills">SKILLS <span class="chev">&#9662;</span></div>
+      <div class="sb-head w1" data-toggle="sk-skills">Skills <span class="chev">&#9662;</span></div>
       <div class="sb-grp" id="sk-skills"></div>
 
-      <div class="sb-head w3" data-toggle="sk-cmds">COMMANDS <span class="chev">&#9662;</span></div>
+      <div class="sb-head w3" data-toggle="sk-cmds">Commands <span class="chev">&#9662;</span></div>
       <div class="sb-grp" id="sk-cmds"></div>
 
-      <div class="sb-head w4" data-toggle="sk-crons">SCHEDULED <span class="chev">&#9662;</span></div>
+      <div class="sb-head w4" data-toggle="sk-crons">Scheduled <span class="chev">&#9662;</span></div>
       <div class="sb-grp" id="sk-crons"></div>
-      <button class="sb-btn" id="btn-cron">+ SCHEDULE</button>
+      <button class="sb-btn" id="btn-cron">+ Schedule</button>
 
-      <div class="sb-drop" id="cron-zone">DROP TO SCHEDULE</div>
+      <div class="sb-drop" id="cron-zone">Drop skill here to schedule</div>
 
       <div class="sb-foot">your-domain.com</div>
     </aside>
@@ -457,8 +457,8 @@
         </div>
         <div class="tw" id="tw">
           <div class="term-empty" id="term-empty">
-            <b>NO ACTIVE SESSIONS</b>
-            <span>Press + to initialize</span>
+            <b>No active sessions</b>
+            <span>Click + to start a new Claude session</span>
           </div>
         </div>
       </div>
@@ -466,22 +466,22 @@
 
     <aside class="rp">
       <div class="rp-sec">
-        <div class="rp-title w1">SESSION</div>
-        <div class="si"><span class="si-k">name</span><span class="si-v" id="rp-sn">—</span></div>
-        <div class="si"><span class="si-k">dir</span><span class="si-v" id="rp-sd">—</span></div>
-        <div class="si"><span class="si-k">status</span><span class="si-v"><span class="si-live"><span class="si-dot" id="rp-dot" style="background:var(--tx3)"></span> <span id="rp-ss">idle</span></span></span></div>
-        <div class="si"><span class="si-k">sessions</span><span class="si-v" id="rp-sc">0</span></div>
+        <div class="rp-title w1">Session</div>
+        <div class="si"><span class="si-k">Name</span><span class="si-v" id="rp-sn">—</span></div>
+        <div class="si"><span class="si-k">Directory</span><span class="si-v" id="rp-sd">—</span></div>
+        <div class="si"><span class="si-k">Status</span><span class="si-v"><span class="si-live"><span class="si-dot" id="rp-dot" style="background:var(--tx3)"></span> <span id="rp-ss">idle</span></span></span></div>
+        <div class="si"><span class="si-k">Sessions</span><span class="si-v" id="rp-sc">0</span></div>
       </div>
 
       <div class="rp-sec skd" id="rp-skd">
-        <div class="rp-title w2">INSPECT</div>
+        <div class="rp-title w2">Inspect</div>
         <div class="skd-name" id="rp-skn"></div>
         <div class="skd-type" id="rp-skt"></div>
         <div class="skd-desc" id="rp-skdesc"></div>
       </div>
 
       <div class="rp-sec">
-        <div class="rp-title w2">ACTIONS</div>
+        <div class="rp-title w2">Quick Actions</div>
         <div class="qa">
           <button data-action="test">test</button>
           <button data-action="audit">audit</button>
@@ -493,12 +493,12 @@
       </div>
 
       <div class="rp-sec" style="flex:1;overflow-y:auto;">
-        <div class="rp-title w3">ACTIVITY</div>
+        <div class="rp-title w3">Activity</div>
         <div class="af" id="rp-af"></div>
       </div>
 
       <div class="rp-sec">
-        <div class="rp-title w4">SYSTEM</div>
+        <div class="rp-title w4">System</div>
         <div class="sys">
           <div class="sys-lbl"><span>cpu</span><span id="sys-cpu">—</span></div>
           <div class="sys-bar"><div class="sys-fill" id="sys-cpu-b" style="width:0%;background:var(--w1)"></div></div>
@@ -556,10 +556,10 @@
   <script>
     /* ═══ 4-Color Wire Particles ═══ */
     const WIRES = [
-      [0,229,255],  // cyan
-      [255,45,120], // magenta
-      [57,255,20],  // green
-      [255,179,0],  // amber
+      [77,184,194],   // teal
+      [199,88,120],   // dusty rose
+      [92,184,122],   // sage
+      [201,160,64],   // gold
     ];
 
     class Net {
@@ -628,12 +628,12 @@
 
     /* ═══ Terminal ═══ */
     const TH={
-      background:'#0f1220',foreground:'#e4e7f0',cursor:'#00e5ff',cursorAccent:'#0f1220',
-      selectionBackground:'rgba(0,229,255,0.2)',selectionForeground:'#fff',
-      black:'#1c2033',red:'#ff2d78',green:'#39ff14',yellow:'#ffb300',
-      blue:'#00e5ff',magenta:'#a855f7',cyan:'#00e5ff',white:'#c8ccd8',
-      brightBlack:'#3a3f55',brightRed:'#ff5c96',brightGreen:'#66ff44',brightYellow:'#ffc633',
-      brightBlue:'#44edff',brightMagenta:'#c084fc',brightCyan:'#44edff',brightWhite:'#e8eaf0'
+      background:'#16181d',foreground:'#e2dfd8',cursor:'#4db8c2',cursorAccent:'#16181d',
+      selectionBackground:'rgba(77,184,194,0.2)',selectionForeground:'#fff',
+      black:'#2b2f38',red:'#c75878',green:'#5cb87a',yellow:'#c9a040',
+      blue:'#4db8c2',magenta:'#b07cc2',cyan:'#4db8c2',white:'#e2dfd8',
+      brightBlack:'#5e5c56',brightRed:'#d4748e',brightGreen:'#78cc94',brightYellow:'#d4b35c',
+      brightBlue:'#6ac8d0',brightMagenta:'#c494d4',brightCyan:'#6ac8d0',brightWhite:'#eceae4'
     };
 
     function mkTerm(id,name,dir){
@@ -765,7 +765,7 @@
     }
 
     function renderCr(){
-      $('sk-crons').innerHTML=cronJobs.length?cronJobs.map(c=>`<div class="cron"><div class="cron-top"><span class="cron-name">${esc(c.name)}</span><button class="cron-x" onclick="delCr('${esc(c.id)}')">&times;</button></div><div class="cron-sched">${esc(c.schedule)}</div><div class="cron-skill">/${esc(c.skill)}</div></div>`).join(''):'<div style="font-size:9px;color:var(--tx3);padding:4px 7px">NO JOBS</div>';
+      $('sk-crons').innerHTML=cronJobs.length?cronJobs.map(c=>`<div class="cron"><div class="cron-top"><span class="cron-name">${esc(c.name)}</span><button class="cron-x" onclick="delCr('${esc(c.id)}')">&times;</button></div><div class="cron-sched">${esc(c.schedule)}</div><div class="cron-skill">/${esc(c.skill)}</div></div>`).join(''):'<div style="font-size:9px;color:var(--tx3);padding:4px 7px">No scheduled jobs</div>';
     }
 
     async function mkCr(d){
@@ -808,7 +808,7 @@
       $('login').style.display='none';$('app').style.display='grid';
       if(currentUser)$('hd-user').innerHTML=`${currentUser.avatar?`<img class="hd-avatar" src="${esc(currentUser.avatar)}">`:''}
         <span class="hd-name">${esc(currentUser.sub)}</span>
-        <button class="hd-out" onclick="fetch('/auth/logout',{method:'POST'}).then(()=>location.reload())">LOGOUT</button>`;
+        <button class="hd-out" onclick="fetch('/auth/logout',{method:'POST'}).then(()=>location.reload())">Logout</button>`;
       loadSkills();loadCrons();loadSessions();
     }
 
