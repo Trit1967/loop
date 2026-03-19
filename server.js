@@ -16,7 +16,7 @@ const cookieParser = require('cookie-parser');
 const { WebSocketServer } = require('ws');
 const jwt = require('jsonwebtoken');
 
-const { router: authRouter, requireAuth } = require('./lib/auth');
+const { router: authRouter, requireAuth, validateJWT } = require('./lib/auth');
 const sessions = require('./lib/sessions');
 const skills = require('./lib/skills');
 const cron = require('./lib/cron');
@@ -222,7 +222,7 @@ server.on('upgrade', (req, socket, head) => {
     return;
   }
 
-  const user = verifyTokenFromCookies(req.headers.cookie);
+  const user = validateJWT(req.headers.cookie);
   if (!user) {
     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
     socket.destroy();

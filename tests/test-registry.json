@@ -1,0 +1,56 @@
+{
+  "project": "loop-terminal",
+  "features": [
+    {
+      "name": "login-page",
+      "description": "Login screen with GitHub OAuth authenticate button",
+      "routes": ["/"],
+      "tests": ["login-screen-renders", "authenticate-button-redirects", "particle-canvas-animates"]
+    },
+    {
+      "name": "dashboard-layout",
+      "description": "Three-panel layout: skills sidebar, terminal workspace, right panel",
+      "routes": ["/"],
+      "tests": ["sidebar-renders-skills", "sidebar-renders-commands", "right-panel-session-info", "right-panel-quick-actions", "right-panel-system-stats"]
+    },
+    {
+      "name": "auth-flow",
+      "description": "GitHub OAuth login, JWT session, logout",
+      "routes": ["/auth/login", "/auth/callback", "/auth/logout", "/auth/me"],
+      "tests": ["auth-login-redirects-github", "auth-callback-sets-cookie", "auth-me-returns-user", "auth-logout-clears-cookie"]
+    },
+    {
+      "name": "sessions-api",
+      "description": "Terminal session CRUD via REST API",
+      "routes": ["/api/sessions"],
+      "tests": ["list-sessions", "create-session", "kill-session", "send-skill-to-session"]
+    },
+    {
+      "name": "skills-api",
+      "description": "Skill listing from filesystem",
+      "routes": ["/api/skills"],
+      "tests": ["list-skills-returns-array"]
+    },
+    {
+      "name": "crons-api",
+      "description": "Cron job scheduling CRUD",
+      "routes": ["/api/crons"],
+      "tests": ["list-crons", "create-cron", "delete-cron"]
+    },
+    {
+      "name": "terminal-ui",
+      "description": "xterm.js terminal tabs, WebSocket connection",
+      "tests": ["tab-bar-renders", "new-session-modal-opens", "tab-switching"]
+    },
+    {
+      "name": "skill-drag-drop",
+      "description": "Drag skills onto terminal tabs or schedule drop zone",
+      "tests": ["skill-cards-draggable", "drop-on-tab-fires-skill", "drop-on-schedule-opens-cron-modal"]
+    },
+    {
+      "name": "right-panel",
+      "description": "Session info, skill inspector, quick actions, activity feed, system stats",
+      "tests": ["session-info-updates", "skill-click-shows-detail", "quick-actions-fire", "activity-feed-logs"]
+    }
+  ]
+}
