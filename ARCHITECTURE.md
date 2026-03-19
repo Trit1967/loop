@@ -1,13 +1,13 @@
 # Claude Terminal Platform — Architecture
 
-**Domain:** `loop.seafin.ai`
+**Domain:** `your-domain.com`
 **VPS:** Hetzner CX22 (4GB RAM, 2 vCPU, 40GB SSD, ~$4.50/mo)
 **OS:** Ubuntu 24.04
 
 ## System Diagram
 
 ```
-Browser (loop.seafin.ai)
+Browser (your-domain.com)
 │
 │  HTTPS / WSS (Cloudflare edge TLS)
 │
@@ -33,7 +33,7 @@ Layer 1 │ Cloudflare WAF + IP Access Rules (only allowed IPs)
 Layer 2 │ Cloudflare TLS (edge) + Origin Certificate (VPS)
 Layer 3 │ UFW: 443 → Cloudflare IPs only, 22 → admin IP only
 Layer 4 │ GitHub OAuth2 (must authenticate with GitHub)
-Layer 5 │ Username allowlist (only "Trit1967" gets a JWT)
+Layer 5 │ Username allowlist (only "your-github-user" gets a JWT)
 Layer 6 │ JWT cookie (httpOnly, secure, sameSite=strict)
 ```
 
@@ -121,11 +121,11 @@ WebSocket upgrade requires valid JWT cookie. Each frame is raw terminal data.
 ## Auth Flow
 
 ```
-1. GET loop.seafin.ai → no JWT cookie → 302 /auth/login
+1. GET your-domain.com → no JWT cookie → 302 /auth/login
 2. GET /auth/login → 302 github.com/login/oauth/authorize?client_id=X
 3. User authorizes → GitHub 302 /auth/callback?code=X
 4. POST github.com/login/oauth/access_token → access_token
-5. GET api.github.com/user → { login: "Trit1967" }
+5. GET api.github.com/user → { login: "your-github-user" }
 6. Check login ∈ ALLOWED_USERS → issue JWT cookie
 7. 302 / → dashboard loads with valid cookie
 ```
@@ -173,8 +173,8 @@ Trigger (node-cron fires):
 # GitHub OAuth
 GITHUB_CLIENT_ID=xxx
 GITHUB_CLIENT_SECRET=xxx
-GITHUB_CALLBACK_URL=https://loop.seafin.ai/auth/callback
-ALLOWED_USERS=Trit1967
+GITHUB_CALLBACK_URL=https://your-domain.com/auth/callback
+ALLOWED_USERS=your-github-user
 
 # JWT
 JWT_SECRET=xxx (random 64-char string)
@@ -193,7 +193,7 @@ PROJECTS_DIR=/home/claude/projects
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  loop.seafin.ai              @Trit1967  ◐  [logout]   │
+│  your-domain.com              @your-github-user  ◐  [logout]   │
 ├──────────┬───────────────────────────────────────────────┤
 │          │  ╔═══════════════════════════════════════════╗ │
 │  SKILLS  │  ║  animated particle canvas background     ║ │

@@ -4,7 +4,7 @@
 set -euo pipefail
 
 HOST="${1:-claude@$(cat .deploy-host 2>/dev/null || echo 'YOUR_VPS_IP')}"
-KEY="${2:-$HOME/.ssh/hetzner_ed25519}"
+KEY="${2:-$HOME/.ssh/id_ed25519}"
 APP_DIR="/opt/claude-terminal"
 
 echo "=== Deploying to $HOST ==="
@@ -42,4 +42,4 @@ REMOTE
 
 echo ""
 echo "=== Deploy complete ==="
-echo "Dashboard: https://loop.seafin.ai"
+echo "Dashboard: https://your-domain.com"
