@@ -47,6 +47,17 @@ app.use(cookieParser());
 // Static files — served before auth so the login page can load assets
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Direct logout route — bypasses caching
+app.get('/logout', (req, res) => {
+  res.cookie('claude_session', '', { maxAge: 0, path: '/' });
+  res.setHeader('Cache-Control', 'no-store, no-cache');
+  res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Logged out</title>
+    <style>body{background:#151820;color:#f0eee8;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .b{text-align:center}h1{font-size:24px;margin-bottom:8px}p{color:#b8b5ac;margin-bottom:24px}
+    a{color:#5ec4ce;border:1px solid #5ec4ce;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600}a:hover{background:#5ec4ce;color:#151820}</style>
+    </head><body><div class="b"><h1>Logged out</h1><p>Session ended successfully.</p><a href="/auth/login">Sign in again</a></div></body></html>`);
+});
+
 // Auth routes (login, callback, logout, me)
 app.use('/auth', authRouter);
 
@@ -90,12 +101,18 @@ app.post('/api/projects/clone', async (req, res, next) => {
     const { repo } = req.body;
     if (!repo) return res.status(400).json({ error: 'repo is required (owner/name or full URL)' });
     const dir = process.env.PROJECTS_DIR || '/home/claude/projects';
-    const url = repo.includes('://') ? repo : `https://github.com/${repo}.git`;
+    const ghToken = req.user && req.user.gh;
+    // Use token in URL for private repo access
+    const url = repo.includes('://') ? repo
+      : ghToken ? `https://${ghToken}@github.com/${repo}.git`
+      : `https://github.com/${repo}.git`;
     const name = repo.split('/').pop().replace('.git', '');
     const target = `${dir}/${name}`;
     const fs = require('fs');
     if (fs.existsSync(target)) return res.status(409).json({ error: 'Project already exists', path: target });
-    execSync(`git clone --depth 1 ${url} ${target}`, { timeout: 60000 });
+    console.log(`[Clone] Cloning ${repo} to ${target}`);
+    execSync(`git clone --depth 1 "${url}" "${target}"`, { timeout: 120000, stdio: 'pipe' });
+    console.log(`[Clone] Success: ${name}`);
     res.status(201).json({ name, path: target });
   } catch (err) { next(err); }
 });
@@ -113,11 +130,11 @@ app.get('/api/sessions', async (_req, res, next) => {
 
 app.post('/api/sessions', async (req, res, next) => {
   try {
-    const { name, directory } = req.body;
+    const { name, directory, mode } = req.body;
     if (!name || !directory) {
       return res.status(400).json({ error: 'name and directory are required' });
     }
-    const session = await sessions.create({ name, directory });
+    const session = await sessions.create({ name, directory, mode: mode || 'claude' });
     res.status(201).json(session);
   } catch (err) { next(err); }
 });
