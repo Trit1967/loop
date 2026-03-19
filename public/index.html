@@ -520,8 +520,11 @@
     <div class="mo-box">
       <h3>New Session</h3>
       <form id="f-session">
-        <div class="ff"><label>Name</label><input id="i-sn" required placeholder="my-project" pattern="[a-zA-Z0-9\-_]+" /></div>
-        <div class="ff"><label>Directory</label><input id="i-sd" required placeholder="/home/claude/projects/clawdbot" /></div>
+        <div class="ff"><label>Project</label><select id="i-proj"><option value="">Select a project...</option></select></div>
+        <div class="ff" style="font-size:10px;color:var(--tx3);text-align:center;padding:2px 0;">— or clone from GitHub —</div>
+        <div class="ff" style="display:flex;gap:4px;"><input id="i-clone" placeholder="owner/repo" style="flex:1" /><button type="button" class="btn" id="btn-clone" style="padding:6px 10px;font-size:9px;">CLONE</button></div>
+        <div class="ff"><label>Session Name</label><input id="i-sn" required placeholder="my-project" pattern="[a-zA-Z0-9\-_]+" /></div>
+        <div class="ff" style="display:none;"><input id="i-sd" required /></div>
         <div class="mo-act">
           <button type="button" class="btn" onclick="closeMo('mo-session')">Cancel</button>
           <button type="submit" class="btn btn-go">Initialize</button>
@@ -848,7 +851,30 @@
     function closeMo(id){$(id).classList.remove('open')}
 
     /* ═══ Events ═══ */
-    $('btn-tab').addEventListener('click',()=>openMo('mo-session'));
+    // Project picker
+    async function loadProjects() {
+      const sel=$('i-proj');
+      sel.innerHTML='<option value="">Select a project...</option>';
+      if(DEV){['loop','clawdbot','seafin-hq'].forEach(n=>{const o=document.createElement('option');o.value='/home/claude/projects/'+n;o.textContent=n;sel.appendChild(o)});return;}
+      try{const ps=await api('/api/projects');ps.forEach(p=>{const o=document.createElement('option');o.value=p.path;o.textContent=p.name;sel.appendChild(o)});}catch(e){}
+    }
+    $('i-proj').addEventListener('change',e=>{
+      const v=e.target.value;
+      if(v){$('i-sd').value=v;const name=v.split('/').pop();$('i-sn').value=name;}
+    });
+    $('btn-clone').addEventListener('click',async()=>{
+      const repo=$('i-clone').value.trim();
+      if(!repo){toast('Enter owner/repo');return;}
+      toast('Cloning...');
+      try{
+        const r=await api('/api/projects/clone',{method:'POST',body:{repo}});
+        toast(`Cloned ${r.name}`);
+        $('i-sd').value=r.path;$('i-sn').value=r.name;
+        loadProjects();
+      }catch(e){toast(e.message);}
+    });
+
+    $('btn-tab').addEventListener('click',()=>{loadProjects();openMo('mo-session')});
     $('btn-cron').addEventListener('click',()=>openMo('mo-cron'));
     $('sk-search').addEventListener('input',e=>renderSk(e.target.value));
 

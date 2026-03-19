@@ -54,6 +54,39 @@ app.use('/auth', authRouter);
 app.use('/api', requireAuth);
 
 // ---------------------------------------------------------------------------
+// REST API — Projects (GitHub repos)
+// ---------------------------------------------------------------------------
+
+const { execSync } = require('child_process');
+
+app.get('/api/projects', async (_req, res, next) => {
+  try {
+    const dir = process.env.PROJECTS_DIR || '/home/claude/projects';
+    const fs = require('fs');
+    if (!fs.existsSync(dir)) { return res.json([]); }
+    const entries = fs.readdirSync(dir, { withFileTypes: true })
+      .filter(e => e.isDirectory())
+      .map(e => ({ name: e.name, path: `${dir}/${e.name}` }));
+    res.json(entries);
+  } catch (err) { next(err); }
+});
+
+app.post('/api/projects/clone', async (req, res, next) => {
+  try {
+    const { repo } = req.body;
+    if (!repo) return res.status(400).json({ error: 'repo is required (owner/name or full URL)' });
+    const dir = process.env.PROJECTS_DIR || '/home/claude/projects';
+    const url = repo.includes('://') ? repo : `https://github.com/${repo}.git`;
+    const name = repo.split('/').pop().replace('.git', '');
+    const target = `${dir}/${name}`;
+    const fs = require('fs');
+    if (fs.existsSync(target)) return res.status(409).json({ error: 'Project already exists', path: target });
+    execSync(`git clone --depth 1 ${url} ${target}`, { timeout: 60000 });
+    res.status(201).json({ name, path: target });
+  } catch (err) { next(err); }
+});
+
+// ---------------------------------------------------------------------------
 // REST API — Sessions
 // ---------------------------------------------------------------------------
 
