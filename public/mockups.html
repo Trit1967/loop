@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Loop — Prompt Overlay Concepts</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  /* Brand palette — CLAUDE.md spec */
+  --teal:#4db8c2;      --teal-dim:rgba(77,184,194,0.15); --teal-glow:rgba(77,184,194,0.25);
+  --rose:#c75878;      --rose-dim:rgba(199,88,120,0.15);
+  --sage:#5cb87a;      --sage-dim:rgba(92,184,122,0.12);
+  --gold:#c9a040;      --gold-dim:rgba(201,160,64,0.15);
+
+  /* Surfaces */
+  --void:#080a0f;  --base:#0d1018;  --sf:#131720;  --sf2:#1a1f2c;  --sf3:#222838;  --raised:#2c3345;
+
+  /* Text */
+  --tx:#eceae2;  --tx2:#b4b8c4;  --tx3:#787e90;
+
+  /* Lines */
+  --line:rgba(184,192,204,0.08);  --line2:rgba(184,192,204,0.14);
+
+  --r:4px;  --rl:8px;  --rx:12px;
+  --mono:'JetBrains Mono',monospace;  --sans:'Space Grotesk',system-ui,sans-serif;
+}
+
+body{
+  background:var(--void);
+  font-family:var(--sans);
+  color:var(--tx);
+  padding:48px 40px 80px;
+  min-height:100vh;
+  position:relative;
+  overflow-x:hidden;
+}
+
+/* Subtle ambient gradient */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 20%, rgba(77,184,194,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 35% at 85% 75%, rgba(92,184,122,0.03) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgba(201,160,64,0.02) 0%, transparent 60%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Header */
+.page-header{
+  position:relative;z-index:1;
+  margin-bottom:56px;
+  max-width:1280px;
+}
+.page-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11px;font-weight:500;
+  color:var(--teal);letter-spacing:0.8px;text-transform:uppercase;
+  margin-bottom:14px;
+  padding:4px 10px;
+  border:1px solid rgba(77,184,194,0.25);
+  border-radius:20px;
+  background:rgba(77,184,194,0.06);
+}
+.page-eyebrow::before{
+  content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--teal);
+  animation:pulse-dot 2.5s ease-in-out infinite;
+}
+.page-title{
+  font-size:28px;font-weight:700;color:var(--tx);
+  letter-spacing:-0.5px;margin-bottom:8px;
+  line-height:1.15;
+}
+.page-title em{font-style:normal;color:var(--teal)}
+.page-sub{
+  font-size:14px;color:var(--tx3);font-family:var(--mono);
+  display:flex;align-items:center;gap:20px;
+}
+.page-sub span{display:flex;align-items:center;gap:6px}
+.page-sub span::before{content:'→';color:var(--teal);font-size:12px}
+
+/* Grid */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:36px;
+  max-width:1280px;
+  position:relative;z-index:1;
+}
+
+/* Mockup card */
+.mk{display:flex;flex-direction:column;gap:10px}
+.mk.full-width{grid-column:1/-1}
+
+.mk-meta{display:flex;flex-direction:column;gap:4px}
+.mk-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:700;font-family:var(--mono);
+  color:var(--tx3);letter-spacing:1px;text-transform:uppercase;
+}
+.mk-tag .n{color:var(--teal)}
+.mk-name{font-size:15px;font-weight:600;color:var(--tx);letter-spacing:-0.2px}
+.mk-desc{font-size:12.5px;color:var(--tx3);line-height:1.55;max-width:480px}
+
+/* Terminal shell */
+.shell{
+  width:100%;height:320px;
+  background:var(--base);
+  border-radius:10px;
+  border:1px solid var(--line2);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  position:relative;
+  box-shadow:0 4px 32px rgba(0,0,0,0.4),0 1px 0 rgba(255,255,255,0.04) inset;
+}
+.shell.tall{height:360px}
+
+/* Shell header / tab bar */
+.shell-bar{
+  height:32px;
+  background:var(--sf);
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;
+  padding:0 12px;
+  gap:10px;
+  flex-shrink:0;
+}
+.sb-dots{display:flex;gap:5px;align-items:center}
+.sb-dot{width:9px;height:9px;border-radius:50%}
+.sb-dot.red{background:#e35c4a}
+.sb-dot.yel{background:#d4a017}
+.sb-dot.grn{background:var(--sage)}
+.sb-session{
+  flex:1;
+  font-size:12px;font-weight:600;color:var(--teal);
+  letter-spacing:0.2px;font-family:var(--mono);
+}
+.sb-badge{
+  font-size:10px;font-weight:600;font-family:var(--mono);
+  color:var(--tx3);background:var(--sf2);
+  padding:2px 8px;border-radius:3px;
+  border:1px solid var(--line);
+  letter-spacing:0.3px;
+}
+.sb-live{
+  display:flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:600;font-family:var(--mono);color:var(--sage);
+  letter-spacing:0.3px;
+}
+.sb-live::before{
+  content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--sage);
+  animation:pulse-dot 2s ease-in-out infinite;
+}
+
+/* Terminal body */
+.shell-body{flex:1;position:relative;overflow:hidden;background:var(--void)}
+
+/* Fake terminal content */
+.tc{
+  position:absolute;inset:0;
+  padding:14px 18px;
+  font-family:var(--mono);font-size:12.5px;
+  line-height:1.7;color:#8892aa;
+  overflow:hidden;
+}
+.tc-teal{color:var(--teal)}
+.tc-sage{color:var(--sage)}
+.tc-rose{color:var(--rose)}
+.tc-gold{color:var(--gold)}
+.tc-dim{color:#4a5060}
+.tc-w{color:#d0d4e0;font-weight:500}
+.tc-bold{font-weight:600}
+.tc-cursor{
+  display:inline-block;width:7px;height:14px;
+  background:#d0d4e0;vertical-align:-2px;
+  animation:blink 1.1s step-end infinite;
+}
+
+/* ─── OVERLAY STYLES ─── */
+
+/* 01 — Slim Banner */
+.ov-banner{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent 0%, rgba(6,8,12,0.97) 35%);
+  padding:36px 16px 14px;
+}
+.ov-banner-inner{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(19,23,32,0.95);
+  border:1px solid rgba(77,184,194,0.2);
+  border-radius:var(--rx);
+  padding:8px 8px 8px 14px;
+  backdrop-filter:blur(8px);
+  box-shadow:0 0 0 1px rgba(77,184,194,0.06) inset, 0 4px 20px rgba(0,0,0,0.5);
+}
+.ov-banner-icon{
+  width:24px;height:24px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),rgba(77,184,194,0.6));
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--void);
+  flex-shrink:0;
+  box-shadow:0 0 8px var(--teal-glow);
+}
+.ov-banner-input{
+  flex:1;background:none;border:none;outline:none;
+  font-family:var(--sans);font-size:13px;color:var(--tx2);
+  caret-color:var(--teal);
+}
+.ov-banner-input::placeholder{color:var(--tx3)}
+.ov-banner-send{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--teal);border:none;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--void);font-size:13px;cursor:pointer;
+  box-shadow:0 0 10px var(--teal-glow);
+  flex-shrink:0;
+}
+.ov-banner-kbd{
+  font-size:10px;color:var(--tx3);font-family:var(--mono);
+  padding:0 14px 0 0;white-space:nowrap;
+}
+
+/* 02 — Frosted Command Palette */
+.ov-palette{
+  position:absolute;inset:0;
+  display:flex;align-items:flex-end;justify-content:stretch;
+  padding:12px;
+  background:linear-gradient(transparent 0%,rgba(6,8,12,0.7) 100%);
+  backdrop-filter:blur(1px);
+}
+.ov-palette-card{
+  width:100%;
+  background:rgba(26,31,44,0.96);
+  border:1px solid rgba(77,184,194,0.2);
+  border-radius:var(--rl);
+  overflow:hidden;
+  box-shadow:0 -4px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(77,184,194,0.05) inset;
+}
+.ov-palette-head{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  border-bottom:1px solid var(--line);
+}
+.ov-palette-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--teal);box-shadow:0 0 8px var(--teal-glow);
+  flex-shrink:0;
+}
+.ov-palette-session{
+  font-size:11px;font-weight:600;font-family:var(--mono);
+  color:var(--teal);letter-spacing:0.3px;flex:1;
+}
+.ov-palette-close{
+  background:none;border:none;color:var(--tx3);
+  font-size:16px;cursor:pointer;line-height:1;padding:2px;
+  display:flex;align-items:center;justify-content:center;
+}
+.ov-palette-inp-wrap{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
+}
+.ov-palette-inp{
+  flex:1;background:var(--sf);border:1px solid var(--line2);
+  border-radius:var(--r);padding:9px 12px;
+  font-family:var(--sans);font-size:13px;color:var(--tx);
+  outline:none;
+  transition:border-color 0.15s;
+}
+.ov-palette-inp:focus{border-color:rgba(77,184,194,0.4)}
+.ov-palette-send{
+  background:var(--teal);border:none;border-radius:var(--r);
+  color:var(--void);font-family:var(--sans);font-size:12px;
+  font-weight:700;padding:9px 16px;cursor:pointer;
+  white-space:nowrap;
+  box-shadow:0 0 12px var(--teal-glow);
+}
+.ov-palette-hints{
+  display:flex;align-items:center;gap:16px;
+  padding:8px 14px;background:var(--sf);
+  border-top:1px solid var(--line);
+}
+.ov-palette-hint{
+  font-size:10px;font-family:var(--mono);color:var(--tx3);
+  display:flex;align-items:center;gap:5px;
+}
+.ov-palette-hint kbd{
+  background:var(--sf2);border:1px solid var(--line2);
+  border-radius:3px;padding:1px 5px;font-size:9px;font-family:var(--mono);
+  color:var(--tx2);
+}
+
+/* 03 — Conversation Rail */
+.ov-rail{
+  position:absolute;top:0;right:0;bottom:0;
+  width:220px;
+  background:rgba(13,16,24,0.98);
+  border-left:1px solid var(--line2);
+  display:flex;flex-direction:column;
+  backdrop-filter:blur(4px);
+}
+.ov-rail-head{
+  padding:10px 12px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;
+}
+.ov-rail-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--teal);box-shadow:0 0 6px var(--teal-glow);
+}
+.ov-rail-lbl{
+  font-size:10px;font-weight:700;font-family:var(--mono);
+  color:var(--teal);letter-spacing:0.8px;text-transform:uppercase;
+  flex:1;
+}
+.ov-rail-x{background:none;border:none;color:var(--tx3);font-size:14px;cursor:pointer;padding:1px}
+.ov-rail-msgs{
+  flex:1;overflow:hidden;
+  padding:10px 10px 8px;
+  display:flex;flex-direction:column;gap:6px;
+  justify-content:flex-end;
+}
+.ov-rail-msg{
+  font-size:11.5px;line-height:1.5;
+  padding:7px 10px;border-radius:var(--r);
+}
+.ov-rail-msg.you{
+  background:var(--teal-dim);
+  border:1px solid rgba(77,184,194,0.18);
+  color:var(--tx);
+  border-radius:var(--r) var(--r) 2px var(--r);
+}
+.ov-rail-msg.ai{
+  background:var(--sf2);
+  border:1px solid var(--line);
+  color:var(--tx2);
+  border-radius:var(--r) var(--r) var(--r) 2px;
+}
+.ov-rail-who{
+  font-size:9px;font-weight:700;font-family:var(--mono);
+  letter-spacing:0.8px;text-transform:uppercase;
+  margin-bottom:3px;
+}
+.ov-rail-msg.you .ov-rail-who{color:var(--teal)}
+.ov-rail-msg.ai .ov-rail-who{color:var(--tx3)}
+.ov-rail-input-area{
+  padding:8px 10px;border-top:1px solid var(--line);
+  display:flex;flex-direction:column;gap:6px;
+}
+.ov-rail-inp{
+  background:var(--sf2);border:1px solid var(--line2);
+  border-radius:var(--r);
+  padding:7px 10px;font-family:var(--sans);font-size:11.5px;
+  color:var(--tx2);outline:none;
+}
+.ov-rail-send{
+  background:var(--teal);border:none;border-radius:3px;
+  color:var(--void);font-family:var(--sans);font-size:11px;
+  font-weight:700;padding:6px;cursor:pointer;text-align:center;
+  letter-spacing:0.3px;
+}
+
+/* 04 — Full Chat Takeover */
+.ov-chat{
+  position:absolute;inset:0;
+  background:rgba(8,10,15,0.96);
+  backdrop-filter:blur(6px);
+  display:flex;flex-direction:column;
+}
+.ov-chat-bar{
+  height:38px;background:var(--sf);
+  border-bottom:1px solid var(--line2);
+  display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;
+}
+.ov-chat-indicator{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--teal);
+  box-shadow:0 0 8px var(--teal-glow);
+  animation:pulse-dot 2s ease-in-out infinite;
+}
+.ov-chat-title{font-size:13px;font-weight:600;color:var(--tx);flex:1;letter-spacing:-0.1px}
+.ov-chat-sub{font-size:10px;color:var(--tx3);font-family:var(--mono)}
+.ov-chat-close{
+  background:none;border:none;color:var(--tx3);
+  font-size:16px;cursor:pointer;padding:2px;line-height:1;
+}
+.ov-chat-msgs{
+  flex:1;overflow:hidden;
+  padding:16px 16px 8px;
+  display:flex;flex-direction:column;gap:8px;
+  justify-content:flex-end;
+}
+.ov-chat-msg{
+  max-width:88%;
+  padding:10px 14px;
+  font-size:12.5px;line-height:1.6;
+  border-radius:var(--rl);
+}
+.ov-chat-msg.you{
+  background:var(--teal-dim);
+  border:1px solid rgba(77,184,194,0.2);
+  color:var(--tx);
+  align-self:flex-end;
+  border-radius:var(--rl) var(--rl) 4px var(--rl);
+}
+.ov-chat-msg.ai{
+  background:var(--sf2);
+  border:1px solid var(--line2);
+  color:var(--tx2);
+  align-self:flex-start;
+  border-radius:var(--rl) var(--rl) var(--rl) 4px;
+}
+.ov-chat-msg .who{
+  font-size:9px;font-weight:700;font-family:var(--mono);
+  letter-spacing:0.8px;text-transform:uppercase;
+  margin-bottom:4px;
+}
+.ov-chat-msg.you .who{color:var(--teal)}
+.ov-chat-msg.ai .who{color:var(--tx3)}
+.ov-chat-input{
+  padding:10px 14px;border-top:1px solid var(--line2);
+  background:var(--sf);
+  display:flex;gap:8px;align-items:center;flex-shrink:0;
+}
+.ov-chat-inp{
+  flex:1;background:var(--sf2);border:1px solid var(--line2);
+  border-radius:var(--r);padding:9px 13px;
+  font-family:var(--sans);font-size:12.5px;color:var(--tx);
+  outline:none;
+}
+.ov-chat-send{
+  background:var(--teal);border:none;border-radius:var(--r);
+  color:var(--void);font-family:var(--sans);font-size:12px;
+  font-weight:700;padding:9px 16px;cursor:pointer;
+  box-shadow:0 0 12px var(--teal-glow);white-space:nowrap;
+}
+
+/* 05 — Floating Pill */
+.ov-pill-btn{
+  position:absolute;bottom:14px;right:14px;
+  display:flex;align-items:center;gap:7px;
+  background:var(--sf2);
+  border:1px solid rgba(77,184,194,0.25);
+  border-radius:24px;
+  padding:0 14px 0 10px;height:34px;
+  cursor:pointer;
+  box-shadow:0 0 0 1px rgba(77,184,194,0.08) inset, 0 4px 16px rgba(0,0,0,0.5);
+  transition:border-color 0.15s;
+}
+.ov-pill-btn:hover{border-color:rgba(77,184,194,0.4)}
+.ov-pill-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--teal);
+  box-shadow:0 0 6px var(--teal-glow);
+}
+.ov-pill-lbl{
+  font-size:11.5px;font-weight:600;color:var(--tx2);
+  letter-spacing:0.2px;
+}
+.ov-pill-kbd{
+  font-size:9px;font-family:var(--mono);color:var(--tx3);
+  background:var(--sf3);border:1px solid var(--line);
+  border-radius:3px;padding:1px 5px;
+}
+
+.ov-pill-expanded{
+  position:absolute;bottom:12px;left:12px;right:12px;
+  background:rgba(22,27,40,0.98);
+  border:1px solid rgba(77,184,194,0.2);
+  border-radius:var(--rl);
+  overflow:hidden;
+  box-shadow:0 0 0 1px rgba(77,184,194,0.06) inset, 0 8px 40px rgba(0,0,0,0.7);
+}
+.ov-pill-exp-head{
+  padding:10px 13px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:9px;
+}
+.ov-pill-avatar{
+  width:22px;height:22px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),rgba(77,184,194,0.5));
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:var(--void);
+  flex-shrink:0;
+}
+.ov-pill-name{font-size:12px;font-weight:600;color:var(--tx);flex:1;letter-spacing:-0.1px}
+.ov-pill-ctx{font-size:10px;font-family:var(--mono);color:var(--tx3)}
+.ov-pill-exp-body{padding:12px 13px;}
+.ov-pill-exp-inp{
+  width:100%;background:var(--sf);border:1px solid var(--line2);
+  border-radius:var(--r);padding:9px 12px;
+  font-family:var(--sans);font-size:12.5px;color:var(--tx2);
+  outline:none;margin-bottom:10px;
+  transition:border-color 0.15s;
+}
+.ov-pill-exp-inp:focus{border-color:rgba(77,184,194,0.35)}
+.ov-pill-exp-foot{
+  display:flex;align-items:center;justify-content:space-between;
+}
+.ov-pill-hist{display:flex;gap:5px;flex-wrap:wrap}
+.ov-pill-chip{
+  font-size:10px;font-family:var(--mono);color:var(--tx3);
+  background:var(--sf3);border:1px solid var(--line);
+  border-radius:10px;padding:2px 9px;
+  cursor:pointer;white-space:nowrap;
+}
+.ov-pill-chip:hover{color:var(--teal);border-color:rgba(77,184,194,0.2)}
+.ov-pill-send{
+  background:var(--teal);border:none;border-radius:var(--r);
+  color:var(--void);font-family:var(--sans);font-size:11.5px;
+  font-weight:700;padding:7px 14px;cursor:pointer;
+  box-shadow:0 0 8px var(--teal-glow);letter-spacing:0.2px;
+}
+
+/* Animations */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
+
+/* Divider labels */
+.sub-states{
+  display:grid;grid-template-columns:1fr 1fr;gap:16px;
+}
+.state-label{
+  font-size:10px;font-weight:700;font-family:var(--mono);
+  color:var(--tx3);letter-spacing:0.8px;text-transform:uppercase;
+  margin-bottom:7px;
+  display:flex;align-items:center;gap:6px;
+}
+.state-label::before{content:'';flex:0 0 20px;height:1px;background:var(--line2)}
+
+/* ─── overlay 01b: code reference chip in banner ─── */
+.ov-banner-chip{
+  display:flex;align-items:center;gap:5px;
+  background:var(--teal-dim);border:1px solid rgba(77,184,194,0.2);
+  border-radius:var(--r);padding:3px 9px;
+  font-size:10.5px;font-family:var(--mono);color:var(--teal);
+  white-space:nowrap;flex-shrink:0;cursor:pointer;
+}
+
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-eyebrow">Loop Terminal · UI Concepts</div>
+  <div class="page-title">Prompt Overlay — <em>5 directions</em></div>
+  <div class="page-sub">
+    <span>pick a direction</span>
+    <span>brand palette applied</span>
+    <span>Alt+P toggle in all variants</span>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- ══════════════════════════════════════
+       01 — Slim Banner
+  ════════════════════════════════════════ -->
+  <div class="mk">
+    <div class="mk-meta">
+      <div class="mk-tag"><span class="n">01</span> &nbsp;Slim Banner</div>
+      <div class="mk-name">Gradient-fade pill, stays out of the way</div>
+      <div class="mk-desc">Least intrusive. Single line, hugs the bottom. Terminal fully visible. Best for quick one-liners.</div>
+    </div>
+    <div class="shell">
+      <div class="shell-bar">
+        <div class="sb-dots">
+          <div class="sb-dot red"></div><div class="sb-dot yel"></div><div class="sb-dot grn"></div>
+        </div>
+        <span class="sb-session">loop-seafin</span>
+        <div class="sb-live">running</div>
+      </div>
+      <div class="shell-body">
+        <div class="tc">
+          <div><span class="tc-dim">$ claude --dangerously-skip-permissions</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tc-teal">◆</span> <span class="tc-w">Claude Code</span> <span class="tc-dim">claude-opus-4-6 · /projects/seafin</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tc-dim">  Analyzing codebase...</span></div>
+          <div><span class="tc-sage">✓</span> <span class="tc-dim">lib/auth.js · server.js · lib/sessions.js</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tc-dim">  Here's my plan — JWT refresh tokens, sliding window,</span></div>
+          <div><span class="tc-dim">  Redis optional. Want me to proceed?</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tc-gold">❯</span> <span class="tc-w">yes, also add the token rotation to the WebSocket handler</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tc-dim">  ◐ Editing server.js...</span></div>
+        </div>
+        <div class="ov-banner">
+          <div class="ov-banner-inner">
+            <div class="ov-banner-icon">C</div>
+            <div class="ov-banner-chip">lib/auth.js</div>
+            <input class="ov-banner-input" placeholder="Message Claude Code…" value="now write tests for the token rotation" readonly />
+            <div class="ov-banner-kbd">↑↓ history</div>
+            <div class="ov-banner-send">↵</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       02 — Command Palette (frosted card)
+  ════════════════════════════════════════ -->
+  <div class="mk">
+    <div class="mk-meta">
+      <div class="mk-tag"><span class="n">02</span> &nbsp;Command Palette</div>
+      <div class="mk-name">Frosted card, keyboard-first feel</div>
+      <div class="mk-desc">Slides up from the bottom. Clear visual separation. Context-aware hints. Feels like a command palette.</div>
+    </div>
+    <div class="shell">
+      <div class="shell-bar">
+        <div class="sb-dots">
+          <div class="sb-dot red"></div><div class="sb-dot yel"></div><div class="sb-dot grn"></div>
+        </div>
+        <span class="sb-session">loop-billing</span>
+        <div class="sb-live">running</div>
+      </div>
+      <div class="shell-body">
+        <div class="tc">
+          <div><span class="tc-teal">◆</span> <span class="tc-w">Claude Code</span> <span class="tc-dim">claude-opus-4-6</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tc-sage">✓</span> <span class="tc-dim">Created tests/auth.test.js — 14 tests</span></div>
+          <div><span class="tc-sage">✓</span> <span class="tc-dim">All passing · 0 failures</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tc-dim">  Coverage: auth.js 94% · sessions.js 87%</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tc-gold">❯</span> <span class="tc-w">_</span><span class="tc-cursor"></span></div>
+        </div>
+        <div class="ov-palette">
+          <div class="ov-palette-card">
+            <div class="ov-palette-head">
+              <div class="ov-palette-dot"></div>
+              <span class="ov-palette-session">loop-billing · claude-opus-4-6</span>
+              <button class="ov-palette-close">×</button>
+            </div>
+            <div class="ov-palette-inp-wrap">
+              <input class="ov-palette-inp" value="deploy to staging and run smoke tests" readonly />
+              <button class="ov-palette-send">↵ Send</button>
+            </div>
+            <div class="ov-palette-hints">
+              <div class="ov-palette-hint"><kbd>↑↓</kbd> history</div>
+              <div class="ov-palette-hint"><kbd>Shift+↵</kbd> newline</div>
+              <div class="ov-palette-hint"><kbd>Alt+P</kbd> close</div>
+              <div class="ov-palette-hint"><kbd>Esc</kbd> dismiss</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       03 — Conversation Rail
+  ════════════════════════════════════════ -->
+  <div class="mk">
+    <div class="mk-meta">
+      <div class="mk-tag"><span class="n">03</span> &nbsp;Conversation Rail</div>
+      <div class="mk-name">Side panel with history, terminal stays left</div>
+      <div class="mk-desc">Persistent history visible alongside the terminal. Good for multi-turn sessions. Tight 220px column.</div>
+    </div>
+    <div class="shell">
+      <div class="shell-bar">
+        <div class="sb-dots">
+          <div class="sb-dot red"></div><div class="sb-dot yel"></div><div class="sb-dot grn"></div>
+        </div>
+        <span class="sb-session">loop-frontend</span>
+        <div class="sb-live">running</div>
+      </div>
+      <div class="shell-body">
+        <div class="tc" style="right:220px;font-size:12px;line-height:1.65">
+          <div><span class="tc-teal">◆</span> <span class="tc-w">Claude Code</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tc-sage">✓</span> <span class="tc-dim">Updated index.html — wf-bar logic</span></div>
+          <div><span class="tc-sage">✓</span> <span class="tc-dim">Keyboard handler attached to xterm</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tc-dim">  4 tests failing — want me to fix them?</span></div>
+          <div>&nbsp;</div>
+          <div><span class="tc-gold">❯</span> <span class="tc-w">_</span><span class="tc-cursor"></span></div>
+        </div>
+        <div class="ov-rail">
+          <div class="ov-rail-head">
+            <div class="ov-rail-dot"></div>
+            <span class="ov-rail-lbl">Prompt</span>
+            <button class="ov-rail-x">×</button>
+          </div>
+          <div class="ov-rail-msgs">
+            <div class="ov-rail-msg you">
+              <div class="ov-rail-who">You</div>
+              fix the wf-bar tab layout
+            </div>
+            <div class="ov-rail-msg ai">
+              <div class="ov-rail-who">Claude</div>
+              Done — hidden when workflows.size===0, show/hide logic updated.
+            </div>
+            <div class="ov-rail-msg you">
+              <div class="ov-rail-who">You</div>
+              attach keyboard shortcuts inside xterm
+            </div>
+            <div class="ov-rail-msg ai">
+              <div class="ov-rail-who">Claude</div>
+              Used attachCustomKeyEventHandler. Alt+P, Alt+N, Alt+1–9 working.
+            </div>
+          </div>
+          <div class="ov-rail-input-area">
+            <input class="ov-rail-inp" value="yes, fix all 4 tests" readonly />
+            <button class="ov-rail-send">↵ Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       04 — Full Chat Takeover
+  ════════════════════════════════════════ -->
+  <div class="mk">
+    <div class="mk-meta">
+      <div class="mk-tag"><span class="n">04</span> &nbsp;Chat Takeover</div>
+      <div class="mk-name">Full pane chat mode, terminal dimmed behind</div>
+      <div class="mk-desc">Toggle between terminal and chat views. Full message history. Terminal keeps running. High context sessions.</div>
+    </div>
+    <div class="shell">
+      <div class="shell-bar">
+        <div class="sb-dots">
+          <div class="sb-dot red"></div><div class="sb-dot yel"></div><div class="sb-dot grn"></div>
+        </div>
+        <span class="sb-session">loop-infra</span>
+        <div class="sb-badge">Chat mode</div>
+      </div>
+      <div class="shell-body">
+        <div class="tc" style="opacity:0.1">
+          <div><span class="tc-teal">◆</span> Claude Code · /projects/infra</div>
+        </div>
+        <div class="ov-chat">
+          <div class="ov-chat-bar">
+            <div class="ov-chat-indicator"></div>
+            <span class="ov-chat-title">Claude Code — loop-infra</span>
+            <span class="ov-chat-sub">terminal running</span>
+            <button class="ov-chat-close">×</button>
+          </div>
+          <div class="ov-chat-msgs">
+            <div class="ov-chat-msg you">
+              <div class="who">You</div>
+              migrate the Postgres schema to add a sessions_archive table with TTL
+            </div>
+            <div class="ov-chat-msg ai">
+              <div class="who">Claude</div>
+              Done. Created <code style="color:var(--teal);font-family:var(--mono);font-size:11px">migrations/004_sessions_archive.sql</code> with a 30-day TTL trigger. Added the migration runner to deploy.sh.
+            </div>
+            <div class="ov-chat-msg you">
+              <div class="who">You</div>
+              write tests for the TTL trigger
+            </div>
+          </div>
+          <div class="ov-chat-input">
+            <input class="ov-chat-inp" value="also add an index on created_at" readonly />
+            <button class="ov-chat-send">↵ Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       05 — Floating Pill (2 states)
+  ════════════════════════════════════════ -->
+  <div class="mk full-width">
+    <div class="mk-meta">
+      <div class="mk-tag"><span class="n">05</span> &nbsp;Floating Pill</div>
+      <div class="mk-name">Minimal button in corner, expands to prompt card</div>
+      <div class="mk-desc">Near-invisible when closed. Expands with history chips for quick recall. Smallest footprint of any option — good for when you're just watching the terminal run.</div>
+    </div>
+    <div class="sub-states">
+      <div>
+        <div class="state-label">Collapsed</div>
+        <div class="shell" style="height:260px">
+          <div class="shell-bar">
+            <div class="sb-dots">
+              <div class="sb-dot red"></div><div class="sb-dot yel"></div><div class="sb-dot grn"></div>
+            </div>
+            <span class="sb-session">loop-seafin</span>
+            <div class="sb-live">running</div>
+          </div>
+          <div class="shell-body">
+            <div class="tc">
+              <div><span class="tc-teal">◆</span> <span class="tc-w">Claude Code</span></div>
+              <div>&nbsp;</div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">Smoke tests passing — 14/14</span></div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">Playwright suite — 94 passed, 1 skipped</span></div>
+              <div>&nbsp;</div>
+              <div><span class="tc-dim">  Ready.</span></div>
+              <div><span class="tc-gold">❯</span> <span class="tc-w">_</span><span class="tc-cursor"></span></div>
+            </div>
+            <div class="ov-pill-btn">
+              <div class="ov-pill-dot"></div>
+              <span class="ov-pill-lbl">Prompt</span>
+              <span class="ov-pill-kbd">Alt+P</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="state-label">Expanded</div>
+        <div class="shell" style="height:260px">
+          <div class="shell-bar">
+            <div class="sb-dots">
+              <div class="sb-dot red"></div><div class="sb-dot yel"></div><div class="sb-dot grn"></div>
+            </div>
+            <span class="sb-session">loop-seafin</span>
+            <div class="sb-live">running</div>
+          </div>
+          <div class="shell-body">
+            <div class="tc" style="opacity:0.3">
+              <div><span class="tc-teal">◆</span> <span class="tc-w">Claude Code</span></div>
+              <div>&nbsp;</div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">94 passed, 1 skipped</span></div>
+            </div>
+            <div class="ov-pill-expanded">
+              <div class="ov-pill-exp-head">
+                <div class="ov-pill-avatar">C</div>
+                <span class="ov-pill-name">Claude Code</span>
+                <span class="ov-pill-ctx">loop-seafin</span>
+              </div>
+              <div class="ov-pill-exp-body">
+                <input class="ov-pill-exp-inp" value="now deploy to VPS and tail the logs" readonly />
+                <div class="ov-pill-exp-foot">
+                  <div class="ov-pill-hist">
+                    <div class="ov-pill-chip">run smoke tests</div>
+                    <div class="ov-pill-chip">fix wf-bar</div>
+                    <div class="ov-pill-chip">write tests</div>
+                  </div>
+                  <button class="ov-pill-send">↵ Send</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

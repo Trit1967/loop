@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Loop — Chat Overlay Variations</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --teal:#4db8c2;      --teal-dim:rgba(77,184,194,0.14); --teal-glow:rgba(77,184,194,0.28);
+  --rose:#c75878;      --rose-dim:rgba(199,88,120,0.14);
+  --sage:#5cb87a;      --sage-dim:rgba(92,184,122,0.12);
+  --gold:#c9a040;
+  --void:#080a0f;  --base:#0d1018;  --sf:#131720;  --sf2:#1a1f2c;  --sf3:#222838;  --raised:#2c3345;
+  --tx:#eceae2;  --tx2:#b4b8c4;  --tx3:#787e90;
+  --line:rgba(184,192,204,0.08);  --line2:rgba(184,192,204,0.14);
+  --r:4px;  --rl:8px;  --rx:12px;
+  --mono:'JetBrains Mono',monospace;  --sans:'Space Grotesk',system-ui,sans-serif;
+}
+
+body{
+  background:var(--void);font-family:var(--sans);color:var(--tx);
+  padding:48px 40px 80px;min-height:100vh;position:relative;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 20%, rgba(77,184,194,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 85% 70%, rgba(92,184,122,0.03) 0%, transparent 55%);
+}
+
+.page-header{position:relative;z-index:1;margin-bottom:52px;max-width:1300px}
+.page-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11px;font-weight:500;color:var(--teal);
+  letter-spacing:0.8px;text-transform:uppercase;margin-bottom:14px;
+  padding:4px 10px;border:1px solid rgba(77,184,194,0.25);border-radius:20px;
+  background:rgba(77,184,194,0.06);
+}
+.page-eyebrow::before{
+  content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);
+  animation:pulse 2.5s ease-in-out infinite;
+}
+.page-title{font-size:26px;font-weight:700;color:var(--tx);letter-spacing:-0.5px;margin-bottom:8px}
+.page-title em{font-style:normal;color:var(--teal)}
+.page-note{
+  font-size:13px;color:var(--tx3);max-width:620px;line-height:1.6;
+  padding:10px 14px;border-left:2px solid rgba(77,184,194,0.3);
+  background:rgba(77,184,194,0.04);border-radius:0 var(--r) var(--r) 0;
+}
+.page-note strong{color:var(--tx2);font-weight:500}
+
+.grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:36px;
+  max-width:1300px;position:relative;z-index:1;
+}
+.mk{display:flex;flex-direction:column;gap:10px}
+.mk.full{grid-column:1/-1}
+
+.mk-tag{font-size:10px;font-weight:700;font-family:var(--mono);color:var(--tx3);letter-spacing:1px;text-transform:uppercase}
+.mk-tag .n{color:var(--teal)}
+.mk-name{font-size:15px;font-weight:600;color:var(--tx);letter-spacing:-0.2px;margin:2px 0}
+.mk-desc{font-size:12.5px;color:var(--tx3);line-height:1.55;max-width:480px}
+.mk-constraint{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:10.5px;font-family:var(--mono);color:var(--sage);
+  margin-top:4px;
+}
+.mk-constraint::before{content:'✓';font-size:10px}
+
+/* ── Shell ── */
+.shell{
+  width:100%;height:340px;
+  background:var(--base);border-radius:10px;
+  border:1px solid var(--line2);overflow:hidden;
+  display:flex;flex-direction:column;position:relative;
+  box-shadow:0 4px 32px rgba(0,0,0,0.45),0 1px 0 rgba(255,255,255,0.04) inset;
+}
+.shell-bar{
+  height:32px;background:var(--sf);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;padding:0 12px;gap:10px;flex-shrink:0;
+}
+.sb-dots{display:flex;gap:5px}
+.sb-dot{width:9px;height:9px;border-radius:50%}
+.sb-dot.r{background:#e35c4a}.sb-dot.y{background:#d4a017}.sb-dot.g{background:var(--sage)}
+.sb-name{flex:1;font-size:12px;font-weight:600;color:var(--teal);font-family:var(--mono)}
+.sb-live{font-size:10px;font-weight:600;font-family:var(--mono);color:var(--sage);display:flex;align-items:center;gap:5px}
+.sb-live::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--sage);animation:pulse 2s ease-in-out infinite}
+.sb-badge{font-size:10px;font-family:var(--mono);color:var(--tx3);background:var(--sf2);padding:2px 8px;border-radius:3px;border:1px solid var(--line)}
+.sb-close{background:none;border:none;color:var(--tx3);font-size:14px;cursor:pointer;padding:2px;display:flex;align-items:center}
+
+.shell-body{flex:1;position:relative;overflow:hidden;background:var(--void)}
+
+/* Fake terminal text */
+.tc{
+  position:absolute;font-family:var(--mono);font-size:12px;line-height:1.7;
+  color:#8892aa;overflow:hidden;
+}
+.tc.fill{inset:0;padding:12px 16px}
+.tc-teal{color:var(--teal)}.tc-sage{color:var(--sage)}.tc-gold{color:var(--gold)}
+.tc-dim{color:#3e4450}.tc-w{color:#d0d4e0;font-weight:500}
+.tc-cursor{display:inline-block;width:7px;height:13px;background:#d0d4e0;vertical-align:-2px;animation:blink 1.1s step-end infinite}
+
+/* ══════════════════════════════════════════
+   VARIANT A — Stacked Split
+   Terminal top 55%, chat drawer bottom 45%
+════════════════════════════════════════════ */
+.va-wrap{position:absolute;inset:0;display:flex;flex-direction:column}
+.va-term{
+  flex:0 0 55%;border-bottom:2px solid var(--teal-dim);
+  position:relative;overflow:hidden;background:var(--void);
+}
+.va-resize{
+  flex:0 0 2px;background:rgba(77,184,194,0.25);cursor:ns-resize;
+  display:flex;align-items:center;justify-content:center;
+}
+.va-resize::after{
+  content:'⋯';color:rgba(77,184,194,0.5);font-size:12px;letter-spacing:2px;
+  position:absolute;
+}
+.va-chat{
+  flex:1;display:flex;flex-direction:column;
+  background:var(--base);
+  min-height:0;
+}
+.va-chat-head{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;border-bottom:1px solid var(--line);flex-shrink:0;
+}
+.va-chat-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal-glow)}
+.va-chat-lbl{font-size:10.5px;font-weight:700;font-family:var(--mono);color:var(--teal);letter-spacing:0.5px;flex:1}
+.va-chat-hint{font-size:10px;font-family:var(--mono);color:var(--tx3)}
+.va-msgs{flex:1;overflow:hidden;padding:8px 14px;display:flex;flex-direction:column;gap:5px;justify-content:flex-end;min-height:0}
+.va-msg{font-size:11.5px;line-height:1.5;padding:6px 10px;border-radius:var(--r)}
+.va-msg.you{background:var(--teal-dim);border:1px solid rgba(77,184,194,0.18);color:var(--tx);align-self:flex-end;border-radius:var(--r) var(--r) 2px var(--r);max-width:85%}
+.va-msg.ai{background:var(--sf2);border:1px solid var(--line);color:var(--tx2);align-self:flex-start;border-radius:var(--r) var(--r) var(--r) 2px;max-width:85%}
+.va-input-row{padding:8px 12px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-shrink:0}
+.va-inp{flex:1;background:var(--sf);border:1px solid var(--line2);border-radius:var(--r);padding:7px 11px;font-family:var(--sans);font-size:12px;color:var(--tx2);outline:none}
+.va-send{background:var(--teal);border:none;border-radius:var(--r);color:var(--void);font-family:var(--sans);font-size:11px;font-weight:700;padding:7px 13px;cursor:pointer;box-shadow:0 0 8px var(--teal-glow)}
+
+/* ══════════════════════════════════════════
+   VARIANT B — Right Drawer, Terminal Left
+   Chat in 260px right pane, terminal fills left
+   (Similar to Concept 03 but with FULL history)
+════════════════════════════════════════════ */
+.vb-wrap{position:absolute;inset:0;display:flex}
+.vb-term{flex:1;position:relative;overflow:hidden;background:var(--void)}
+.vb-drawer{
+  width:260px;flex-shrink:0;
+  background:rgba(13,16,24,0.99);
+  border-left:1px solid var(--line2);
+  display:flex;flex-direction:column;
+}
+.vb-dh{
+  padding:10px 12px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+}
+.vb-dh-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal-glow)}
+.vb-dh-lbl{font-size:10px;font-weight:700;font-family:var(--mono);color:var(--teal);letter-spacing:0.8px;text-transform:uppercase;flex:1}
+.vb-dh-x{background:none;border:none;color:var(--tx3);font-size:14px;cursor:pointer}
+.vb-msgs{flex:1;overflow:hidden;padding:10px 10px 6px;display:flex;flex-direction:column;gap:5px;justify-content:flex-end}
+.vb-msg{font-size:11px;line-height:1.5;padding:6px 9px;border-radius:3px}
+.vb-msg.you{background:var(--teal-dim);border:1px solid rgba(77,184,194,0.16);color:var(--tx);border-radius:3px 3px 1px 3px}
+.vb-msg.ai{background:var(--sf2);border:1px solid var(--line);color:var(--tx2);border-radius:3px 3px 3px 1px}
+.vb-who{font-size:9px;font-weight:700;font-family:var(--mono);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:2px}
+.vb-msg.you .vb-who{color:var(--teal)}.vb-msg.ai .vb-who{color:var(--tx3)}
+.vb-inp-area{padding:8px 10px;border-top:1px solid var(--line);flex-shrink:0;display:flex;flex-direction:column;gap:6px}
+.vb-inp{background:var(--sf2);border:1px solid var(--line2);border-radius:3px;padding:7px 9px;font-family:var(--sans);font-size:11px;color:var(--tx2);outline:none;width:100%}
+.vb-send{background:var(--teal);border:none;border-radius:3px;color:var(--void);font-family:var(--sans);font-size:10.5px;font-weight:700;padding:6px;cursor:pointer;text-align:center}
+
+/* ══════════════════════════════════════════
+   VARIANT C — HUD Mode
+   Chat bubbles float at top of terminal as a translucent strip.
+   Terminal output fills the entire pane below.
+════════════════════════════════════════════ */
+.vc-term{position:absolute;inset:0;background:var(--void)}
+.vc-hud{
+  position:absolute;top:0;left:0;right:0;
+  background:linear-gradient(rgba(13,16,24,0.97) 0%, rgba(13,16,24,0.0) 100%);
+  padding:0 0 24px;
+}
+.vc-hud-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 14px;border-bottom:1px solid rgba(77,184,194,0.12);
+}
+.vc-hud-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);box-shadow:0 0 5px var(--teal-glow)}
+.vc-hud-lbl{font-size:9.5px;font-weight:700;font-family:var(--mono);color:var(--teal);letter-spacing:0.8px;text-transform:uppercase;flex:1}
+.vc-hud-x{background:none;border:none;color:var(--tx3);font-size:12px;cursor:pointer}
+.vc-bubbles{padding:7px 14px;display:flex;flex-direction:column;gap:4px}
+.vc-bubble{
+  display:inline-flex;align-self:flex-start;
+  font-size:11px;line-height:1.5;
+  padding:5px 10px;border-radius:var(--r);max-width:80%;
+}
+.vc-bubble.you{background:rgba(77,184,194,0.15);border:1px solid rgba(77,184,194,0.2);color:var(--tx);align-self:flex-end;border-radius:var(--r) var(--r) 2px var(--r)}
+.vc-bubble.ai{background:rgba(26,31,44,0.9);border:1px solid var(--line2);color:var(--tx2)}
+.vc-input{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:10px 14px 12px;
+  background:linear-gradient(transparent 0%, rgba(6,8,12,0.97) 35%);
+}
+.vc-inp-row{display:flex;align-items:center;gap:8px;background:rgba(26,31,44,0.95);border:1px solid rgba(77,184,194,0.18);border-radius:var(--rx);padding:7px 8px 7px 13px;backdrop-filter:blur(8px)}
+.vc-inp{flex:1;background:none;border:none;outline:none;font-family:var(--sans);font-size:12.5px;color:var(--tx2)}
+.vc-inp::placeholder{color:var(--tx3)}
+.vc-send{width:28px;height:28px;border-radius:7px;background:var(--teal);border:none;color:var(--void);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 8px var(--teal-glow);flex-shrink:0}
+
+/* ══════════════════════════════════════════
+   VARIANT D — Pinned Bottom Bar + Scroll-back
+   Terminal scrolls normally. Chat input docked at bottom.
+   Last exchange shown above input as a "summary strip".
+════════════════════════════════════════════ */
+.vd-term{position:absolute;inset:0;background:var(--void)}
+.vd-bar{
+  position:absolute;bottom:0;left:0;right:0;
+}
+.vd-exchange{
+  margin:0 10px;
+  background:rgba(19,23,32,0.95);
+  border:1px solid rgba(77,184,194,0.15);
+  border-bottom:none;
+  border-radius:var(--r) var(--r) 0 0;
+  overflow:hidden;
+}
+.vd-ex-item{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:7px 12px;font-size:11px;line-height:1.45;
+  border-bottom:1px solid var(--line);
+}
+.vd-ex-item:last-child{border-bottom:none}
+.vd-ex-who{
+  font-size:9px;font-weight:700;font-family:var(--mono);
+  letter-spacing:0.6px;text-transform:uppercase;flex-shrink:0;
+  width:44px;padding-top:1px;
+}
+.vd-ex-item.you .vd-ex-who{color:var(--teal)}
+.vd-ex-item.ai .vd-ex-who{color:var(--tx3)}
+.vd-ex-item.you .vd-ex-txt{color:var(--tx)}
+.vd-ex-item.ai .vd-ex-txt{color:var(--tx2)}
+.vd-ex-txt{font-size:11px;line-height:1.45}
+.vd-more{font-size:9.5px;font-family:var(--mono);color:var(--tx3);text-align:center;padding:4px;background:var(--sf)}
+.vd-inp-strip{
+  background:rgba(13,16,24,0.98);border:1px solid rgba(77,184,194,0.18);
+  border-top:none;margin:0 10px 10px;
+  border-radius:0 0 var(--r) var(--r);
+  padding:8px 10px;
+  display:flex;align-items:center;gap:8px;
+  backdrop-filter:blur(8px);
+}
+.vd-inp{flex:1;background:var(--sf);border:1px solid var(--line2);border-radius:var(--r);padding:7px 11px;font-family:var(--sans);font-size:12px;color:var(--tx2);outline:none}
+.vd-send{background:var(--teal);border:none;border-radius:var(--r);color:var(--void);font-family:var(--sans);font-size:11px;font-weight:700;padding:7px 13px;cursor:pointer;box-shadow:0 0 8px var(--teal-glow)}
+
+/* ══════════════════════════════════════════
+   VARIANT E — Inline Thread (wide, full-width)
+   Terminal fills left 60%. Right 40%: scrollable
+   full transcript with all terminal output mirrored
+   as "stdout" entries between chat messages.
+════════════════════════════════════════════ */
+.ve-wrap{position:absolute;inset:0;display:flex}
+.ve-term{flex:1;position:relative;overflow:hidden;background:var(--void)}
+.ve-thread{
+  width:42%;flex-shrink:0;
+  background:var(--sf);
+  border-left:1px solid var(--line2);
+  display:flex;flex-direction:column;
+}
+.ve-th{
+  padding:9px 13px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+}
+.ve-th-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal-glow)}
+.ve-th-lbl{font-size:10px;font-weight:700;font-family:var(--mono);color:var(--teal);letter-spacing:0.8px;text-transform:uppercase;flex:1}
+.ve-th-x{background:none;border:none;color:var(--tx3);font-size:14px;cursor:pointer}
+.ve-scroll{flex:1;overflow:hidden;padding:10px 12px;display:flex;flex-direction:column;gap:5px;justify-content:flex-end}
+/* Chat messages */
+.ve-msg{font-size:11px;line-height:1.5;padding:6px 9px;border-radius:3px;max-width:90%}
+.ve-msg.you{background:var(--teal-dim);border:1px solid rgba(77,184,194,0.16);color:var(--tx);align-self:flex-end}
+.ve-msg.ai{background:var(--sf2);border:1px solid var(--line);color:var(--tx2);align-self:flex-start}
+/* Stdout block — terminal output inline */
+.ve-stdout{
+  background:rgba(8,10,15,0.7);border:1px solid var(--line);border-radius:3px;
+  padding:7px 10px;font-family:var(--mono);font-size:10.5px;line-height:1.6;
+  color:#4a5565;
+  align-self:stretch;
+}
+.ve-stdout .ve-stdout-lbl{font-size:9px;font-weight:700;color:var(--tx3);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:4px}
+.ve-stdout .ok{color:var(--sage)}.ve-stdout .hl{color:var(--teal)}.ve-stdout .w{color:#d0d4e0}
+.ve-who{font-size:9px;font-weight:700;font-family:var(--mono);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px}
+.ve-msg.you .ve-who{color:var(--teal)}.ve-msg.ai .ve-who{color:var(--tx3)}
+.ve-inp-area{padding:8px 10px;border-top:1px solid var(--line);flex-shrink:0;display:flex;gap:6px;align-items:center}
+.ve-inp{flex:1;background:var(--sf2);border:1px solid var(--line2);border-radius:3px;padding:7px 9px;font-family:var(--sans);font-size:11px;color:var(--tx2);outline:none}
+.ve-send{background:var(--teal);border:none;border-radius:3px;color:var(--void);font-family:var(--sans);font-size:10.5px;font-weight:700;padding:7px 12px;cursor:pointer;white-space:nowrap;box-shadow:0 0 8px var(--teal-glow)}
+
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.85)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* State labels for side-by-side */
+.states{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.state-lbl{font-size:10px;font-weight:700;font-family:var(--mono);color:var(--tx3);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.state-lbl::before{content:'';flex:0 0 20px;height:1px;background:var(--line2)}
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-eyebrow">Loop Terminal · Chat Overlay</div>
+  <div class="page-title">Chat Takeover — <em>5 variations</em></div>
+  <div class="page-note">
+    <strong>Constraint:</strong> Every variation keeps the full terminal output visible.
+    You asked for chat <em>and</em> the ability to watch Claude's terminal output.
+    These 5 approaches solve that differently.
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- ══════════════════════
+       A — Stacked Split
+  ══════════════════════ -->
+  <div class="mk">
+    <div class="mk-tag"><span class="n">A</span> &nbsp;Stacked Split</div>
+    <div class="mk-name">Terminal top, chat drawer bottom — draggable divider</div>
+    <div class="mk-desc">Terminal occupies the upper 55%, chat lives below. Resize the split to show more or less terminal. Both always visible.</div>
+    <div class="mk-constraint">terminal always visible · resizable split</div>
+    <div class="shell" style="height:360px">
+      <div class="shell-bar">
+        <div class="sb-dots"><div class="sb-dot r"></div><div class="sb-dot y"></div><div class="sb-dot g"></div></div>
+        <span class="sb-name">loop-seafin</span>
+        <div class="sb-live">running</div>
+      </div>
+      <div class="shell-body">
+        <div class="va-wrap">
+          <div class="va-term">
+            <div class="tc fill" style="font-size:11.5px">
+              <div><span class="tc-teal">◆</span> <span class="tc-w">Claude Code</span> <span class="tc-dim">claude-opus-4-6</span></div>
+              <div>&nbsp;</div>
+              <div><span class="tc-dim">  Reading lib/auth.js...</span></div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">Found: refreshToken() — missing rotation</span></div>
+              <div><span class="tc-dim">  Writing updated implementation...</span></div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">lib/auth.js updated — +34 lines</span></div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">lib/auth.test.js updated — 8 new tests</span></div>
+              <div>&nbsp;</div>
+              <div><span class="tc-dim">  All 8 tests passing. Done.</span></div>
+            </div>
+          </div>
+          <div class="va-resize"></div>
+          <div class="va-chat">
+            <div class="va-chat-head">
+              <div class="va-chat-dot"></div>
+              <span class="va-chat-lbl">Prompt — loop-seafin</span>
+              <span class="va-chat-hint">↑↓ history · Alt+P close</span>
+            </div>
+            <div class="va-msgs">
+              <div class="va-msg you">add JWT token rotation with sliding window</div>
+              <div class="va-msg ai">Done — updated lib/auth.js with 30-day sliding window rotation. 8 tests added, all passing.</div>
+              <div class="va-msg you">now add it to the WebSocket auth handler too</div>
+            </div>
+            <div class="va-input-row">
+              <input class="va-inp" value="write an integration test for the WS handler" readonly />
+              <button class="va-send">↵ Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════
+       B — Right Drawer (Full History)
+  ══════════════════════ -->
+  <div class="mk">
+    <div class="mk-tag"><span class="n">B</span> &nbsp;Right Drawer — Full History</div>
+    <div class="mk-name">260px chat panel, full terminal on left</div>
+    <div class="mk-desc">Full terminal occupies the left. Chat history on the right. Minimal width so terminal has maximum room. Scrollable history.</div>
+    <div class="mk-constraint">full terminal visible · compact chat rail</div>
+    <div class="shell" style="height:360px">
+      <div class="shell-bar">
+        <div class="sb-dots"><div class="sb-dot r"></div><div class="sb-dot y"></div><div class="sb-dot g"></div></div>
+        <span class="sb-name">loop-billing</span>
+        <div class="sb-live">running</div>
+      </div>
+      <div class="shell-body">
+        <div class="vb-wrap">
+          <div class="vb-term">
+            <div class="tc fill" style="font-size:11px">
+              <div><span class="tc-teal">◆</span> <span class="tc-w">Claude Code</span></div>
+              <div>&nbsp;</div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">migrations/005_billing.sql created</span></div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">Migration applied to dev DB</span></div>
+              <div>&nbsp;</div>
+              <div><span class="tc-dim">  Running tests...</span></div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">11/11 passing</span></div>
+              <div>&nbsp;</div>
+              <div><span class="tc-gold">❯</span> <span class="tc-w">_</span><span class="tc-cursor"></span></div>
+            </div>
+          </div>
+          <div class="vb-drawer">
+            <div class="vb-dh">
+              <div class="vb-dh-dot"></div>
+              <span class="vb-dh-lbl">Chat</span>
+              <button class="vb-dh-x">×</button>
+            </div>
+            <div class="vb-msgs">
+              <div class="vb-msg you"><div class="vb-who">You</div>add a billing_events table with indexes</div>
+              <div class="vb-msg ai"><div class="vb-who">Claude</div>Created migration 005. Added composite index on (user_id, created_at). Applied to dev.</div>
+              <div class="vb-msg you"><div class="vb-who">You</div>run tests</div>
+              <div class="vb-msg ai"><div class="vb-who">Claude</div>All 11 passing. Ready for staging.</div>
+              <div class="vb-msg you"><div class="vb-who">You</div>deploy to staging</div>
+            </div>
+            <div class="vb-inp-area">
+              <input class="vb-inp" value="tail the deploy logs" readonly />
+              <button class="vb-send">↵ Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════
+       C — HUD Mode
+  ══════════════════════ -->
+  <div class="mk">
+    <div class="mk-tag"><span class="n">C</span> &nbsp;HUD Mode</div>
+    <div class="mk-name">Floating exchange at top, full terminal below</div>
+    <div class="mk-desc">Chat bubbles hover at the top in a translucent strip that fades into the terminal. Terminal completely unobstructed below the fold. Input docked at bottom.</div>
+    <div class="mk-constraint">maximum terminal visibility · minimal chrome</div>
+    <div class="shell" style="height:360px">
+      <div class="shell-bar">
+        <div class="sb-dots"><div class="sb-dot r"></div><div class="sb-dot y"></div><div class="sb-dot g"></div></div>
+        <span class="sb-name">loop-frontend</span>
+        <div class="sb-live">running</div>
+      </div>
+      <div class="shell-body">
+        <div class="vc-term">
+          <div class="tc fill" style="font-size:11.5px;padding-top:100px">
+            <div><span class="tc-sage">✓</span> <span class="tc-dim">Updated public/index.html — 48 lines</span></div>
+            <div><span class="tc-sage">✓</span> <span class="tc-dim">Keyboard handler: Alt+P, Alt+N, Alt+W attached</span></div>
+            <div><span class="tc-sage">✓</span> <span class="tc-dim">Voice overlay: debounced reconnect fixed</span></div>
+            <div>&nbsp;</div>
+            <div><span class="tc-dim">  Running Playwright tests...</span></div>
+            <div><span class="tc-sage">✓</span> <span class="tc-dim">94 passed · 1 skipped · 0 failed</span></div>
+            <div>&nbsp;</div>
+            <div><span class="tc-gold">❯</span> <span class="tc-w">_</span><span class="tc-cursor"></span></div>
+          </div>
+        </div>
+        <div class="vc-hud">
+          <div class="vc-hud-bar">
+            <div class="vc-hud-dot"></div>
+            <span class="vc-hud-lbl">Prompt · loop-frontend</span>
+            <button class="vc-hud-x">×</button>
+          </div>
+          <div class="vc-bubbles">
+            <div class="vc-bubble you">fix keyboard shortcuts in terminal focus</div>
+            <div class="vc-bubble ai">Used attachCustomKeyEventHandler. All shortcuts working in xterm context now.</div>
+          </div>
+        </div>
+        <div class="vc-input">
+          <div class="vc-inp-row">
+            <input class="vc-inp" placeholder="Message Claude Code…" value="commit and push to VPS" readonly />
+            <div class="vc-send">↵</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════
+       D — Docked Exchange Strip
+  ══════════════════════ -->
+  <div class="mk">
+    <div class="mk-tag"><span class="n">D</span> &nbsp;Docked Exchange Strip</div>
+    <div class="mk-name">Last message pair + input bar, docked at bottom</div>
+    <div class="mk-desc">Only the most recent exchange shown as a compact strip above the input. Terminal fills everything above it. Tap the strip to expand full history.</div>
+    <div class="mk-constraint">terminal fills 70%+ · last exchange always visible</div>
+    <div class="shell" style="height:360px">
+      <div class="shell-bar">
+        <div class="sb-dots"><div class="sb-dot r"></div><div class="sb-dot y"></div><div class="sb-dot g"></div></div>
+        <span class="sb-name">loop-infra</span>
+        <div class="sb-live">running</div>
+      </div>
+      <div class="shell-body">
+        <div class="vd-term">
+          <div class="tc fill" style="font-size:11.5px">
+            <div><span class="tc-teal">◆</span> <span class="tc-w">Claude Code</span> <span class="tc-dim">claude-opus-4-6</span></div>
+            <div>&nbsp;</div>
+            <div><span class="tc-dim">  Connecting to vps.example.com...</span></div>
+            <div><span class="tc-sage">✓</span> <span class="tc-dim">SSH connected</span></div>
+            <div><span class="tc-dim">  Pulling latest from master...</span></div>
+            <div><span class="tc-sage">✓</span> <span class="tc-dim">Already up to date.</span></div>
+            <div><span class="tc-dim">  Restarting claude-terminal service...</span></div>
+            <div><span class="tc-sage">✓</span> <span class="tc-dim">Active: running (pid 44369)</span></div>
+          </div>
+        </div>
+        <div class="vd-bar">
+          <div class="vd-exchange">
+            <div class="vd-more">↑ 3 earlier messages — tap to expand</div>
+            <div class="vd-ex-item you">
+              <span class="vd-ex-who">You</span>
+              <span class="vd-ex-txt">deploy to VPS and restart the service</span>
+            </div>
+            <div class="vd-ex-item ai">
+              <span class="vd-ex-who">Claude</span>
+              <span class="vd-ex-txt">Done — pulled master, service restarted. Logs look clean.</span>
+            </div>
+          </div>
+          <div class="vd-inp-strip">
+            <input class="vd-inp" value="tail the logs for 30 seconds" readonly />
+            <button class="vd-send">↵ Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════
+       E — Inline Thread (Full Width)
+       Terminal left, right panel shows BOTH
+       chat messages AND stdout inline
+  ══════════════════════ -->
+  <div class="mk full">
+    <div class="mk-tag"><span class="n">E</span> &nbsp;Inline Thread — Terminal Output Mirrored</div>
+    <div class="mk-name">Chat messages + terminal stdout woven into a single scrollable thread</div>
+    <div class="mk-desc">The right panel shows your chat AND Claude's terminal output — checkmarks, file edits, test results — all inline in the conversation thread. Nothing is hidden. Terminal on left stays live for interactive use. This is the most information-dense option.</div>
+    <div class="mk-constraint">full terminal live on left · stdout mirrored inline in thread on right</div>
+    <div class="shell full" style="height:340px">
+      <div class="shell-bar">
+        <div class="sb-dots"><div class="sb-dot r"></div><div class="sb-dot y"></div><div class="sb-dot g"></div></div>
+        <span class="sb-name">loop-seafin</span>
+        <div class="sb-live">running</div>
+        <span class="sb-badge">Thread view</span>
+      </div>
+      <div class="shell-body">
+        <div class="ve-wrap">
+          <div class="ve-term">
+            <div class="tc fill" style="font-size:11.5px">
+              <div><span class="tc-teal">◆</span> <span class="tc-w">Claude Code</span> <span class="tc-dim">claude-opus-4-6 · /projects/seafin</span></div>
+              <div>&nbsp;</div>
+              <div><span class="tc-dim">  Reading server.js...</span></div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">server.js (1,247 lines)</span></div>
+              <div>&nbsp;</div>
+              <div><span class="tc-dim">  Adding /api/user-state endpoints...</span></div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">GET /api/user-state added</span></div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">POST /api/user-state added</span></div>
+              <div>&nbsp;</div>
+              <div><span class="tc-dim">  Deploying via scp...</span></div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">server.js → VPS</span></div>
+              <div><span class="tc-dim">  Restarting service...</span></div>
+              <div><span class="tc-sage">✓</span> <span class="tc-dim">Active — pid 44520</span></div>
+              <div>&nbsp;</div>
+              <div><span class="tc-gold">❯</span> <span class="tc-w">_</span><span class="tc-cursor"></span></div>
+            </div>
+          </div>
+          <div class="ve-thread">
+            <div class="ve-th">
+              <div class="ve-th-dot"></div>
+              <span class="ve-th-lbl">Thread</span>
+              <button class="ve-th-x">×</button>
+            </div>
+            <div class="ve-scroll">
+              <!-- User message -->
+              <div class="ve-msg you"><div class="ve-who">You</div>add server-side user state persistence + deploy</div>
+              <!-- Stdout block — terminal output inline -->
+              <div class="ve-stdout">
+                <div class="ve-stdout-lbl">stdout</div>
+                <div><span class="ok">✓</span> server.js — GET /api/user-state added</div>
+                <div><span class="ok">✓</span> server.js — POST /api/user-state added</div>
+                <div><span class="ok">✓</span> Deployed → <span class="hl">vps.example.com</span></div>
+                <div><span class="ok">✓</span> Service restarted — <span class="w">pid 44520</span></div>
+              </div>
+              <!-- Claude response -->
+              <div class="ve-msg ai"><div class="ve-who">Claude</div>Done — user state endpoints live. Writes to data/{user}.json. 512KB limit, 800ms debounce.</div>
+              <!-- Next user msg -->
+              <div class="ve-msg you"><div class="ve-who">You</div>now test it — reload and check persistence</div>
+            </div>
+            <div class="ve-inp-area">
+              <input class="ve-inp" value="run the full Playwright suite" readonly />
+              <button class="ve-send">↵ Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
