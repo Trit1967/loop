@@ -296,7 +296,9 @@ if (TLS_CERT && TLS_KEY) {
 // WebSocket server — terminal multiplexing
 // ---------------------------------------------------------------------------
 
-const wss = new WebSocketServer({ noServer: true });
+// perMessageDeflate buffers each frame to compress it — catastrophic for interactive typing.
+// Disable it so keystrokes are sent immediately without compression overhead.
+const wss = new WebSocketServer({ noServer: true, perMessageDeflate: false });
 
 /**
  * Parse a JWT from the Cookie header.
@@ -336,6 +338,9 @@ function parseSessionId(url) {
 
 // Handle HTTP upgrade requests for WebSocket
 server.on('upgrade', (req, socket, head) => {
+  // Disable Nagle's algorithm — it batches small TCP packets, adding up to 200ms latency
+  // for single-keystroke writes. setNoDelay(true) sends each packet immediately.
+  socket.setNoDelay(true);
   const sessionId = parseSessionId(req.url);
   if (!sessionId) {
     socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
@@ -387,8 +392,10 @@ wss.on('connection', (ws) => {
 
     // WebSocket messages → PTY stdin (or resize)
     ws.on('message', (data) => {
-      // Try to parse as JSON for control messages
-      if (typeof data === 'string' || (data instanceof Buffer && data[0] === 0x7b)) {
+      // Only attempt JSON parse if message starts with '{' — avoids calling
+      // JSON.parse on every single keystroke (the common case is raw terminal input)
+      const firstByte = Buffer.isBuffer(data) ? data[0] : (typeof data === 'string' ? data.charCodeAt(0) : -1);
+      if (firstByte === 0x7b) {
         try {
           const msg = JSON.parse(data.toString());
           if (msg.type === 'resize' && msg.cols && msg.rows) {
@@ -396,10 +403,10 @@ wss.on('connection', (ws) => {
             return;
           }
         } catch {
-          // Not JSON — treat as raw terminal input
+          // Not valid JSON — fall through to PTY write
         }
       }
-      pty.write(data.toString());
+      pty.write(Buffer.isBuffer(data) ? data.toString() : data);
     });
 
     // WebSocket close → detach PTY
