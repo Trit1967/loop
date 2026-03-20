@@ -92,7 +92,7 @@
 
     /* ═ Panel Drag Handles ═ */
     .drag-h {
-      grid-row: 2; background: transparent; cursor: col-resize; position: relative;
+      background: transparent; cursor: col-resize; position: relative;
       z-index: 10; display: flex; align-items: center; justify-content: center;
       transition: background 80ms;
     }
@@ -100,10 +100,10 @@
     .drag-h:hover, .drag-h.dragging { background: var(--line2); }
     .panel-tog {
       position: absolute; width: 16px; height: 26px; background: var(--sf2);
-      border: 1px solid var(--line2); border-radius: 3px; color: var(--tx3);
+      border: none; border-radius: 3px; color: var(--tx3);
       font-size: 9px; cursor: pointer; display: flex; align-items: center;
       justify-content: center; opacity: 0; transition: opacity var(--t), color var(--t);
-      user-select: none; border: none; padding: 0;
+      user-select: none; padding: 0;
     }
     .drag-h:hover .panel-tog, .drag-h.dragging .panel-tog { opacity: 1; }
     .panel-tog:hover { color: var(--w1); background: var(--sf3); }
