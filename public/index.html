@@ -345,6 +345,7 @@
     .term-empty {
       position: absolute; inset: 0; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 16px; z-index: 3;
+      pointer-events: none; background: var(--void);
     }
     .te-title { font-size: 20px; font-weight: 600; color: var(--tx2); letter-spacing: -0.3px; text-shadow: 0 0 20px rgba(184,192,204,0.08); }
     .te-sub { font-size: 14px; color: var(--tx3); max-width: 400px; text-align: center; line-height: 1.6; }
@@ -614,7 +615,7 @@
         <div class="ff"><label>Job name</label><input id="i-cn" required placeholder="nightly-tests" /></div>
         <div class="ff"><label>Skill</label><input id="i-cs" required placeholder="full-stack-tester" /></div>
         <div class="ff"><label>Schedule (cron)</label><input id="i-cc" required placeholder="0 2 * * *" /></div>
-        <div class="ff"><label>Directory</label><input id="i-cd" required placeholder="/home/claude/projects/my-app" /></div>
+        <div class="ff"><label>Directory <span style="color:var(--tx3);font-weight:400">(optional)</span></label><input id="i-cd" placeholder="/home/claude/projects/my-app" /></div>
         <div class="mo-act">
           <button type="button" class="btn" onclick="closeMo('mo-cron')">Cancel</button>
           <button type="submit" class="btn btn-go">Schedule</button>

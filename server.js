@@ -201,16 +201,42 @@ app.get('/api/claude-usage', async (_req, res, next) => {
 
     const oauth = creds.claudeAiOauth;
     if (!oauth || !oauth.accessToken) return res.json({ available: false, reason: 'no_token' });
-    if (oauth.expiresAt && Date.now() > oauth.expiresAt) return res.json({ available: false, reason: 'token_expired' });
 
-    const resp = await fetch('https://api.anthropic.com/api/oauth/usage', {
-      headers: {
-        'Authorization': `Bearer ${oauth.accessToken}`,
-        'Content-Type': 'application/json',
-        'anthropic-beta': 'oauth-2025-04-20',
-        'User-Agent': 'claude-code/2.0.37'
-      }
-    });
+    // Try the API; if 401, attempt token refresh then retry once
+    async function fetchUsage(token) {
+      return fetch('https://api.anthropic.com/api/oauth/usage', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'anthropic-beta': 'oauth-2025-04-20',
+          'User-Agent': 'claude-code/2.0.37'
+        }
+      });
+    }
+
+    let resp = await fetchUsage(oauth.accessToken);
+
+    // If unauthorized and we have a refresh token, try refreshing
+    if (resp.status === 401 && oauth.refreshToken) {
+      try {
+        const refreshResp = await fetch('https://api.anthropic.com/oauth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grant_type: 'refresh_token', refresh_token: oauth.refreshToken })
+        });
+        if (refreshResp.ok) {
+          const tokens = await refreshResp.json();
+          const newToken = tokens.access_token;
+          // Persist refreshed token back to credentials file
+          creds.claudeAiOauth.accessToken = newToken;
+          if (tokens.expires_in) creds.claudeAiOauth.expiresAt = Date.now() + tokens.expires_in * 1000;
+          if (tokens.refresh_token) creds.claudeAiOauth.refreshToken = tokens.refresh_token;
+          try { fs.writeFileSync(credsPath, JSON.stringify(creds, null, 2)); } catch {}
+          resp = await fetchUsage(newToken);
+        }
+      } catch {}
+    }
+
     if (!resp.ok) return res.json({ available: false, reason: `api_${resp.status}` });
 
     const data = await resp.json();
@@ -249,10 +275,11 @@ app.get('/api/crons', async (_req, res, next) => {
 app.post('/api/crons', async (req, res, next) => {
   try {
     const { skill, schedule, directory } = req.body;
-    if (!skill || !schedule || !directory) {
-      return res.status(400).json({ error: 'skill, schedule, and directory are required' });
+    if (!skill || !schedule) {
+      return res.status(400).json({ error: 'skill and schedule are required' });
     }
-    const job = await cron.create({ skill, schedule, directory });
+    const dir = directory || process.env.HOME || '/root';
+    const job = await cron.create({ skill, schedule, directory: dir });
     res.status(201).json(job);
   } catch (err) { next(err); }
 });
