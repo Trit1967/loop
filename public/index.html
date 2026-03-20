@@ -905,7 +905,7 @@
       document.querySelectorAll('.sk').forEach(el=>{
         el.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',el.dataset.skill);el.classList.add('dragging')});
         el.addEventListener('dragend',()=>el.classList.remove('dragging'));
-        el.addEventListener('dblclick',()=>{if(activeId)fire(activeId,el.dataset.skill)});
+        el.addEventListener('dblclick',()=>{if(activeId)fire(activeId,el.dataset.skill);else toast('No active session — create one first')});
         el.addEventListener('click',()=>{$('rp-skn').textContent=el.dataset.skill;const b=$('rp-skt');b.textContent=el.dataset.type;b.className='skd-type '+el.dataset.type;$('rp-skdesc').textContent=el.dataset.desc;$('rp-skd').classList.add('vis')});
       });
     }
