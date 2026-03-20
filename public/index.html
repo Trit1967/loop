@@ -1346,8 +1346,9 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
         } else if(sess.size>0){
           switchTo(sess.keys().next().value);
         }
-        if(sess.size>0)$('term-empty').style.display='none';
       }catch(e){}
+      // Always resolve: show terminal or empty state
+      if(sess.size===0)$('term-empty').style.display='flex';
     }
     function demo(name){const{term}=mkTerm(name,name);setTimeout(()=>{const s=sess.get(name);if(s)s.fit.fit();[`\x1b[2m$ claude --project ~/projects/${name}\x1b[0m`,'',`\x1b[36m\u25c6\x1b[0m \x1b[1mClaude Code\x1b[0m  \x1b[2mOpus 4.6 \xb7 /projects/${name}\x1b[0m`,'',`  \x1b[2mReady. Type a message or drag a skill from the sidebar.\x1b[0m`,'','\x1b[36m>\x1b[0m \x1b[5m\u2588\x1b[0m'].forEach((l,i)=>setTimeout(()=>term.writeln(l),i*30))},150)}
 
