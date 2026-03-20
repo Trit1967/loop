@@ -1003,8 +1003,9 @@
       grid.className='pane-grid layout-'+wf.layout;
       // Remove panes beyond current layout count (don't nuke all — avoids WebGL context loss)
       Array.from(grid.querySelectorAll('.pane')).forEach(p=>{if(parseInt(p.dataset.pane)>=count)p.remove()});
-      // Hide all terminals — assigned ones get unhidden below
-      sess.forEach(s=>s.el.classList.add('hidden'));
+      // Only hide sessions NOT assigned to any pane — never hide already-placed terminals (causes WebGL context loss)
+      const assignedIds=new Set(wf.sessions.map(a=>a.id));
+      sess.forEach((s,id)=>{if(!assignedIds.has(id))s.el.classList.add('hidden');});
       for(let i=0;i<count;i++){
         let pane=grid.querySelector('.pane[data-pane="'+i+'"]');
         if(!pane){pane=mkPane(i);grid.appendChild(pane);}
