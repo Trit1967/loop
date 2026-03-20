@@ -1132,7 +1132,7 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
 
     /* ═ Voice ═ */
     const Voice={
-      rec:null,listening:false,_rt:null,_lastFinal:'',
+      rec:null,listening:false,_rt:null,_lastFinal:'',_recentFinals:new Map(),
       init(){
         const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
         if(!SR){$('btn-mic').title='Voice not supported in this browser';return}
@@ -1142,10 +1142,12 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
           for(let i=e.resultIndex;i<e.results.length;i++){
             if(e.results[i].isFinal){
               const text=e.results[i][0].transcript.trim();
-              if(text&&activeId){
-                if(text!==this._lastFinal){
+              if(text){
+                const norm=text.toLowerCase().replace(/[.,!?'"]/g,'').trim();
+                const now=Date.now();
+                if(now-(this._recentFinals.get(norm)||0)>2500){
+                  this._recentFinals.set(norm,now);
                   updateCmdBar(text,null);
-                  this._lastFinal=text;
                 }
               }
             } else {
@@ -1168,7 +1170,7 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
         this.listening?this.stop():this.start();
       },
       start(){
-        this.listening=true;this._lastFinal='';
+        this.listening=true;this._lastFinal='';this._recentFinals.clear();
         $('btn-mic').classList.add('listening');
         showCmdBar();
         try{this.rec.start()}catch(e){this.stop()}
