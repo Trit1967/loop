@@ -750,6 +750,7 @@
     /* ═ Workflow State ═ */
     const workflows=new Map();let activeWfId=null,editingWfId=null;
     const tabColors=new Map(); // sessionId → color key
+    let _restoredActiveId=null,_restoredActiveWfId=null;
 
     /* ═ Server-side User State ═ */
     let _saveTimer=null;
@@ -771,7 +772,7 @@
         localStorage.setItem('loop-rp-collapsed',panel.rpC?'1':'0');
         const wfs=[];workflows.forEach(wf=>wfs.push(wf));
         const tcs={};tabColors.forEach((v,k)=>tcs[k]=v);
-        try{await api('/api/user-state',{method:'POST',body:{workflows:wfs,panel,tabColors:tcs}})}
+        try{await api('/api/user-state',{method:'POST',body:{workflows:wfs,panel,tabColors:tcs,activeId,activeWfId}})}
         catch(e){console.warn('state save failed:',e)}
       },800);
     }
@@ -781,6 +782,8 @@
         const state=await api('/api/user-state');
         if(state.workflows)state.workflows.forEach(wf=>workflows.set(wf.id,wf));
         if(state.tabColors)Object.entries(state.tabColors).forEach(([k,v])=>tabColors.set(k,v));
+        if(state.activeId)_restoredActiveId=state.activeId;
+        if(state.activeWfId)_restoredActiveWfId=state.activeWfId;
         if(state.panel){
           const app=document.querySelector('.app');
           if(state.panel.sbW){app.style.setProperty('--sb-w',state.panel.sbW);localStorage.setItem('loop-sb-w',state.panel.sbW)}
@@ -868,6 +871,7 @@
     function switchTo(id){
       activeId=id;
       localStorage.setItem('loopActiveSession',id);
+      saveUserState();
       if(!activeWfId){
         sess.forEach((s,sid)=>{s.el.classList.toggle('hidden',sid!==id);if(sid===id)setTimeout(()=>s.fit.fit(),10)});
         renderPanes();
@@ -967,6 +971,7 @@
 
     function activateWf(id){
       const wf=workflows.get(id);if(!wf)return;activeWfId=id;
+      saveUserState();
       renderWfTabs();hideStandaloneTabs();
       document.querySelectorAll('.layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.layout===wf.layout));
       sess.forEach(s=>s.el.classList.add('hidden'));$('term-empty').style.display='none';
@@ -1240,9 +1245,15 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
       try{
         const l=await api('/api/sessions');
         l.forEach(s=>mkTerm(s.id||s.name,s.name,s.directory));
-        // Restore last active session — skip if a workflow already set activeId
-        const last=localStorage.getItem('loopActiveSession');
-        if(last&&sess.has(last))switchTo(last);
+        // Restore active workflow — it will show sessions in the correct panes
+        if(_restoredActiveWfId&&workflows.has(_restoredActiveWfId)){
+          activateWf(_restoredActiveWfId);
+        } else {
+          // Restore active session tab (server-side preferred, localStorage fallback)
+          const last=_restoredActiveId||localStorage.getItem('loopActiveSession');
+          if(last&&sess.has(last))switchTo(last);
+          else if(sess.size>0)switchTo(sess.keys().next().value);
+        }
       }catch(e){}
     }
     function demo(name){const{term}=mkTerm(name,name);setTimeout(()=>{const s=sess.get(name);if(s)s.fit.fit();[`\x1b[2m$ claude --project ~/projects/${name}\x1b[0m`,'',`\x1b[36m\u25c6\x1b[0m \x1b[1mClaude Code\x1b[0m  \x1b[2mOpus 4.6 \xb7 /projects/${name}\x1b[0m`,'',`  \x1b[2mReady. Type a message or drag a skill from the sidebar.\x1b[0m`,'','\x1b[36m>\x1b[0m \x1b[5m\u2588\x1b[0m'].forEach((l,i)=>setTimeout(()=>term.writeln(l),i*30))},150)}
