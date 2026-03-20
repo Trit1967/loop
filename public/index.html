@@ -12,45 +12,69 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --void: #151820;
-      --base: #1b1e28;
-      --sf: #222632;
-      --sf2: #2a2e3a;
-      --sf3: #343844;
-      --raised: #40444f;
-      --w1: #5ec4ce;
-      --w2: #d4688a;
-      --w3: #6cc88a;
-      --w4: #d4ac4e;
-      --w1sub: rgba(94,196,206,0.12);
-      --w2sub: rgba(212,104,138,0.12);
-      --w3sub: rgba(108,200,138,0.12);
-      --w4sub: rgba(212,172,78,0.12);
-      --tx: #f0eee8;
-      --tx2: #b8b5ac;
-      --tx3: #7e7c74;
-      --line: rgba(255,255,255,0.09);
-      --line2: rgba(255,255,255,0.15);
-      --r: 6px;
-      --rl: 10px;
-      --t: 120ms ease-out;
+      /* ── Void & Surfaces (cold steel / blue-black) ── */
+      --void: #050508;
+      --base: #0a0c10;
+      --sf:   #0e1117;
+      --sf2:  #141820;
+      --sf3:  #1a1f2a;
+      --raised: #242a36;
+      /* ── Wire Colors ── */
+      --w1: #ff6b1a;    /* Phosphor orange */
+      --w2: #00e64d;    /* Phosphor green  */
+      --w3: #9b6bff;    /* Mainframe purple */
+      --w4: #b8c0cc;    /* Chrome silver    */
+      /* ── Wire Substrates ── */
+      --w1sub: rgba(255,107,26,0.08);
+      --w2sub: rgba(0,230,77,0.08);
+      --w3sub: rgba(155,107,255,0.08);
+      --w4sub: rgba(184,192,204,0.08);
+      /* ── Wire Glow ── */
+      --w1glow: rgba(255,107,26,0.35);
+      --w2glow: rgba(0,230,77,0.35);
+      --w3glow: rgba(155,107,255,0.35);
+      --w4glow: rgba(184,192,204,0.25);
+      /* ── Text ── */
+      --tx:  #d0cfc8;
+      --tx2: #808690;
+      --tx3: #4a5060;
+      /* ── Lines ── */
+      --line:  rgba(184,192,204,0.06);
+      --line2: rgba(184,192,204,0.10);
+      /* ── Tokens ── */
+      --r:  4px;
+      --rl: 8px;
+      --t:  100ms ease-out;
       --mono: 'JetBrains Mono', monospace;
       --sans: 'Space Grotesk', system-ui, sans-serif;
     }
 
     html, body { height: 100%; overflow: hidden; }
     body { font-family: var(--sans); background: var(--void); color: var(--tx); -webkit-font-smoothing: antialiased; }
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--sf3); border-radius: 3px; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--void); }
+    ::-webkit-scrollbar-thumb { background: var(--sf3); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--raised); }
+    ::selection { background: rgba(255,107,26,0.18); color: #fff; }
 
     #cv { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
+    /* ═══ Glow Utilities ═══ */
+    .glow-w1 { text-shadow: 0 0 6px var(--w1), 0 0 18px var(--w1glow), 0 0 40px rgba(255,107,26,0.12); }
+    .glow-w2 { text-shadow: 0 0 6px var(--w2), 0 0 18px var(--w2glow), 0 0 40px rgba(0,230,77,0.12); }
+    .glow-w3 { text-shadow: 0 0 6px var(--w3), 0 0 18px var(--w3glow), 0 0 40px rgba(155,107,255,0.12); }
+    .glow-w4 { text-shadow: 0 0 6px var(--w4), 0 0 14px var(--w4glow); }
+    .box-glow-w1 { box-shadow: 0 0 8px var(--w1glow), inset 0 0 4px rgba(255,107,26,0.05); }
+    .box-glow-w2 { box-shadow: 0 0 8px var(--w2glow), inset 0 0 4px rgba(0,230,77,0.05); }
+    .box-glow-w3 { box-shadow: 0 0 8px var(--w3glow), inset 0 0 4px rgba(155,107,255,0.05); }
+    .box-glow-w4 { box-shadow: 0 0 6px var(--w4glow); }
+
     /* ═ Login ═ */
     .login { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; }
-    .login-card { background: var(--sf); border: 1px solid var(--line2); border-radius: var(--rl); padding: 48px 56px; text-align: center; z-index: 1; }
+    .login-card { background: var(--sf); border: 1px solid var(--line2); border-radius: var(--rl); padding: 48px 56px; text-align: center; z-index: 1; box-shadow: 0 0 40px rgba(0,0,0,0.5), 0 0 80px rgba(255,107,26,0.03); }
     .login h1 { font-family: var(--sans); font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: var(--tx); margin-bottom: 4px; }
-    .login h1 span { color: var(--w1); }
+    .login h1 span { color: var(--w1); text-shadow: 0 0 10px var(--w1glow); }
     .login p { font-size: 14px; color: var(--tx2); margin-bottom: 36px; }
     .login-btn {
       display: inline-flex; align-items: center; gap: 10px;
@@ -70,13 +94,13 @@
       border-bottom: 1px solid var(--line); background: var(--base); z-index: 10;
     }
     .hd-brand { font-size: 16px; font-weight: 700; color: var(--tx); letter-spacing: -0.3px; }
-    .hd-brand span { color: var(--w1); font-weight: 500; }
+    .hd-brand span { color: var(--w1); font-weight: 500; text-shadow: 0 0 8px var(--w1glow); }
     .hd-sep { width: 1px; height: 20px; background: var(--line2); }
-    .hd-live { width: 7px; height: 7px; border-radius: 50%; background: var(--w3); animation: pulse 2.5s ease-in-out infinite; }
+    .hd-live { width: 7px; height: 7px; border-radius: 50%; background: var(--w2); box-shadow: 0 0 4px var(--w2), 0 0 10px var(--w2glow); animation: pulse 2.5s ease-in-out infinite; }
     .hd-stat { font-size: 13px; color: var(--tx2); display: flex; align-items: center; gap: 6px; }
     .hd-fill { flex: 1; }
     .hd-wires { display: flex; gap: 3px; align-items: center; }
-    .hd-wire { width: 18px; height: 2px; border-radius: 1px; opacity: 0.45; }
+    .hd-wire { width: 18px; height: 2px; border-radius: 1px; opacity: 0.7; }
     .hd-user { display: flex; align-items: center; gap: 10px; }
     .hd-avatar { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--sf3); }
     .hd-name { font-size: 13px; color: var(--tx2); font-weight: 500; }
@@ -85,6 +109,19 @@
       font-family: var(--sans); padding: 4px 8px; border-radius: var(--r); transition: all var(--t);
     }
     .hd-out:hover { color: var(--tx); background: var(--sf2); }
+
+    /* ═ Mic Button ═ */
+    .hd-mic {
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--sf2); border: 1px solid var(--line2);
+      cursor: pointer; transition: all var(--t); flex-shrink: 0;
+    }
+    .hd-mic:hover { border-color: var(--w1); background: var(--sf3); }
+    .hd-mic svg { width: 14px; height: 14px; color: var(--tx2); transition: color var(--t); }
+    .hd-mic.listening { border-color: var(--w1); background: var(--w1sub); box-shadow: 0 0 12px var(--w1glow), 0 0 24px rgba(255,107,26,0.15); animation: mic-glow 1.8s ease-in-out infinite; }
+    .hd-mic.listening svg { color: var(--w1); }
+    @keyframes mic-glow { 0%,100%{box-shadow:0 0 12px var(--w1glow),0 0 24px rgba(255,107,26,0.15)}50%{box-shadow:0 0 18px rgba(255,107,26,0.5),0 0 36px rgba(255,107,26,0.25)} }
 
     /* ═ Sidebar ═ */
     .sb {
@@ -97,9 +134,10 @@
       cursor: pointer; user-select: none; transition: color var(--t);
     }
     .sb-head:hover { color: var(--tx2); }
-    .sb-head.w1 { color: var(--w1); }
-    .sb-head.w3 { color: var(--w3); }
-    .sb-head.w4 { color: var(--w4); }
+    .sb-head.w1 { color: var(--w1); text-shadow: 0 0 6px var(--w1glow); }
+    .sb-head.w2 { color: var(--w2); text-shadow: 0 0 6px var(--w2glow); }
+    .sb-head.w3 { color: var(--w3); text-shadow: 0 0 6px var(--w3glow); }
+    .sb-head.w4 { color: var(--w4); text-shadow: 0 0 4px var(--w4glow); }
     .sb-head .chev { font-size: 11px; transition: transform var(--t); }
     .sb-head.shut .chev { transform: rotate(-90deg); }
     .sb-grp { padding: 0 8px; }
@@ -108,10 +146,10 @@
       margin: 0 12px 8px; width: calc(100% - 24px);
       background: var(--sf); border: 1px solid var(--line2); border-radius: var(--r);
       padding: 8px 12px; font-family: var(--sans); font-size: 13px;
-      color: var(--tx); outline: none; transition: border-color var(--t);
+      color: var(--tx); outline: none; transition: all var(--t);
     }
     .sb-search::placeholder { color: var(--tx3); }
-    .sb-search:focus { border-color: var(--w1); }
+    .sb-search:focus { border-color: var(--w1); box-shadow: 0 0 6px rgba(255,107,26,0.15); }
 
     .sk {
       display: flex; align-items: center; gap: 10px;
@@ -121,23 +159,26 @@
     .sk:hover { background: var(--sf2); }
     .sk.dragging { opacity: 0.3; }
     .sk-wire { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; }
-    .sk-wire.w1 { background: var(--w1); }
-    .sk-wire.w3 { background: var(--w3); }
+    .sk-wire.w1 { background: var(--w1); box-shadow: 0 0 3px var(--w1glow); }
+    .sk-wire.w2 { background: var(--w2); width: 5px; box-shadow: 0 0 3px var(--w2glow); }
+    .sk-wire.w3 { background: var(--w3); box-shadow: 0 0 3px var(--w3glow); }
+    .sk-wire.w4 { background: var(--w4); }
     .sk-name { font-size: 13px; font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tx2); }
     .sk:hover .sk-name { color: var(--tx); }
     .sk-tag { font-size: 11px; color: var(--tx3); opacity: 0; transition: opacity var(--t); flex-shrink: 0; }
     .sk:hover .sk-tag { opacity: 1; }
+    .sk-loop-icon { font-size: 10px; color: var(--w2); opacity: 0.7; flex-shrink: 0; margin-right: -4px; }
 
-    .cron { padding: 8px 10px; border-radius: var(--r); border-left: 3px solid var(--w4); background: var(--sf); margin: 0 8px 4px; }
+    .cron { padding: 8px 10px; border-radius: var(--r); border-left: 3px solid var(--w4); background: var(--sf); margin: 0 8px 4px; box-shadow: -2px 0 6px rgba(184,192,204,0.06); }
     .cron-top { display: flex; align-items: center; justify-content: space-between; }
     .cron-name { font-size: 13px; font-weight: 500; color: var(--tx2); }
     .cron-sched { font-family: var(--mono); font-size: 12px; color: var(--w4); margin-top: 2px; }
     .cron-skill { font-size: 12px; color: var(--tx3); }
     .cron-x { background: none; border: none; color: var(--tx3); cursor: pointer; font-size: 14px; padding: 2px 4px; border-radius: 3px; transition: all var(--t); }
-    .cron-x:hover { color: var(--w2); background: var(--w2sub); }
+    .cron-x:hover { color: #ff4040; background: rgba(255,64,64,0.1); }
 
     .sb-drop { margin: 8px 12px; padding: 14px; border: 1px dashed var(--line2); border-radius: var(--r); text-align: center; font-size: 12px; color: var(--tx3); transition: all var(--t); }
-    .sb-drop.over { border-color: var(--w4); background: var(--w4sub); color: var(--w4); }
+    .sb-drop.over { border-color: var(--w1); background: var(--w1sub); color: var(--w1); box-shadow: 0 0 8px var(--w1glow); }
     .sb-btn {
       display: flex; align-items: center; gap: 6px; width: calc(100% - 24px);
       margin: 4px 12px; padding: 7px 10px; background: var(--sf); border: 1px solid var(--line);
@@ -154,6 +195,50 @@
       background: var(--base); display: flex; flex-direction: column; overflow: hidden; z-index: 2;
     }
 
+    /* ═ Workflow Tabs ═ */
+    .wf-bar {
+      display: flex; align-items: stretch; height: 36px;
+      border-bottom: 1px solid var(--line); background: var(--void); flex-shrink: 0; overflow-x: auto;
+    }
+    .wf-bar::-webkit-scrollbar { height: 0; }
+    .wf-tab {
+      display: flex; align-items: center; gap: 6px;
+      padding: 0 16px; font-family: var(--sans); font-size: 12px; font-weight: 600;
+      color: var(--tx3); cursor: pointer; transition: all var(--t); white-space: nowrap;
+      position: relative; letter-spacing: 0.3px; text-transform: uppercase; border-right: 1px solid var(--line);
+    }
+    .wf-tab:hover { color: var(--tx2); background: var(--sf); }
+    .wf-tab.active { color: var(--w1); background: var(--base); }
+    .wf-tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--w1); box-shadow: 0 0 6px var(--w1glow); }
+    .wf-tab-x {
+      background: none; border: none; color: var(--tx3); cursor: pointer;
+      font-size: 12px; padding: 1px 3px; border-radius: 3px; line-height: 1;
+      opacity: 0; transition: all var(--t); margin-left: 2px;
+    }
+    .wf-tab:hover .wf-tab-x { opacity: 0.6; }
+    .wf-tab-x:hover { opacity: 1; color: var(--w1); }
+    .wf-add {
+      padding: 0 14px; background: none; border: none; border-right: 1px solid var(--line);
+      color: var(--tx3); font-family: var(--sans); font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all var(--t); flex-shrink: 0;
+    }
+    .wf-add:hover { color: var(--w1); background: var(--sf); }
+
+    /* ═ Layout Selector ═ */
+    .layout-bar {
+      display: flex; align-items: center; gap: 2px; margin-left: auto; padding: 0 8px; flex-shrink: 0;
+    }
+    .layout-btn {
+      background: none; border: 1px solid transparent; border-radius: 4px;
+      padding: 4px 6px; cursor: pointer; transition: all var(--t); display: flex; align-items: center;
+    }
+    .layout-btn:hover { background: var(--sf2); border-color: var(--line); }
+    .layout-btn.active { border-color: var(--w1); background: var(--w1sub); }
+    .layout-btn svg { width: 16px; height: 16px; }
+    .layout-btn rect, .layout-btn line { stroke: var(--tx3); fill: none; stroke-width: 1.5; }
+    .layout-btn.active rect, .layout-btn.active line { stroke: var(--w1); }
+
+    /* ═ Session Tabs (standalone mode) ═ */
     .tabs {
       display: flex; align-items: stretch; height: 42px;
       border-bottom: 1px solid var(--line); background: var(--sf); flex-shrink: 0; overflow-x: auto;
@@ -166,48 +251,119 @@
     }
     .tab:hover { color: var(--tx2); background: var(--sf2); }
     .tab.active { color: var(--tx); background: var(--base); }
-    .tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--w1); }
+    .tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--w1); box-shadow: 0 0 6px var(--w1glow), 0 1px 12px rgba(255,107,26,0.15); }
     .tab.drop-target { background: var(--w1sub); color: var(--w1); }
     .tab-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-    .tab-dot.live { background: var(--w3); }
-    .tab-dot.demo { background: var(--w4); }
+    .tab-dot.live { background: var(--w2); box-shadow: 0 0 4px var(--w2), 0 0 8px var(--w2glow); }
+    .tab-dot.demo { background: var(--w4); box-shadow: 0 0 3px var(--w4glow); }
     .tab-close { background: none; border: none; color: var(--tx3); cursor: pointer; font-size: 14px; padding: 2px 4px; border-radius: 3px; line-height: 1; opacity: 0; transition: all var(--t); }
     .tab:hover .tab-close { opacity: 0.6; }
-    .tab-close:hover { opacity: 1; color: var(--w2); }
+    .tab-close:hover { opacity: 1; color: var(--w1); }
     .tab-add {
       padding: 0 16px; background: var(--w1sub); border: none; border-left: 1px solid var(--line);
       color: var(--w1); font-family: var(--sans); font-size: 13px; font-weight: 600;
       cursor: pointer; transition: all var(--t); flex-shrink: 0; display: flex; align-items: center; gap: 6px;
     }
-    .tab-add:hover { background: var(--w1); color: var(--void); }
+    .tab-add:hover { background: var(--w1); color: var(--void); box-shadow: 0 0 8px var(--w1glow); }
 
-    .tw { flex: 1; position: relative; overflow: hidden; }
-    .ti { position: absolute; inset: 0; padding: 4px 6px; }
-    .ti.hidden { display: none; }
+    /* ═ Split Pane Layouts ═ */
+    .pane-grid {
+      flex: 1; position: relative; overflow: hidden;
+      display: grid; gap: 1px; background: var(--line);
+    }
+    .pane-grid.layout-single { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+    .pane-grid.layout-side-by-side { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+    .pane-grid.layout-stacked { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+    .pane-grid.layout-triple { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .pane-grid.layout-quad { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
 
-    /* Empty state — teaches the interface */
+    .pane {
+      position: relative; overflow: hidden; background: var(--base);
+      display: flex; flex-direction: column;
+    }
+    .pane-triple-0 { grid-row: 1 / 3; }
+    .pane-hd {
+      display: flex; align-items: center; height: 28px; padding: 0 10px;
+      background: var(--sf); border-bottom: 1px solid var(--line); flex-shrink: 0; gap: 6px;
+    }
+    .pane-label {
+      font-family: var(--sans); font-size: 11px; font-weight: 600;
+      color: var(--tx3); letter-spacing: 0.3px; text-transform: uppercase; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .pane-label .alias { color: var(--w1); }
+    .pane-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .pane-dot.live { background: var(--w2); box-shadow: 0 0 4px var(--w2), 0 0 8px var(--w2glow); }
+    .pane-dot.empty { background: var(--tx3); opacity: 0.4; }
+    .pane-assign {
+      background: none; border: none; color: var(--tx3); font-family: var(--sans);
+      font-size: 11px; cursor: pointer; padding: 2px 6px; border-radius: 3px;
+      transition: all var(--t);
+    }
+    .pane-assign:hover { color: var(--w1); background: var(--w1sub); }
+    .pane-body { flex: 1; position: relative; overflow: hidden; }
+    .pane-body .ti { position: absolute; inset: 0; padding: 4px 6px; }
+    .pane-body .ti.hidden { display: none; }
+    .pane-empty {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px;
+    }
+    .pane-empty-txt { font-size: 12px; color: var(--tx3); }
+    .pane-empty-btn {
+      font-family: var(--sans); font-size: 12px; font-weight: 600;
+      color: var(--w1); background: var(--w1sub); border: 1px solid transparent;
+      border-radius: var(--r); padding: 5px 14px; cursor: pointer; transition: all var(--t);
+    }
+    .pane-empty-btn:hover { border-color: var(--w1); }
+
+    /* ═══ CRT Scanline Overlay ═══ */
+    .pane-body::after {
+      content: '';
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 10;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      mix-blend-mode: multiply;
+    }
+    .pane-body::before {
+      content: '';
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 11;
+      background: radial-gradient(
+        ellipse at center,
+        transparent 60%,
+        rgba(0,0,0,0.15) 100%
+      );
+    }
+
+    /* Empty state */
     .term-empty {
       position: absolute; inset: 0; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 16px;
+      align-items: center; justify-content: center; gap: 16px; z-index: 3;
     }
-    .te-title { font-size: 20px; font-weight: 600; color: var(--tx2); letter-spacing: -0.3px; }
+    .te-title { font-size: 20px; font-weight: 600; color: var(--tx2); letter-spacing: -0.3px; text-shadow: 0 0 20px rgba(184,192,204,0.08); }
     .te-sub { font-size: 14px; color: var(--tx3); max-width: 400px; text-align: center; line-height: 1.6; }
     .te-shortcuts { display: flex; gap: 20px; margin-top: 8px; }
     .te-shortcut { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--tx3); }
     .te-kbd {
       font-family: var(--mono); font-size: 11px; font-weight: 600;
       background: var(--sf2); border: 1px solid var(--line2); border-radius: 4px;
-      padding: 2px 8px; color: var(--tx2);
+      padding: 2px 8px; color: var(--w1);
     }
 
     /* ═ Right Panel ═ */
     .rp { border-left: 1px solid var(--line); background: var(--base); overflow-y: auto; display: flex; flex-direction: column; z-index: 5; }
     .rp-sec { padding: 14px 16px; border-bottom: 1px solid var(--line); }
     .rp-title { font-size: 12px; font-weight: 600; color: var(--tx3); margin-bottom: 10px; }
-    .rp-title.w1 { color: var(--w1); }
-    .rp-title.w2 { color: var(--w2); }
-    .rp-title.w3 { color: var(--w3); }
-    .rp-title.w4 { color: var(--w4); }
+    .rp-title.w1 { color: var(--w1); text-shadow: 0 0 6px var(--w1glow); }
+    .rp-title.w2 { color: var(--w2); text-shadow: 0 0 6px var(--w2glow); }
+    .rp-title.w3 { color: var(--w3); text-shadow: 0 0 6px var(--w3glow); }
+    .rp-title.w4 { color: var(--w4); text-shadow: 0 0 4px var(--w4glow); }
 
     .si { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
     .si-k { color: var(--tx3); }
@@ -220,16 +376,9 @@
     .skd-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
     .skd-type { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
     .skd-type.skill { background: var(--w1sub); color: var(--w1); }
+    .skd-type.loop-skill { background: var(--w2sub); color: var(--w2); }
     .skd-type.command { background: var(--w3sub); color: var(--w3); }
     .skd-desc { font-size: 13px; color: var(--tx2); line-height: 1.55; }
-
-    .qa { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-    .qa button {
-      padding: 8px 8px; background: var(--sf); border: 1px solid var(--line);
-      border-radius: var(--r); font-family: var(--sans); font-size: 13px; font-weight: 500;
-      color: var(--tx2); cursor: pointer; transition: all var(--t); text-align: center;
-    }
-    .qa button:hover { border-color: var(--w2); color: var(--w2); background: var(--w2sub); }
 
     .af { font-size: 13px; }
     .af-i { display: flex; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--line); }
@@ -243,10 +392,10 @@
     .sys-lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--tx3); margin-bottom: 3px; }
     .sys-lbl span:last-child { font-family: var(--mono); color: var(--tx2); }
     .sys-bar { height: 4px; background: var(--sf3); border-radius: 2px; overflow: hidden; }
-    .sys-fill { height: 100%; border-radius: 2px; transition: width 600ms ease-out; }
+    .sys-fill { height: 100%; border-radius: 2px; transition: width 600ms ease-out; box-shadow: 0 0 4px currentColor; }
 
     /* ═ Modal ═ */
-    .mo { position: fixed; inset: 0; background: rgba(17,19,24,0.75); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .mo { position: fixed; inset: 0; background: rgba(2,3,5,0.82); z-index: 200; display: none; align-items: center; justify-content: center; }
     .mo.open { display: flex; }
     .mo-box { background: var(--sf); border: 1px solid var(--line2); border-radius: var(--rl); padding: 28px; width: 420px; max-width: 92vw; }
     .mo-box h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.3px; }
@@ -255,9 +404,9 @@
     .ff input, .ff select {
       width: 100%; background: var(--base); border: 1px solid var(--line2); border-radius: var(--r);
       padding: 9px 12px; font-family: var(--sans); font-size: 13px; color: var(--tx); outline: none;
-      transition: border-color var(--t);
+      transition: all var(--t);
     }
-    .ff input:focus, .ff select:focus { border-color: var(--w1); }
+    .ff input:focus, .ff select:focus { border-color: var(--w1); box-shadow: 0 0 6px rgba(255,107,26,0.1); }
     .ff input::placeholder { color: var(--tx3); }
     .mo-act { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
     .btn {
@@ -266,18 +415,55 @@
       background: var(--sf2); color: var(--tx2); cursor: pointer; transition: all var(--t);
     }
     .btn:hover { color: var(--tx); background: var(--sf3); }
-    .btn-go { background: var(--w1); border-color: var(--w1); color: var(--void); }
-    .btn-go:hover { opacity: 0.88; }
+    .btn-go { background: var(--w1); border-color: var(--w1); color: var(--void); box-shadow: 0 0 8px var(--w1glow); }
+    .btn-go:hover { opacity: 0.9; box-shadow: 0 0 12px var(--w1glow), 0 0 24px rgba(255,107,26,0.15); }
 
     /* ═ Toast ═ */
     .toast {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(50px);
       background: var(--sf3); border: 1px solid var(--line2); border-radius: var(--r);
       padding: 8px 20px; font-size: 13px; z-index: 300; opacity: 0; transition: all 180ms ease-out; pointer-events: none;
+      box-shadow: 0 0 12px rgba(0,0,0,0.5);
     }
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+    /* ═ CLAUDE.md Briefing Overlay ═ */
+    .briefing {
+      position: absolute; inset: 0; z-index: 20;
+      background: rgba(5,5,8,0.92); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 32px;
+      animation: brief-in 200ms ease-out;
+    }
+    @keyframes brief-in { from{opacity:0} to{opacity:1} }
+    .briefing-box {
+      background: var(--sf); border: 1px solid var(--line2); border-radius: var(--rl);
+      max-width: 640px; width: 100%; max-height: 70vh; display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .briefing-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; border-bottom: 1px solid var(--line);
+    }
+    .briefing-title { font-size: 14px; font-weight: 600; color: var(--w1); font-family: var(--mono); text-shadow: 0 0 6px var(--w1glow); }
+    .briefing-timer { font-size: 11px; color: var(--tx3); font-family: var(--mono); }
+    .briefing-body {
+      flex: 1; overflow-y: auto; padding: 20px;
+      font-family: var(--mono); font-size: 13px; line-height: 1.65;
+      color: var(--tx2); white-space: pre-wrap; word-break: break-word;
+    }
+    .briefing-foot { padding: 12px 20px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; }
+    .briefing-btn {
+      font-family: var(--sans); font-size: 13px; font-weight: 600;
+      padding: 7px 20px; background: var(--w1); border: none; border-radius: var(--r);
+      color: var(--void); cursor: pointer; transition: all var(--t);
+      box-shadow: 0 0 8px var(--w1glow);
+    }
+    .briefing-btn:hover { opacity: 0.88; box-shadow: 0 0 12px var(--w1glow), 0 0 24px rgba(255,107,26,0.15); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--w2), 0 0 10px var(--w2glow); }
+      50% { opacity: 0.3; box-shadow: 0 0 2px var(--w2); }
+    }
   </style>
 </head>
 <body>
@@ -299,6 +485,9 @@
       <div class="hd-brand"><span>Loop</span> Terminal</div>
       <div class="hd-sep"></div>
       <div class="hd-stat"><div class="hd-live"></div> Online</div>
+      <button class="hd-mic" id="btn-mic" title="Voice input (Chrome/Edge)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="1" width="6" height="11" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
       <div class="hd-sep"></div>
       <div class="hd-wires">
         <div class="hd-wire" style="background:var(--w1)"></div>
@@ -314,6 +503,8 @@
       <input class="sb-search" id="sk-search" type="search" placeholder="Filter skills..." spellcheck="false" />
       <div class="sb-head w1" data-toggle="sk-skills">Skills <span class="chev">&#9662;</span></div>
       <div class="sb-grp" id="sk-skills"></div>
+      <div class="sb-head w2" data-toggle="sk-loop">Loop Skills <span class="chev">&#9662;</span></div>
+      <div class="sb-grp" id="sk-loop"></div>
       <div class="sb-head w3" data-toggle="sk-cmds">Commands <span class="chev">&#9662;</span></div>
       <div class="sb-grp" id="sk-cmds"></div>
       <div class="sb-head w4" data-toggle="sk-crons">Scheduled <span class="chev">&#9662;</span></div>
@@ -325,19 +516,46 @@
 
     <main class="ws">
       <div class="term-panel">
-        <div class="tabs">
+        <!-- Workflow tab bar -->
+        <div class="wf-bar">
+          <div id="wf-tabs" style="display:flex;"></div>
+          <button class="wf-add" id="btn-wf" title="New workflow">+ Workflow</button>
+          <div class="layout-bar" id="layout-bar">
+            <button class="layout-btn active" data-layout="single" title="Single pane">
+              <svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="1.5"/></svg>
+            </button>
+            <button class="layout-btn" data-layout="side-by-side" title="Side by side">
+              <svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="1.5"/><line x1="8" y1="1" x2="8" y2="15"/></svg>
+            </button>
+            <button class="layout-btn" data-layout="stacked" title="Stacked">
+              <svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="1.5"/><line x1="1" y1="8" x2="15" y2="8"/></svg>
+            </button>
+            <button class="layout-btn" data-layout="triple" title="Triple">
+              <svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="1.5"/><line x1="8" y1="1" x2="8" y2="15"/><line x1="8" y1="8" x2="15" y2="8"/></svg>
+            </button>
+            <button class="layout-btn" data-layout="quad" title="Quad">
+              <svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="1.5"/><line x1="8" y1="1" x2="8" y2="15"/><line x1="1" y1="8" x2="15" y2="8"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Session tabs (standalone mode) -->
+        <div class="tabs" id="standalone-tabs">
           <div id="tab-list" style="display:flex;"></div>
           <button class="tab-add" id="btn-tab" title="New session">+ New</button>
         </div>
-        <div class="tw" id="tw">
-          <div class="term-empty" id="term-empty">
-            <div class="te-title">Ready to go</div>
-            <div class="te-sub">Create a session to start Claude Code on a project. Clone a GitHub repo or pick one that's already on the server.</div>
-            <div class="te-shortcuts">
-              <div class="te-shortcut"><span class="te-kbd">Alt N</span> New session</div>
-              <div class="te-shortcut"><span class="te-kbd">Alt W</span> Close tab</div>
-              <div class="te-shortcut"><span class="te-kbd">Alt 1-9</span> Switch tab</div>
-            </div>
+
+        <!-- Pane grid -->
+        <div class="pane-grid layout-single" id="pane-grid"></div>
+
+        <!-- Empty state -->
+        <div class="term-empty" id="term-empty">
+          <div class="te-title">Ready to go</div>
+          <div class="te-sub">Create a session to start Claude Code on a project, or create a workflow to group sessions across repos.</div>
+          <div class="te-shortcuts">
+            <div class="te-shortcut"><span class="te-kbd">Alt N</span> New session</div>
+            <div class="te-shortcut"><span class="te-kbd">Alt W</span> Close tab</div>
+            <div class="te-shortcut"><span class="te-kbd">Alt 1-9</span> Switch tab</div>
           </div>
         </div>
       </div>
@@ -352,30 +570,19 @@
         <div class="si"><span class="si-k">Sessions</span><span class="si-v" id="rp-sc">0</span></div>
       </div>
       <div class="rp-sec skd" id="rp-skd">
-        <div class="rp-title w2">Inspect</div>
+        <div class="rp-title w3">Inspect</div>
         <div class="skd-name" id="rp-skn"></div>
         <div class="skd-type" id="rp-skt"></div>
         <div class="skd-desc" id="rp-skdesc"></div>
       </div>
-      <div class="rp-sec">
-        <div class="rp-title w2">Quick Actions</div>
-        <div class="qa">
-          <button data-action="test">test</button>
-          <button data-action="audit">audit</button>
-          <button data-action="polish">polish</button>
-          <button data-action="optimize">optimize</button>
-          <button data-action="harden">harden</button>
-          <button data-action="simplify">simplify</button>
-        </div>
-      </div>
       <div class="rp-sec" style="flex:1;overflow-y:auto;">
-        <div class="rp-title w3">Activity</div>
+        <div class="rp-title w2">Activity</div>
         <div class="af" id="rp-af"></div>
       </div>
       <div class="rp-sec">
         <div class="rp-title w4">System</div>
         <div class="sys"><div class="sys-lbl"><span>cpu</span><span id="sys-cpu">&mdash;</span></div><div class="sys-bar"><div class="sys-fill" id="sys-cpu-b" style="width:0%;background:var(--w1)"></div></div></div>
-        <div class="sys"><div class="sys-lbl"><span>mem</span><span id="sys-mem">&mdash;</span></div><div class="sys-bar"><div class="sys-fill" id="sys-mem-b" style="width:0%;background:var(--w3)"></div></div></div>
+        <div class="sys"><div class="sys-lbl"><span>mem</span><span id="sys-mem">&mdash;</span></div><div class="sys-bar"><div class="sys-fill" id="sys-mem-b" style="width:0%;background:var(--w2)"></div></div></div>
         <div class="sys"><div class="sys-lbl"><span>disk</span><span id="sys-disk">&mdash;</span></div><div class="sys-bar"><div class="sys-fill" id="sys-disk-b" style="width:0%;background:var(--w4)"></div></div></div>
       </div>
     </aside>
@@ -414,6 +621,48 @@
       </form>
     </div>
   </div>
+  <div class="mo" id="mo-workflow">
+    <div class="mo-box">
+      <h3 id="mo-wf-title">New Workflow</h3>
+      <form id="f-workflow">
+        <div class="ff"><label>Workflow name</label><input id="i-wfn" required placeholder="Seafin Platform" /></div>
+        <div class="ff">
+          <label>Layout</label>
+          <select id="i-wfl" style="font-family:var(--sans);font-size:13px;">
+            <option value="single">Single</option>
+            <option value="side-by-side">Side by Side</option>
+            <option value="stacked">Stacked</option>
+            <option value="triple">Triple (1+2)</option>
+            <option value="quad">Quad (2x2)</option>
+          </select>
+        </div>
+        <div class="mo-act">
+          <button type="button" class="btn" onclick="closeMo('mo-workflow')">Cancel</button>
+          <button type="submit" class="btn btn-go" id="btn-wf-go">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="mo" id="mo-assign">
+    <div class="mo-box">
+      <h3>Assign Session to Pane</h3>
+      <form id="f-assign">
+        <div class="ff">
+          <label>Session</label>
+          <select id="i-assign-sess" style="font-family:var(--sans);font-size:13px;"><option value="">Select a session...</option></select>
+        </div>
+        <div class="ff"><label>Alias (display name)</label><input id="i-assign-alias" placeholder="platform" /></div>
+        <div class="ff" style="text-align:center;padding:6px 0;color:var(--tx3);font-size:12px;">or create a new session</div>
+        <div class="ff"><label>On server</label><select id="i-assign-proj" style="font-family:var(--sans);font-size:13px;"><option value="">Select cloned project...</option></select></div>
+        <div class="ff"><label>Session name</label><input id="i-assign-name" placeholder="my-project" pattern="[a-zA-Z0-9\-_]+" /></div>
+        <input type="hidden" id="i-assign-pane" />
+        <div class="mo-act">
+          <button type="button" class="btn" onclick="closeMo('mo-assign')">Cancel</button>
+          <button type="submit" class="btn btn-go">Assign</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
@@ -421,8 +670,8 @@
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-webgl@0.16.0/lib/xterm-addon-webgl.min.js"></script>
 
   <script>
-    /* ═ Particles — muted wire colors ═ */
-    const WIRES=[[77,184,194],[199,88,120],[92,184,122],[201,160,64]];
+    /* ═ Particles — CRT phosphor wire colors ═ */
+    const WIRES=[[255,107,26],[0,200,68],[140,96,230],[160,170,188]];
     class Net{
       constructor(c){this.c=c;this.x=c.getContext('2d');this.pts=[];this.mx=-999;this.my=-999;this.resize();this.seed();addEventListener('resize',()=>this.resize());document.addEventListener('mousemove',e=>{this.mx=e.clientX;this.my=e.clientY});this.go()}
       resize(){this.w=this.c.width=innerWidth;this.h=this.c.height=innerHeight}
@@ -434,23 +683,30 @@
     const DEV=location.protocol==='file:'||location.hostname==='localhost';
     const sess=new Map();let activeId=null,currentUser=null,allSkills=[],cronJobs=[];const activity=[];
 
+    /* ═ Workflow State ═ */
+    const workflows=new Map();let activeWfId=null,editingWfId=null;
+    const LAYOUT_PANES={single:1,'side-by-side':2,stacked:2,triple:3,quad:4};
+
     /* ═ API ═ */
     async function api(p,o={}){const r=await fetch(p,{headers:{'Content-Type':'application/json'},...o,body:o.body?JSON.stringify(o.body):undefined});if(r.status===401){showLogin();throw Error('401')}if(!r.ok)throw Error(await r.text());return r.json()}
 
-    /* ═ Terminal ═ */
+    /* ═ Terminal — CRT Phosphor Theme ═ */
     const TH={
-      background:'#1b1e28',foreground:'#f0eee8',cursor:'#5ec4ce',cursorAccent:'#1b1e28',
-      selectionBackground:'rgba(77,184,194,0.2)',selectionForeground:'#fff',
-      black:'#2c303a',red:'#c75878',green:'#5cb87a',yellow:'#c9a040',
-      blue:'#4db8c2',magenta:'#b07cc2',cyan:'#4db8c2',white:'#e4e1da',
-      brightBlack:'#626059',brightRed:'#d4748e',brightGreen:'#78cc94',brightYellow:'#d4b35c',
-      brightBlue:'#6ac8d0',brightMagenta:'#c494d4',brightCyan:'#6ac8d0',brightWhite:'#eceae4'
+      background:'#0a0c10',foreground:'#d0cfc8',cursor:'#ff6b1a',cursorAccent:'#0a0c10',
+      selectionBackground:'rgba(255,107,26,0.15)',selectionForeground:'#ffffff',
+      selectionInactiveBackground:'rgba(255,107,26,0.08)',
+      black:'#141820',red:'#e05035',green:'#00cc44',yellow:'#e0a020',
+      blue:'#7b5af0',magenta:'#c060e0',cyan:'#40b8cc',white:'#b0b4bc',
+      brightBlack:'#3a4050',brightRed:'#ff6b1a',brightGreen:'#00e64d',brightYellow:'#f0c030',
+      brightBlue:'#9b6bff',brightMagenta:'#d080f0',brightCyan:'#60d0e0',brightWhite:'#e8e6e0'
     };
 
     function mkTerm(id,name,dir){
       const term=new Terminal({fontFamily:"'JetBrains Mono',monospace",fontSize:15,lineHeight:1.35,theme:TH,cursorBlink:true,cursorStyle:'bar',scrollback:5000});
       const fit=new FitAddon.FitAddon();term.loadAddon(fit);
-      const el=document.createElement('div');el.className='ti hidden';el.dataset.session=id;$('tw').appendChild(el);term.open(el);
+      const el=document.createElement('div');el.className='ti hidden';el.dataset.session=id;
+      // Don't attach to DOM yet — renderPanes will place it
+      term.open(el);
       try{term.loadAddon(new WebglAddon.WebglAddon())}catch(e){}
       let ws=null;
       if(!DEV){
@@ -462,14 +718,37 @@
         term.onResize(({cols,rows})=>{if(ws.readyState===1)ws.send(JSON.stringify({type:'resize',cols,rows}))});
       }
       sess.set(id,{term,ws,el,fit,name,dir:dir||'/home/claude/projects/'+name});
-      addTab(id,name);switchTo(id);$('term-empty').style.display='none';
-      new ResizeObserver(()=>{if(activeId===id)fit.fit()}).observe(el);
-      log(`Session <b>${esc(name)}</b> started`);return{term,ws,el};
+      addTab(id,name);
+      if(!activeWfId){switchTo(id)}
+      $('term-empty').style.display='none';
+      new ResizeObserver(()=>{if(!el.classList.contains('hidden'))fit.fit()}).observe(el);
+      log(`Session <b>${esc(name)}</b> started`);
+      fetchBriefing(id);
+      return{term,ws,el};
     }
 
-    function switchTo(id){activeId=id;sess.forEach((s,sid)=>{s.el.classList.toggle('hidden',sid!==id);if(sid===id)setTimeout(()=>s.fit.fit(),10)});document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.session===id));upRP()}
+    function switchTo(id){
+      activeId=id;
+      if(!activeWfId){
+        sess.forEach((s,sid)=>{s.el.classList.toggle('hidden',sid!==id);if(sid===id)setTimeout(()=>s.fit.fit(),10)});
+        renderPanes();
+      }
+      document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.session===id));
+      upRP();
+    }
 
-    function killSess(id){const s=sess.get(id);if(!s)return;if(s.ws&&s.ws.readyState===1)s.ws.close();s.term.dispose();s.el.remove();sess.delete(id);document.querySelector(`.tab[data-session="${id}"]`)?.remove();if(sess.size>0)switchTo(sess.keys().next().value);else{activeId=null;$('term-empty').style.display='flex'}if(!DEV)api(`/api/sessions/${id}`,{method:'DELETE'}).catch(()=>{});log('Session closed');upRP()}
+    function killSess(id){
+      const s=sess.get(id);if(!s)return;
+      if(s.ws&&s.ws.readyState===1)s.ws.close();s.term.dispose();s.el.remove();sess.delete(id);
+      document.querySelector(`.tab[data-session="${id}"]`)?.remove();
+      // Clean from workflows
+      workflows.forEach(wf=>{wf.sessions=wf.sessions.filter(ws=>ws.id!==id)});
+      saveWorkflows();
+      if(sess.size>0)switchTo(sess.keys().next().value);
+      else{activeId=null;$('term-empty').style.display='flex'}
+      if(!DEV)api(`/api/sessions/${id}`,{method:'DELETE'}).catch(()=>{});
+      log('Session closed');upRP();renderPanes();
+    }
 
     /* ═ Tabs ═ */
     function addTab(id,name){
@@ -487,6 +766,109 @@
       try{await api(`/api/sessions/${sid}/skill`,{method:'POST',body:{skill:name}});log(`Sent <b>/${esc(name)}</b>`);toast(`/${name}`)}catch(e){toast(e.message)}
     }
 
+    /* ═ Workflows ═ */
+    function genId(){return 'wf-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+    function saveWorkflows(){const d=[];workflows.forEach(wf=>d.push(wf));localStorage.setItem('loop-workflows',JSON.stringify(d))}
+    function loadWorkflowData(){try{const raw=localStorage.getItem('loop-workflows');if(!raw)return;JSON.parse(raw).forEach(wf=>workflows.set(wf.id,wf));renderWfTabs()}catch(e){}}
+    function createWf(name,layout){const wf={id:genId(),name,layout:layout||'single',sessions:[]};workflows.set(wf.id,wf);renderWfTabs();activateWf(wf.id);saveWorkflows();log(`Workflow <b>${esc(name)}</b> created`);return wf}
+    function renameWf(id,name){const wf=workflows.get(id);if(!wf)return;wf.name=name;renderWfTabs();saveWorkflows()}
+    function deleteWf(id){const wf=workflows.get(id);if(!wf)return;workflows.delete(id);if(activeWfId===id){activeWfId=null;if(workflows.size>0)activateWf(workflows.keys().next().value);else{showStandaloneTabs();renderPanes()}}renderWfTabs();saveWorkflows();log(`Workflow <b>${esc(wf.name)}</b> deleted`)}
+
+    function renderWfTabs(){
+      const c=$('wf-tabs');c.innerHTML='';
+      const all=document.createElement('div');all.className='wf-tab'+(activeWfId===null?' active':'');all.textContent='Sessions';
+      all.addEventListener('click',()=>{activeWfId=null;renderWfTabs();showStandaloneTabs();renderPanes()});
+      c.appendChild(all);
+      workflows.forEach(wf=>{
+        const t=document.createElement('div');t.className='wf-tab'+(activeWfId===wf.id?' active':'');t.dataset.wf=wf.id;
+        t.innerHTML=`<span>${esc(wf.name)}</span><button class="wf-tab-x">&times;</button>`;
+        t.addEventListener('click',e=>{if(e.target.closest('.wf-tab-x')){deleteWf(wf.id);return}activateWf(wf.id)});
+        t.addEventListener('dblclick',e=>{if(e.target.closest('.wf-tab-x'))return;editingWfId=wf.id;$('mo-wf-title').textContent='Edit Workflow';$('i-wfn').value=wf.name;$('i-wfl').value=wf.layout;$('btn-wf-go').textContent='Save';openMo('mo-workflow')});
+        c.appendChild(t);
+      });
+    }
+
+    function showStandaloneTabs(){$('standalone-tabs').style.display='flex'}
+    function hideStandaloneTabs(){$('standalone-tabs').style.display='none'}
+
+    function activateWf(id){
+      const wf=workflows.get(id);if(!wf)return;activeWfId=id;
+      renderWfTabs();hideStandaloneTabs();
+      document.querySelectorAll('.layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.layout===wf.layout));
+      sess.forEach(s=>s.el.classList.add('hidden'));$('term-empty').style.display='none';
+      renderPanes();
+    }
+
+    /* ═ Panes ═ */
+    function renderPanes(){
+      const grid=$('pane-grid');
+      if(!activeWfId){
+        // Standalone mode
+        grid.className='pane-grid layout-single';grid.innerHTML='';
+        const pane=mkPane(0);grid.appendChild(pane);
+        if(activeId){
+          const s=sess.get(activeId);
+          if(s){
+            pane.querySelector('.pane-body').appendChild(s.el);s.el.classList.remove('hidden');
+            pane.querySelector('.pane-label').innerHTML=`<span class="alias">${esc(s.name)}</span>`;
+            pane.querySelector('.pane-dot').className='pane-dot live';
+            pane.querySelector('.pane-empty')?.remove();
+            setTimeout(()=>s.fit.fit(),20);
+          }
+        }
+        if(sess.size===0)$('term-empty').style.display='flex';
+        return;
+      }
+      const wf=workflows.get(activeWfId);if(!wf)return;
+      $('term-empty').style.display='none';
+      const count=LAYOUT_PANES[wf.layout]||1;
+      grid.className='pane-grid layout-'+wf.layout;grid.innerHTML='';
+      for(let i=0;i<count;i++){
+        const pane=mkPane(i);
+        if(wf.layout==='triple'&&i===0)pane.classList.add('pane-triple-0');
+        grid.appendChild(pane);
+        const assignment=wf.sessions.find(s=>s.paneIndex===i);
+        if(assignment){
+          const s=sess.get(assignment.id);
+          if(s){
+            pane.querySelector('.pane-body').appendChild(s.el);s.el.classList.remove('hidden');
+            pane.querySelector('.pane-label').innerHTML=`<span class="alias">${esc(assignment.alias||s.name)}</span>`;
+            pane.querySelector('.pane-dot').className='pane-dot live';
+            pane.querySelector('.pane-empty')?.remove();
+            setTimeout(()=>s.fit.fit(),20);
+          } else {
+            pane.querySelector('.pane-label').innerHTML=`<span style="color:var(--tx3)">${esc(assignment.alias||assignment.id)} (closed)</span>`;
+          }
+        }
+      }
+    }
+
+    function mkPane(idx){
+      const pane=document.createElement('div');pane.className='pane';pane.dataset.pane=idx;
+      pane.innerHTML=`<div class="pane-hd"><span class="pane-dot empty"></span><span class="pane-label">Pane ${idx+1}</span><button class="pane-assign" data-pane="${idx}">assign</button></div><div class="pane-body"><div class="pane-empty"><div class="pane-empty-txt">No session assigned</div><button class="pane-empty-btn" data-pane="${idx}">+ Assign Session</button></div></div>`;
+      pane.querySelector('.pane-assign').addEventListener('click',()=>openAssign(idx));
+      const eb=pane.querySelector('.pane-empty-btn');if(eb)eb.addEventListener('click',()=>openAssign(idx));
+      pane.addEventListener('dragover',e=>e.preventDefault());
+      pane.addEventListener('drop',e=>{e.preventDefault();const sk=e.dataTransfer.getData('text/plain');const a=activeWfId?workflows.get(activeWfId)?.sessions.find(s=>s.paneIndex===idx):null;const sid=a?.id||activeId;if(sk&&sid)fire(sid,sk)});
+      return pane;
+    }
+
+    function setLayout(layout){
+      if(activeWfId){const wf=workflows.get(activeWfId);if(wf){wf.layout=layout;saveWorkflows()}}
+      document.querySelectorAll('.layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.layout===layout));
+      renderPanes();refitAll();
+    }
+    function refitAll(){setTimeout(()=>{sess.forEach(s=>{if(!s.el.classList.contains('hidden'))try{s.fit.fit()}catch(e){}})},50)}
+
+    function openAssign(paneIdx){
+      const sel=$('i-assign-sess');sel.innerHTML='<option value="">Select a session...</option>';
+      sess.forEach((s,id)=>{const o=document.createElement('option');o.value=id;o.textContent=s.name;sel.appendChild(o)});
+      const ps=$('i-assign-proj');ps.innerHTML='<option value="">Select cloned project...</option>';
+      if(DEV){['loop','clawdbot','seafin-hq'].forEach(n=>{const o=document.createElement('option');o.value='/home/claude/projects/'+n;o.textContent=n;ps.appendChild(o)})}
+      else{api('/api/projects').then(l=>l.forEach(p=>{const o=document.createElement('option');o.value=p.path;o.textContent=p.name;ps.appendChild(o)})).catch(()=>{})}
+      $('i-assign-pane').value=paneIdx;$('i-assign-alias').value='';$('i-assign-name').value='';openMo('mo-assign');
+    }
+
     /* ═ Skills ═ */
     const MOCK=[
       {id:'test',name:'test',description:'Universal test-fix loop — tests everything, fixes in parallel.',type:'skill'},
@@ -498,6 +880,9 @@
       {id:'configure-opus-bots',name:'configure-opus-bots',description:'Configure OpenClaw bots — openclaw.json, workspace, deployment.',type:'skill'},
       {id:'app-builder-e2e',name:'app-builder-e2e',description:'End-to-end test of the Seafin App Builder.',type:'skill'},
       {id:'mobile-first-design',name:'mobile-first-design',description:'Responsive design from mobile screens up.',type:'skill'},
+      {id:'ls-build-feature',name:'platform-build-feature',description:'Spawn architect + builder + tester agents for feature development.',type:'loop-skill',teams:['architect','builder','tester']},
+      {id:'ls-full-qa',name:'platform-full-qa',description:'Run comprehensive QA with parallel test agents.',type:'loop-skill',teams:['unit-tester','e2e-tester','perf-tester']},
+      {id:'ls-deploy',name:'platform-deploy',description:'Coordinated deployment with rollback agent.',type:'loop-skill',teams:['deployer','monitor','rollback']},
       {id:'cmd-research',name:'research',description:'Structured research with tool routing.',type:'command'},
       {id:'cmd-polish',name:'polish',description:'Final quality pass — alignment, spacing, consistency.',type:'command'},
       {id:'cmd-audit',name:'audit',description:'Audit accessibility, performance, theming.',type:'command'},
@@ -512,8 +897,10 @@
     function renderSk(q=''){
       const f=q.toLowerCase();
       const sk=allSkills.filter(s=>s.type==='skill'&&(!f||s.name.includes(f)||(s.description||'').toLowerCase().includes(f)));
+      const ls=allSkills.filter(s=>s.type==='loop-skill'&&(!f||s.name.includes(f)||(s.description||'').toLowerCase().includes(f)));
       const cm=allSkills.filter(s=>s.type==='command'&&(!f||s.name.includes(f)||(s.description||'').toLowerCase().includes(f)));
       $('sk-skills').innerHTML=sk.map(s=>`<div class="sk" draggable="true" data-skill="${esc(s.name)}" data-type="skill" data-desc="${esc(s.description||'')}"><span class="sk-wire w1"></span><span class="sk-name">${esc(s.name)}</span><span class="sk-tag">drag</span></div>`).join('');
+      $('sk-loop').innerHTML=ls.map(s=>`<div class="sk" draggable="true" data-skill="${esc(s.name)}" data-type="loop-skill" data-desc="${esc(s.description||'')}"><span class="sk-wire w2"></span><span class="sk-loop-icon">&#x21bb;</span><span class="sk-name">${esc(s.name)}</span><span class="sk-tag">drag</span></div>`).join('');
       $('sk-cmds').innerHTML=cm.map(s=>`<div class="sk" draggable="true" data-skill="${esc(s.name)}" data-type="command" data-desc="${esc(s.description||'')}"><span class="sk-wire w3"></span><span class="sk-name">${esc(s.name)}</span><span class="sk-tag">drag</span></div>`).join('');
       document.querySelectorAll('.sk').forEach(el=>{
         el.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',el.dataset.skill);el.classList.add('dragging')});
@@ -530,8 +917,75 @@
     async function delCr(id){if(DEV){cronJobs=cronJobs.filter(c=>c.id!==id);renderCr();return}try{await api(`/api/crons/${id}`,{method:'DELETE'});loadCrons()}catch(e){toast(e.message)}}
 
     /* ═ Right Panel ═ */
-    function upRP(){const s=activeId?sess.get(activeId):null;$('rp-sn').textContent=s?s.name:'\u2014';$('rp-sd').textContent=s?s.dir:'\u2014';$('rp-sd').title=s?s.dir:'';$('rp-ss').textContent=s?(DEV?'demo':'live'):'idle';$('rp-dot').style.background=s?(DEV?'var(--w4)':'var(--w3)'):'var(--tx3)';$('rp-sc').textContent=sess.size;if(DEV){$('sys-cpu').textContent='8%';$('sys-cpu-b').style.width='8%';$('sys-mem').textContent='1.1/4GB';$('sys-mem-b').style.width='28%';$('sys-disk').textContent='12/40GB';$('sys-disk-b').style.width='30%'}}
+    function upRP(){const s=activeId?sess.get(activeId):null;$('rp-sn').textContent=s?s.name:'\u2014';$('rp-sd').textContent=s?s.dir:'\u2014';$('rp-sd').title=s?s.dir:'';$('rp-ss').textContent=s?(DEV?'demo':'live'):'idle';$('rp-dot').style.background=s?(DEV?'var(--w4)':'var(--w2)'):'var(--tx3)';$('rp-sc').textContent=sess.size;if(DEV){$('sys-cpu').textContent='8%';$('sys-cpu-b').style.width='8%';$('sys-mem').textContent='1.1/4GB';$('sys-mem-b').style.width='28%';$('sys-disk').textContent='12/40GB';$('sys-disk-b').style.width='30%'}}
+    function fmtBytes(b){if(b>1e9)return(b/1e9).toFixed(1)+'GB';if(b>1e6)return(b/1e6).toFixed(0)+'MB';return b+'B'}
+    async function pollStats(){if(DEV)return;try{const d=await api('/api/stats');$('sys-cpu').textContent=d.cpu+'%';$('sys-cpu-b').style.width=d.cpu+'%';const mUsed=fmtBytes(d.mem.used),mTotal=fmtBytes(d.mem.total);$('sys-mem').textContent=mUsed+'/'+mTotal;$('sys-mem-b').style.width=d.mem.pct+'%';const dUsed=fmtBytes(d.disk.used),dTotal=fmtBytes(d.disk.total);$('sys-disk').textContent=dUsed+'/'+dTotal;$('sys-disk-b').style.width=d.disk.pct+'%'}catch{}}
+
     function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});activity.unshift({t,msg});if(activity.length>30)activity.length=30;$('rp-af').innerHTML=activity.map(a=>`<div class="af-i"><span class="af-t">${a.t}</span><span class="af-m">${a.msg}</span></div>`).join('')}
+
+    /* ═ Voice ═ */
+    const Voice={
+      rec:null,listening:false,
+      init(){
+        const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+        if(!SR){$('btn-mic').title='Voice not supported in this browser';return}
+        this.rec=new SR();this.rec.continuous=true;this.rec.interimResults=false;this.rec.lang='en-US';
+        this.rec.onresult=e=>{
+          for(let i=e.resultIndex;i<e.results.length;i++){
+            if(e.results[i].isFinal){
+              const text=e.results[i][0].transcript.trim();
+              if(text&&activeId){
+                const s=sess.get(activeId);
+                if(s){
+                  if(DEV)s.term.write(text);
+                  else if(s.ws&&s.ws.readyState===1)s.ws.send(text);
+                  log(`Voice: <b>${esc(text.substring(0,50))}</b>`);
+                }
+              }
+            }
+          }
+        };
+        this.rec.onerror=e=>{if(e.error!=='aborted')toast('Voice error: '+e.error);this.stop()};
+        this.rec.onend=()=>{if(this.listening){try{this.rec.start()}catch(e){this.stop()}}};
+      },
+      toggle(){
+        if(!this.rec){toast('Voice not supported — use Chrome or Edge');return}
+        if(!activeId){toast('No active session');return}
+        this.listening?this.stop():this.start();
+      },
+      start(){this.listening=true;$('btn-mic').classList.add('listening');try{this.rec.start()}catch(e){this.stop()}log('Voice input started')},
+      stop(){this.listening=false;$('btn-mic').classList.remove('listening');try{this.rec.stop()}catch(e){}log('Voice input stopped')}
+    };
+
+    /* ═ CLAUDE.md Briefing ═ */
+    function fetchBriefing(sid){
+      const s=sess.get(sid);if(!s)return;
+      const delay=DEV?300:1500;
+      setTimeout(async()=>{
+        let content=null;
+        if(DEV){
+          content=`# ${s.name.toUpperCase()} — Project Context\n\nThis is the project CLAUDE.md for ${s.name}.\n\n## Quick Reference\n- Main branch: master\n- Test command: npm test\n- Deploy: ./scripts/deploy.sh\n\n## Architecture\nStandard Node.js + Express backend with React frontend.\n\n## Current Focus\nFeature development phase — see GitHub issues for priorities.`;
+        } else {
+          try{const r=await api(`/api/sessions/${sid}/claude-md`);content=r.content}catch(e){}
+        }
+        if(!content)return;
+        showBriefing(sid,content);
+      },delay);
+    }
+    function showBriefing(sid,content){
+      const s=sess.get(sid);if(!s)return;
+      // Find the pane body containing this session's element
+      const paneBody=s.el.closest('.pane-body');if(!paneBody)return;
+      const div=document.createElement('div');div.className='briefing';
+      let seconds=10;
+      div.innerHTML=`<div class="briefing-box"><div class="briefing-head"><span class="briefing-title">CLAUDE.md</span><span class="briefing-timer">${seconds}s</span></div><div class="briefing-body">${esc(content)}</div><div class="briefing-foot"><button class="briefing-btn">Got it</button></div></div>`;
+      paneBody.appendChild(div);
+      const timer=div.querySelector('.briefing-timer');
+      const dismiss=()=>{clearInterval(iv);div.remove()};
+      div.querySelector('.briefing-btn').addEventListener('click',dismiss);
+      div.addEventListener('click',e=>{if(e.target===div)dismiss()});
+      const iv=setInterval(()=>{seconds--;timer.textContent=seconds+'s';if(seconds<=0)dismiss()},1000);
+    }
 
     /* ═ Auth ═ */
     async function checkAuth(){if(DEV){currentUser={sub:'dev-user',avatar:null};showApp();return}try{currentUser=await api('/auth/me');showApp()}catch(e){showLogin()}}
@@ -541,14 +995,15 @@
       if(currentUser)$('hd-user').innerHTML=`${currentUser.avatar?`<img class="hd-avatar" src="${esc(currentUser.avatar)}">`:''}
         <span class="hd-name">${esc(currentUser.sub)}</span>
         <a class="hd-out" href="/logout">Logout</a>`;
-      loadSkills();loadCrons();loadSessions();
+      loadSkills();loadCrons();loadWorkflowData();loadSessions();
+      Voice.init();pollStats();setInterval(pollStats,15000);
     }
 
     async function loadSessions(){
       if(DEV){demo('loop');demo('seafin-hq');log('Dashboard loaded');upRP();return}
       try{const l=await api('/api/sessions');l.forEach(s=>mkTerm(s.id||s.name,s.name,s.directory))}catch(e){}
     }
-    function demo(name){const{term}=mkTerm(name,name);setTimeout(()=>{const s=sess.get(name);if(s)s.fit.fit();[`\x1b[2m$ claude --project ~/projects/${name}\x1b[0m`,'',`\x1b[36m◆\x1b[0m \x1b[1mClaude Code\x1b[0m  \x1b[2mOpus 4.6 · /projects/${name}\x1b[0m`,'',`  \x1b[2mReady. Type a message or drag a skill from the sidebar.\x1b[0m`,'','\x1b[36m>\x1b[0m \x1b[5m\u2588\x1b[0m'].forEach((l,i)=>setTimeout(()=>term.writeln(l),i*30))},150)}
+    function demo(name){const{term}=mkTerm(name,name);setTimeout(()=>{const s=sess.get(name);if(s)s.fit.fit();[`\x1b[2m$ claude --project ~/projects/${name}\x1b[0m`,'',`\x1b[36m\u25c6\x1b[0m \x1b[1mClaude Code\x1b[0m  \x1b[2mOpus 4.6 \xb7 /projects/${name}\x1b[0m`,'',`  \x1b[2mReady. Type a message or drag a skill from the sidebar.\x1b[0m`,'','\x1b[36m>\x1b[0m \x1b[5m\u2588\x1b[0m'].forEach((l,i)=>setTimeout(()=>term.writeln(l),i*30))},150)}
 
     /* ═ Util ═ */
     function $(id){return document.getElementById(id)}
@@ -558,7 +1013,6 @@
     function closeMo(id){$(id).classList.remove('open')}
 
     /* ═ Events ═ */
-    // Project picker
     async function loadProjects(){
       const sel=$('i-proj');sel.innerHTML='<option value="">Select cloned project...</option>';
       if(DEV){['loop','clawdbot','seafin-hq'].forEach(n=>{const o=document.createElement('option');o.value='/home/claude/projects/'+n;o.textContent=n;sel.appendChild(o)});return}
@@ -578,28 +1032,50 @@
 
     $('btn-tab').addEventListener('click',()=>{loadProjects();loadGHRepos();openMo('mo-session')});
     $('btn-cron').addEventListener('click',()=>openMo('mo-cron'));
+    $('btn-mic').addEventListener('click',()=>Voice.toggle());
     $('sk-search').addEventListener('input',e=>renderSk(e.target.value));
     document.querySelectorAll('.sb-head[data-toggle]').forEach(h=>{h.addEventListener('click',()=>{h.classList.toggle('shut');const g=$(h.dataset.toggle);if(g)g.classList.toggle('shut')})});
-    document.querySelectorAll('.qa button').forEach(b=>{b.addEventListener('click',()=>{if(activeId)fire(activeId,b.dataset.action)})});
 
     const cz=$('cron-zone');
     cz.addEventListener('dragover',e=>{e.preventDefault();cz.classList.add('over')});
     cz.addEventListener('dragleave',()=>cz.classList.remove('over'));
     cz.addEventListener('drop',e=>{e.preventDefault();cz.classList.remove('over');const sk=e.dataTransfer.getData('text/plain');if(sk){$('i-cs').value=sk;$('i-cn').value=sk+'-job';openMo('mo-cron')}});
 
-    $('tw').addEventListener('dragover',e=>e.preventDefault());
-    $('tw').addEventListener('drop',e=>{e.preventDefault();const sk=e.dataTransfer.getData('text/plain');if(sk&&activeId)fire(activeId,sk)});
+    $('btn-wf').addEventListener('click',()=>{editingWfId=null;$('mo-wf-title').textContent='New Workflow';$('i-wfn').value='';$('i-wfl').value='single';$('btn-wf-go').textContent='Create';openMo('mo-workflow')});
+    $('f-workflow').addEventListener('submit',e=>{
+      e.preventDefault();closeMo('mo-workflow');
+      const name=$('i-wfn').value.trim(),layout=$('i-wfl').value;if(!name)return;
+      if(editingWfId){renameWf(editingWfId,name);const wf=workflows.get(editingWfId);if(wf&&wf.layout!==layout){wf.layout=layout;saveWorkflows()}if(activeWfId===editingWfId){renderPanes();refitAll()}editingWfId=null}
+      else{createWf(name,layout)}
+    });
+    $('f-assign').addEventListener('submit',async e=>{
+      e.preventDefault();closeMo('mo-assign');
+      const paneIdx=parseInt($('i-assign-pane').value);let sessId=$('i-assign-sess').value;let alias=$('i-assign-alias').value.trim();
+      if(!sessId){
+        const projPath=$('i-assign-proj').value,name=$('i-assign-name').value.trim();
+        if(!name||!projPath){toast('Select a session or create one');return}
+        if(DEV){demo(name);sessId=name}
+        else{try{const s=await api('/api/sessions',{method:'POST',body:{name,directory:projPath,mode:'claude'}});mkTerm(s.id||name,name,projPath);sessId=s.id||name}catch(err){toast(err.message);return}}
+        if(!alias)alias=name;
+      }
+      if(!alias){const s=sess.get(sessId);alias=s?s.name:sessId}
+      if(!activeWfId)return;const wf=workflows.get(activeWfId);if(!wf)return;
+      wf.sessions=wf.sessions.filter(s=>s.paneIndex!==paneIdx);
+      wf.sessions=wf.sessions.filter(s=>s.id!==sessId);
+      wf.sessions.push({id:sessId,alias,paneIndex:paneIdx});
+      saveWorkflows();renderPanes();toast(`Assigned "${alias}" to pane ${paneIdx+1}`);
+    });
+
+    document.querySelectorAll('.layout-btn').forEach(btn=>{btn.addEventListener('click',()=>setLayout(btn.dataset.layout))});
 
     $('f-session').addEventListener('submit',async e=>{
       e.preventDefault();closeMo('mo-session');
       let name=$('i-sn').value.trim(), dir=$('i-sd').value.trim();
       const ghRepo=$('i-ghrepo').value.trim()||$('i-clone').value.trim();
       if(DEV){demo(name||'session');return}
-      // If GitHub repo selected but not cloned yet, clone first
       if(ghRepo&&!dir){
         toast('Cloning '+ghRepo.split('/').pop()+'...');
         try{const r=await api('/api/projects/clone',{method:'POST',body:{repo:ghRepo}});dir=r.path;if(!name)name=r.name;}catch(e){
-          // Already cloned? Use existing path
           if(e.message.includes('already exists')){dir='/home/claude/projects/'+ghRepo.split('/').pop();if(!name)name=ghRepo.split('/').pop();}
           else{toast(e.message);return}
         }
@@ -615,9 +1091,10 @@
       if(e.altKey&&e.key==='n'){e.preventDefault();loadProjects();loadGHRepos();openMo('mo-session')}
       if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));
       if(e.altKey&&e.key==='w'&&activeId){e.preventDefault();killSess(activeId)}
-      // Alt+1 through Alt+9 to switch tabs
       if(e.altKey&&e.key>='1'&&e.key<='9'){e.preventDefault();const ids=[...sess.keys()];const idx=parseInt(e.key)-1;if(idx<ids.length)switchTo(ids[idx])}
+      if(e.altKey&&e.shiftKey&&e.key==='N'){e.preventDefault();$('btn-wf').click()}
     });
+    window.addEventListener('resize',()=>refitAll());
 
     /* ═ Boot ═ */
     new Net($('cv'));

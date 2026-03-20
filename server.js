@@ -158,6 +158,37 @@ app.post('/api/sessions/:id/skill', async (req, res, next) => {
 });
 
 // ---------------------------------------------------------------------------
+// REST API — System Stats
+// ---------------------------------------------------------------------------
+
+app.get('/api/stats', async (_req, res, next) => {
+  try {
+    const { execSync } = require('child_process');
+    // CPU: 1-second average via /proc/stat
+    let cpu = 0;
+    try {
+      const out = execSync("awk '/^cpu / {idle=$5+$6; total=0; for(i=2;i<=NF;i++) total+=$i; print int((total-idle)*100/total)}' /proc/stat", { timeout: 2000 }).toString().trim();
+      cpu = parseInt(out) || 0;
+    } catch {}
+    // Memory
+    let mem = { used: 0, total: 0, pct: 0 };
+    try {
+      const mout = execSync("free -b | awk 'NR==2{print $2,$3}'", { timeout: 2000 }).toString().trim().split(' ');
+      const total = parseInt(mout[0]) || 1;
+      const used = parseInt(mout[1]) || 0;
+      mem = { used, total, pct: Math.round(used * 100 / total) };
+    } catch {}
+    // Disk
+    let disk = { used: 0, total: 0, pct: 0 };
+    try {
+      const dout = execSync("df -B1 / | awk 'NR==2{print $2,$3,$5}'", { timeout: 2000 }).toString().trim().split(' ');
+      disk = { total: parseInt(dout[0]) || 0, used: parseInt(dout[1]) || 0, pct: parseInt(dout[2]) || 0 };
+    } catch {}
+    res.json({ cpu, mem, disk });
+  } catch (err) { next(err); }
+});
+
+// ---------------------------------------------------------------------------
 // REST API — Skills
 // ---------------------------------------------------------------------------
 
