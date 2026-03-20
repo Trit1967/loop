@@ -833,7 +833,7 @@
     /* ═ Workflow State ═ */
     const workflows=new Map();let activeWfId=null,editingWfId=null;
     const tabColors=new Map(); // sessionId → color key
-    let _restoredActiveId=null,_restoredActiveWfId=null;
+    let _restoredActiveId=null,_restoredActiveWfId=null,_restoredSessions=[];
 
     /* ═ Server-side User State ═ */
     let _saveTimer=null;
@@ -855,7 +855,8 @@
         localStorage.setItem('loop-rp-collapsed',panel.rpC?'1':'0');
         const wfs=[];workflows.forEach(wf=>wfs.push(wf));
         const tcs={};tabColors.forEach((v,k)=>tcs[k]=v);
-        try{await api('/api/user-state',{method:'POST',body:{workflows:wfs,panel,tabColors:tcs,activeId,activeWfId}})}
+        const sessionList=[];sess.forEach((s,id)=>sessionList.push({id,name:s.name,dir:s.dir}));
+        try{await api('/api/user-state',{method:'POST',body:{workflows:wfs,panel,tabColors:tcs,activeId,activeWfId,sessions:sessionList}})}
         catch(e){console.warn('state save failed:',e)}
       },800);
     }
@@ -867,6 +868,7 @@
         if(state.tabColors)Object.entries(state.tabColors).forEach(([k,v])=>tabColors.set(k,v));
         if(state.activeId)_restoredActiveId=state.activeId;
         if(state.activeWfId)_restoredActiveWfId=state.activeWfId;
+        if(state.sessions)_restoredSessions=state.sessions;
         if(state.panel){
           const app=document.querySelector('.app');
           if(state.panel.sbW){app.style.setProperty('--sb-w',state.panel.sbW);localStorage.setItem('loop-sb-w',state.panel.sbW)}
