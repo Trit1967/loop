@@ -588,7 +588,7 @@ class TestWorkflowSystem:
         """'Sessions' wf-tab is active on load."""
         page.wait_for_selector("#wf-tabs .wf-tab", timeout=5000)
         first = page.locator("#wf-tabs .wf-tab").first
-        assert "Sessions" in first.inner_text()
+        assert "sessions" in first.inner_text().lower()  # CSS may uppercase
         expect(first).to_have_class(re.compile(r"\bactive\b"))
 
     def test_workflow_button_exists(self, page: Page):
