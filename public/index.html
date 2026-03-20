@@ -323,8 +323,8 @@
     }
     .pane-assign:hover { color: var(--w1); background: var(--w1sub); }
     .pane-body { flex: 1; position: relative; overflow: hidden; }
-    .pane-body .ti { position: absolute; inset: 0; padding: 4px 6px; }
-    .pane-body .ti.hidden { display: none; }
+    .pane-body .ti { position: absolute; inset: 0; padding: 4px 6px; background: var(--base); }
+    .pane-body .ti.hidden { visibility: hidden; pointer-events: none; }
     .pane-empty {
       position: absolute; inset: 0; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 8px;
@@ -804,10 +804,8 @@
       if(sess.has(id))return sess.get(id); // guard against duplicate sessions
       const term=new Terminal({fontFamily:"'JetBrains Mono',monospace",fontSize:15,lineHeight:1.35,theme:TH,cursorBlink:true,cursorStyle:'bar',scrollback:5000});
       const fit=new FitAddon.FitAddon();term.loadAddon(fit);
-      const el=document.createElement('div');el.className='ti';el.dataset.session=id;
-      // WebGL requires the canvas to be in a live document tree to initialize.
-      // Attach off-screen briefly so WebGL can bootstrap, then renderPanes moves it.
-      el.style.cssText='position:absolute;visibility:hidden;width:800px;height:400px;top:-9999px;left:-9999px';
+      const el=document.createElement('div');el.className='ti hidden';el.dataset.session=id;
+      // .ti.hidden now uses visibility:hidden (not display:none) so WebGL context survives
       document.body.appendChild(el);
       term.open(el);
       // Intercept app shortcuts before xterm swallows them
@@ -818,7 +816,6 @@
       });
       try{term.loadAddon(new WebglAddon.WebglAddon())}catch(e){}
       try{term.loadAddon(new WebLinksAddon.WebLinksAddon())}catch(e){}
-      el.removeAttribute('style');el.classList.add('hidden');
       // TypeAhead — optimistic local echo for printable chars.
       // Chars typed are written to the terminal immediately, then stripped
       // from the server's echo when it arrives to avoid double-printing.
