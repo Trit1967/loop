@@ -1143,11 +1143,10 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
             if(e.results[i].isFinal){
               const text=e.results[i][0].transcript.trim();
               if(text&&activeId){
-                const s=sess.get(activeId);
-                if(s){
+                if(text!==this._lastFinal){
                   updateCmdBar(text,null);
+                  this._lastFinal=text;
                 }
-                this._lastFinal=text;
               }
             } else {
               interim+=e.results[i][0].transcript;
