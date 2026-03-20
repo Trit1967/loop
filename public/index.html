@@ -790,7 +790,9 @@
 
     function killSess(id){
       const s=sess.get(id);if(!s)return;
-      if(s.ws&&s.ws.readyState===1)s.ws.close();s.term.dispose();s.el.remove();sess.delete(id);
+      if(s.ws&&s.ws.readyState===1)s.ws.close();
+      try{s.term.dispose()}catch(e){}
+      s.el.remove();sess.delete(id);
       document.querySelector(`.tab[data-session="${id}"]`)?.remove();
       // Clean from workflows
       workflows.forEach(wf=>{wf.sessions=wf.sessions.filter(ws=>ws.id!==id)});
@@ -844,7 +846,7 @@
     /* ═ Workflows ═ */
     function genId(){return 'wf-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
     function saveWorkflows(){const d=[];workflows.forEach(wf=>d.push(wf));localStorage.setItem('loop-workflows',JSON.stringify(d))}
-    function loadWorkflowData(){try{const raw=localStorage.getItem('loop-workflows');if(!raw)return;JSON.parse(raw).forEach(wf=>workflows.set(wf.id,wf));renderWfTabs()}catch(e){}}
+    function loadWorkflowData(){try{const raw=localStorage.getItem('loop-workflows');if(raw)JSON.parse(raw).forEach(wf=>workflows.set(wf.id,wf))}catch(e){}renderWfTabs()}
     function createWf(name,layout){const wf={id:genId(),name,layout:layout||'single',sessions:[]};workflows.set(wf.id,wf);renderWfTabs();activateWf(wf.id);saveWorkflows();log(`Workflow <b>${esc(name)}</b> created`);return wf}
     function renameWf(id,name){const wf=workflows.get(id);if(!wf)return;wf.name=name;renderWfTabs();saveWorkflows()}
     function deleteWf(id){const wf=workflows.get(id);if(!wf)return;workflows.delete(id);if(activeWfId===id){activeWfId=null;if(workflows.size>0)activateWf(workflows.keys().next().value);else{showStandaloneTabs();renderPanes()}}renderWfTabs();saveWorkflows();log(`Workflow <b>${esc(wf.name)}</b> deleted`)}
