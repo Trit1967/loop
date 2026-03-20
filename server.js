@@ -192,28 +192,12 @@ app.get('/api/stats', async (_req, res, next) => {
 // REST API — Claude Usage
 // ---------------------------------------------------------------------------
 
-app.get('/api/claude-usage', async (_req, res, next) => {
-  try {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return res.json({ available: false });
-
-    // Lightweight call to get rate-limit headers without burning tokens
-    const resp = await fetch('https://api.anthropic.com/v1/models', {
-      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' }
-    });
-
-    const tokensLimit     = parseInt(resp.headers.get('anthropic-ratelimit-tokens-limit')     || '0');
-    const tokensRemaining = parseInt(resp.headers.get('anthropic-ratelimit-tokens-remaining') || '0');
-    const tokensReset     = resp.headers.get('anthropic-ratelimit-tokens-reset');
-    const reqLimit        = parseInt(resp.headers.get('anthropic-ratelimit-requests-limit')     || '0');
-    const reqRemaining    = parseInt(resp.headers.get('anthropic-ratelimit-requests-remaining') || '0');
-
-    if (!tokensLimit) return res.json({ available: false });
-
-    const used = tokensLimit - tokensRemaining;
-    const pct  = Math.round(used * 100 / tokensLimit);
-    res.json({ available: true, used, limit: tokensLimit, pct, resetAt: tokensReset, reqLimit, reqRemaining });
-  } catch (err) { next(err); }
+app.get('/api/claude-usage', (_req, res) => {
+  const { input, output } = sessions.getUsage();
+  const used  = input + output;
+  const limit = parseInt(process.env.CLAUDE_DAILY_TOKENS || '1000000');
+  const pct   = Math.min(100, Math.round(used * 100 / limit));
+  res.json({ available: true, used, limit, pct, input, output });
 });
 
 // ---------------------------------------------------------------------------
@@ -372,8 +356,9 @@ wss.on('connection', (ws) => {
       return;
     }
 
-    // PTY stdout → WebSocket
+    // PTY stdout → WebSocket (also scan for Claude token usage lines)
     pty.onData((data) => {
+      sessions.scanTokens(data);
       if (ws.readyState === ws.OPEN) {
         ws.send(data);
       }
