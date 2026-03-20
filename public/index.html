@@ -47,6 +47,8 @@
       --t:  100ms ease-out;
       --mono: 'JetBrains Mono', monospace;
       --sans: 'Space Grotesk', system-ui, sans-serif;
+      --sb-w: 224px;
+      --rp-w: 264px;
     }
 
     html, body { height: 100%; overflow: hidden; }
@@ -86,7 +88,27 @@
     .login-btn svg { width: 18px; height: 18px; }
 
     /* ═ App ═ */
-    .app { display: grid; grid-template-columns: 224px 1fr 264px; grid-template-rows: 48px 1fr; height: 100vh; position: relative; z-index: 1; }
+    .app { display: grid; grid-template-columns: var(--sb-w) 5px 1fr 5px var(--rp-w); grid-template-rows: 48px 1fr; height: 100vh; position: relative; z-index: 1; }
+
+    /* ═ Panel Drag Handles ═ */
+    .drag-h {
+      grid-row: 2; background: transparent; cursor: col-resize; position: relative;
+      z-index: 10; display: flex; align-items: center; justify-content: center;
+      transition: background 80ms;
+    }
+    .drag-h::before { content: ''; position: absolute; inset: 0 -3px; }
+    .drag-h:hover, .drag-h.dragging { background: var(--line2); }
+    .panel-tog {
+      position: absolute; width: 16px; height: 26px; background: var(--sf2);
+      border: 1px solid var(--line2); border-radius: 3px; color: var(--tx3);
+      font-size: 9px; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; opacity: 0; transition: opacity var(--t), color var(--t);
+      user-select: none; border: none; padding: 0;
+    }
+    .drag-h:hover .panel-tog, .drag-h.dragging .panel-tog { opacity: 1; }
+    .panel-tog:hover { color: var(--w1); background: var(--sf3); }
+    .app.sb-collapsed { --sb-w: 0px; }
+    .app.rp-collapsed { --rp-w: 0px; }
 
     /* ═ Header ═ */
     .hd {
@@ -126,7 +148,7 @@
     /* ═ Sidebar ═ */
     .sb {
       border-right: 1px solid var(--line); background: var(--base);
-      overflow-y: auto; display: flex; flex-direction: column; z-index: 5; padding: 12px 0;
+      overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; z-index: 5; padding: 12px 0; min-width: 0;
     }
     .sb-head {
       font-size: 11px; font-weight: 600; color: var(--tx3); letter-spacing: 0.5px;
@@ -353,7 +375,14 @@
     }
 
     /* ═ Right Panel ═ */
-    .rp { border-left: 1px solid var(--line); background: var(--base); overflow-y: auto; display: flex; flex-direction: column; z-index: 5; }
+    .rp { border-left: 1px solid var(--line); background: var(--base); overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; z-index: 5; min-width: 0; }
+
+    /* ═ Tab inline rename ═ */
+    .tab-name-inp {
+      background: var(--sf); border: 1px solid var(--w1); border-radius: 2px; outline: none;
+      color: var(--tx); font-family: var(--sans); font-size: 14px; font-weight: 500;
+      padding: 0 3px; margin: 0 -3px; min-width: 40px;
+    }
     .rp-sec { padding: 14px 16px; border-bottom: 1px solid var(--line); }
     .rp-title { font-size: 12px; font-weight: 600; color: var(--tx3); margin-bottom: 10px; }
     .rp-title.w1 { color: var(--w1); text-shadow: 0 0 6px var(--w1glow); }
@@ -506,11 +535,14 @@
 <div class="sb-foot">loop.seafin.ai</div>
     </aside>
 
+    <div class="drag-h" id="dh-sb"><button class="panel-tog" id="tog-sb">&#9664;</button></div>
+
     <main class="ws">
       <div class="term-panel">
         <!-- Workflow tab bar -->
         <div class="wf-bar">
           <div id="wf-tabs" style="display:flex;"></div>
+          <button class="wf-add" id="btn-new-sess" title="New session (Alt+N)">+ Session</button>
           <button class="wf-add" id="btn-wf" title="New workflow">+ Workflow</button>
           <div class="layout-bar" id="layout-bar" style="display:none">
             <button class="layout-btn active" data-layout="single" title="Single pane">
@@ -533,8 +565,7 @@
 
         <!-- Session tabs (standalone mode) -->
         <div class="tabs" id="standalone-tabs">
-          <div id="tab-list" style="display:flex;"></div>
-          <button class="tab-add" id="btn-tab" title="New session">+ New</button>
+          <div id="tab-list" style="display:flex;flex:1;overflow-x:auto;"></div>
         </div>
 
         <!-- Pane grid -->
@@ -553,6 +584,8 @@
         </div>
       </div>
     </main>
+
+    <div class="drag-h" id="dh-rp"><button class="panel-tog" id="tog-rp">&#9654;</button></div>
 
     <aside class="rp">
       <div class="rp-sec">
@@ -770,9 +803,33 @@
 
     /* ═ Tabs ═ */
     function addTab(id,name){
+      const COLORS=['w1','w2','w3','w4','teal','rose'];
+      const dotC={w1:'var(--w1)',w2:'var(--w2)',w3:'var(--w3)',w4:'var(--w4)',teal:'#4db8c2',rose:'#c75878'};
+      const dotS={w1:'0 0 4px var(--w1),0 0 8px var(--w1glow)',w2:'0 0 4px var(--w2),0 0 8px var(--w2glow)',w3:'0 0 4px var(--w3),0 0 8px var(--w3glow)',w4:'0 0 3px var(--w4glow)',teal:'0 0 4px rgba(77,184,194,0.5)',rose:'0 0 4px rgba(199,88,120,0.5)'};
+      const getCol=()=>localStorage.getItem('loop-tab-color-'+id)||'w1';
       const t=document.createElement('div');t.className='tab';t.dataset.session=id;
-      t.innerHTML=`<span class="tab-dot ${DEV?'demo':'live'}"></span><span>${esc(name)}</span><button class="tab-close">&times;</button>`;
-      t.addEventListener('click',e=>e.target.closest('.tab-close')?killSess(id):switchTo(id));
+      // Color dot — click to cycle
+      const dot=document.createElement('span');dot.className='tab-dot'+(DEV?' demo':' live');
+      dot.style.background=dotC[getCol()];dot.style.boxShadow=dotS[getCol()];
+      dot.style.cursor='pointer';dot.title='Click to change color';
+      dot.addEventListener('click',e=>{e.stopPropagation();const c=COLORS.indexOf(getCol()),n=COLORS[(c+1)%COLORS.length];localStorage.setItem('loop-tab-color-'+id,n);dot.style.background=dotC[n];dot.style.boxShadow=dotS[n]});
+      // Name span — double-click to rename inline
+      const ns=document.createElement('span');ns.textContent=name;ns.style.userSelect='none';
+      let editing=false;
+      ns.addEventListener('dblclick',e=>{
+        e.stopPropagation();if(editing)return;editing=true;
+        const cur=sess.get(id)?.name||ns.textContent;
+        const inp=document.createElement('input');inp.className='tab-name-inp';inp.value=cur;
+        inp.style.width=Math.max(60,cur.length*9)+'px';
+        ns.replaceWith(inp);inp.focus();inp.select();
+        const commit=()=>{editing=false;const n=inp.value.trim()||cur;const s=sess.get(id);if(s)s.name=n;ns.textContent=n;inp.replaceWith(ns);upRP()};
+        inp.addEventListener('blur',commit);
+        inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();inp.blur()}if(e.key==='Escape'){inp.value=cur;inp.blur()}e.stopPropagation()});
+      });
+      // Close button
+      const cls=document.createElement('button');cls.className='tab-close';cls.innerHTML='&times;';
+      t.appendChild(dot);t.appendChild(ns);t.appendChild(cls);
+      t.addEventListener('click',e=>{if(e.target.closest('.tab-close'))killSess(id);else if(e.target.tagName!=='INPUT')switchTo(id)});
       t.addEventListener('dragover',e=>{e.preventDefault();t.classList.add('drop-target')});
       t.addEventListener('dragleave',()=>t.classList.remove('drop-target'));
       t.addEventListener('drop',e=>{e.preventDefault();t.classList.remove('drop-target');const sk=e.dataTransfer.getData('text/plain');if(sk)fire(id,sk)});
@@ -945,7 +1002,7 @@
     async function pollStats(){if(DEV)return;try{const d=await api('/api/stats');$('sys-cpu').textContent=d.cpu+'%';$('sys-cpu-b').style.width=d.cpu+'%';const mUsed=fmtBytes(d.mem.used),mTotal=fmtBytes(d.mem.total);$('sys-mem').textContent=mUsed+'/'+mTotal;$('sys-mem-b').style.width=d.mem.pct+'%';const dUsed=fmtBytes(d.disk.used),dTotal=fmtBytes(d.disk.total);$('sys-disk').textContent=dUsed+'/'+dTotal;$('sys-disk-b').style.width=d.disk.pct+'%'}catch{}}
     async function pollClaudeUsage(){if(DEV)return;try{const d=await api('/api/claude-usage');if(!d.available){$('sys-claude-row').style.display='none';return}$('sys-claude-row').style.display='';const fh=d.five_hour;$('sys-claude').textContent=fh.pct+'%';const reset=fh.resets_at?new Date(fh.resets_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';$('sys-claude').title='5-hour window'+(reset?' · resets '+reset:'');$('sys-claude-b').style.width=fh.pct+'%';$('sys-claude-b').style.background=fh.pct>85?'var(--w1)':fh.pct>60?'var(--w4)':'var(--w3)'}catch{}}
 
-function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});activity.unshift({t,msg});if(activity.length>30)activity.length=30;$('rp-af').innerHTML=activity.map(a=>`<div class="af-i"><span class="af-t">${a.t}</span><span class="af-m">${a.msg}</span></div>`).join('')}
+function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});activity.unshift({t,msg});if(activity.length>30)activity.length=30;const af=$('rp-af');if(af)af.innerHTML=activity.map(a=>`<div class="af-i"><span class="af-t">${a.t}</span><span class="af-m">${a.msg}</span></div>`).join('')}
 
     /* ═ Voice ═ */
     const Voice={
@@ -1067,7 +1124,7 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
     });
 
     function openSession(){$('i-sd').value='';$('i-sn').value='';$('i-clone').value='';loadProjects();openMo('mo-session')}
-    $('btn-tab').addEventListener('click',openSession);
+    $('btn-new-sess').addEventListener('click',openSession);
     $('btn-mic').addEventListener('click',()=>Voice.toggle());
     $('sk-search').addEventListener('input',e=>renderSk(e.target.value));
     document.querySelectorAll('.sb-head[data-toggle]').forEach(h=>{h.addEventListener('click',()=>{h.classList.toggle('shut');const g=$(h.dataset.toggle);if(g)g.classList.toggle('shut')})});
@@ -1118,6 +1175,46 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
       if(e.altKey&&e.shiftKey&&e.key==='N'){e.preventDefault();$('btn-wf').click()}
     });
     window.addEventListener('resize',()=>refitAll());
+
+    /* ═ Panel Resize & Collapse ═ */
+    (function(){
+      const app=document.querySelector('.app');
+      const sbW=localStorage.getItem('loop-sb-w'),rpW=localStorage.getItem('loop-rp-w');
+      if(sbW)app.style.setProperty('--sb-w',sbW);
+      if(rpW)app.style.setProperty('--rp-w',rpW);
+      if(localStorage.getItem('loop-sb-collapsed')==='1')app.classList.add('sb-collapsed');
+      if(localStorage.getItem('loop-rp-collapsed')==='1')app.classList.add('rp-collapsed');
+      function sync(){
+        const sc=app.classList.contains('sb-collapsed'),rc=app.classList.contains('rp-collapsed');
+        const ts=$('tog-sb'),tr=$('tog-rp');
+        if(ts){ts.textContent=sc?'▶':'◀';ts.title=sc?'Expand sidebar':'Collapse sidebar'}
+        if(tr){tr.textContent=rc?'◀':'▶';tr.title=rc?'Expand panel':'Collapse panel'}
+      }
+      sync();
+      $('tog-sb').addEventListener('click',e=>{e.stopPropagation();const c=app.classList.toggle('sb-collapsed');localStorage.setItem('loop-sb-collapsed',c?'1':'0');sync();setTimeout(refitAll,160)});
+      $('tog-rp').addEventListener('click',e=>{e.stopPropagation();const c=app.classList.toggle('rp-collapsed');localStorage.setItem('loop-rp-collapsed',c?'1':'0');sync();setTimeout(refitAll,160)});
+      function startDrag(e,side){
+        e.preventDefault();
+        const dh=$(side==='sb'?'dh-sb':'dh-rp');dh.classList.add('dragging');
+        document.body.style.cursor='col-resize';document.body.style.userSelect='none';
+        const onMove=ev=>{
+          if(side==='sb'){
+            const w=Math.max(140,Math.min(420,ev.clientX-2));
+            app.style.setProperty('--sb-w',w+'px');app.classList.remove('sb-collapsed');
+            localStorage.setItem('loop-sb-w',w+'px');localStorage.setItem('loop-sb-collapsed','0');
+          } else {
+            const w=Math.max(160,Math.min(480,window.innerWidth-ev.clientX-2));
+            app.style.setProperty('--rp-w',w+'px');app.classList.remove('rp-collapsed');
+            localStorage.setItem('loop-rp-w',w+'px');localStorage.setItem('loop-rp-collapsed','0');
+          }
+          sync();
+        };
+        const onUp=()=>{dh.classList.remove('dragging');document.body.style.cursor='';document.body.style.userSelect='';document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);setTimeout(refitAll,20)};
+        document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
+      }
+      $('dh-sb').addEventListener('mousedown',e=>{if(!e.target.closest('.panel-tog'))startDrag(e,'sb')});
+      $('dh-rp').addEventListener('mousedown',e=>{if(!e.target.closest('.panel-tog'))startDrag(e,'rp')});
+    })();
 
     /* ═ Boot ═ */
     new Net($('cv'));
