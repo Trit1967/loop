@@ -688,6 +688,7 @@
     };
 
     function mkTerm(id,name,dir){
+      if(sess.has(id))return sess.get(id); // guard against duplicate sessions
       const term=new Terminal({fontFamily:"'JetBrains Mono',monospace",fontSize:15,lineHeight:1.35,theme:TH,cursorBlink:true,cursorStyle:'bar',scrollback:5000});
       const fit=new FitAddon.FitAddon();term.loadAddon(fit);
       const el=document.createElement('div');el.className='ti hidden';el.dataset.session=id;
@@ -789,20 +790,24 @@
     function renderPanes(){
       const grid=$('pane-grid');
       if(!activeWfId){
-        // Standalone mode — pane is just a terminal container, no assign UI
         grid.className='pane-grid layout-single';
-        Array.from(grid.children).forEach(c=>{if(c.id!=='term-empty')c.remove()});
-        const pane=mkPane(0);
-        pane.querySelector('.pane-assign').style.display='none';
-        pane.querySelector('.pane-empty')?.remove();
-        grid.appendChild(pane);
+        // Reuse existing standalone pane if it exists — avoids DOM detach/reattach
+        // which causes xterm.js WebGL context loss and duplicate rendering
+        let pane=grid.querySelector('.pane[data-pane="0"]');
+        if(!pane){
+          pane=mkPane(0);
+          pane.querySelector('.pane-assign').style.display='none';
+          pane.querySelector('.pane-empty')?.remove();
+          grid.appendChild(pane);
+        }
+        const body=pane.querySelector('.pane-body');
         if(activeId){
           const s=sess.get(activeId);
           if(s){
-            pane.querySelector('.pane-body').appendChild(s.el);s.el.classList.remove('hidden');
+            if(s.el.parentElement!==body){body.appendChild(s.el);setTimeout(()=>s.fit.fit(),20);}
+            s.el.classList.remove('hidden');
             pane.querySelector('.pane-label').innerHTML=`<span class="alias">${esc(s.name)}</span>`;
             pane.querySelector('.pane-dot').className='pane-dot live';
-            setTimeout(()=>s.fit.fit(),20);
           }
         }
         if(sess.size===0)$('term-empty').style.display='flex';
