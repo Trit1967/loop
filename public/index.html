@@ -988,8 +988,9 @@
         if(activeId){
           const s=sess.get(activeId);
           if(s){
-            if(s.el.parentElement!==body){body.appendChild(s.el);setTimeout(()=>s.fit.fit(),20);}
+            if(s.el.parentElement!==body){body.appendChild(s.el);setTimeout(()=>{try{s.fit.fit();s.term.scrollToBottom()}catch(e){}},20);}
             s.el.classList.remove('hidden');
+            setTimeout(()=>{try{s.term.scrollToBottom()}catch(e){}},60);
             pane.querySelector('.pane-label').innerHTML=`<span class="alias">${esc(s.name)}</span>`;
             pane.querySelector('.pane-dot').className='pane-dot live';
           }
@@ -1015,8 +1016,9 @@
         if(assignment){
           const s=sess.get(assignment.id);
           if(s){
-            if(s.el.parentElement!==body){body.appendChild(s.el);setTimeout(()=>s.fit.fit(),20);}
+            if(s.el.parentElement!==body){body.appendChild(s.el);setTimeout(()=>{try{s.fit.fit();s.term.scrollToBottom()}catch(e){}},20);}
             s.el.classList.remove('hidden');
+            setTimeout(()=>{try{s.term.scrollToBottom()}catch(e){}},60);
             pane.querySelector('.pane-label').innerHTML=`<span class="alias">${esc(assignment.alias||s.name)}</span>`;
             pane.querySelector('.pane-dot').className='pane-dot live';
             body.querySelector('.pane-empty')?.remove();
