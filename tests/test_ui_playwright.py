@@ -87,14 +87,15 @@ def page(browser):
     app boots to avoid stale panel-collapse state (KB-004).
     """
     ctx = browser.new_context(viewport={"width": 1440, "height": 900})
-    pg = ctx.new_page()
 
-    # Capture JS errors into a list we can query later
-    pg.evaluate_on_new_document("""() => {
+    # Capture JS errors into a list we can query later (must add before page creation)
+    ctx.add_init_script("""
         window.__console_errors__ = [];
         const orig = console.error.bind(console);
         console.error = (...a) => { window.__console_errors__.push(a.join(' ')); orig(...a); };
-    }""")
+    """)
+
+    pg = ctx.new_page()
 
     # First load to get the right origin, then clear storage and reload clean
     pg.goto(BASE_URL, wait_until="load")
