@@ -1002,22 +1002,35 @@
       $('term-empty').style.display='none';
       const count=LAYOUT_PANES[wf.layout]||1;
       grid.className='pane-grid layout-'+wf.layout;
-      Array.from(grid.children).forEach(c=>{if(c.id!=='term-empty')c.remove()});
+      // Remove panes beyond current layout count (don't nuke all — avoids WebGL context loss)
+      Array.from(grid.querySelectorAll('.pane')).forEach(p=>{if(parseInt(p.dataset.pane)>=count)p.remove()});
+      // Hide all terminals — assigned ones get unhidden below
+      sess.forEach(s=>s.el.classList.add('hidden'));
       for(let i=0;i<count;i++){
-        const pane=mkPane(i);
-        if(wf.layout==='triple'&&i===0)pane.classList.add('pane-triple-0');
-        grid.appendChild(pane);
+        let pane=grid.querySelector('.pane[data-pane="'+i+'"]');
+        if(!pane){pane=mkPane(i);grid.appendChild(pane);}
+        pane.classList.toggle('pane-triple-0',wf.layout==='triple'&&i===0);
         const assignment=wf.sessions.find(s=>s.paneIndex===i);
+        const body=pane.querySelector('.pane-body');
         if(assignment){
           const s=sess.get(assignment.id);
           if(s){
-            pane.querySelector('.pane-body').appendChild(s.el);s.el.classList.remove('hidden');
+            if(s.el.parentElement!==body){body.appendChild(s.el);setTimeout(()=>s.fit.fit(),20);}
+            s.el.classList.remove('hidden');
             pane.querySelector('.pane-label').innerHTML=`<span class="alias">${esc(assignment.alias||s.name)}</span>`;
             pane.querySelector('.pane-dot').className='pane-dot live';
-            pane.querySelector('.pane-empty')?.remove();
-            setTimeout(()=>s.fit.fit(),20);
+            body.querySelector('.pane-empty')?.remove();
           } else {
             pane.querySelector('.pane-label').innerHTML=`<span style="color:var(--tx3)">${esc(assignment.alias||assignment.id)} (closed)</span>`;
+          }
+        } else {
+          pane.querySelector('.pane-dot').className='pane-dot empty';
+          pane.querySelector('.pane-label').textContent=`Pane ${i+1}`;
+          if(!body.querySelector('.pane-empty')){
+            const emp=document.createElement('div');emp.className='pane-empty';
+            emp.innerHTML=`<div class="pane-empty-txt">No session assigned</div><button class="pane-empty-btn" data-pane="${i}">+ Assign Session</button>`;
+            emp.querySelector('.pane-empty-btn').addEventListener('click',()=>openAssign(i));
+            body.insertBefore(emp,body.querySelector('.cmd-bar'));
           }
         }
       }
