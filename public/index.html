@@ -152,22 +152,27 @@
     .sb-search:focus { border-color: var(--w1); box-shadow: 0 0 6px rgba(255,107,26,0.15); }
 
     .sk {
-      display: flex; align-items: center; gap: 6px;
-      padding: 3px 8px; border-radius: var(--r); cursor: grab;
-      transition: all var(--t); border: 1px solid transparent;
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 10px; border-radius: var(--r); cursor: grab;
+      transition: all var(--t); border: 1px solid transparent; margin-bottom: 1px;
     }
     .sk:hover { background: var(--sf2); }
     .sk.dragging { opacity: 0.3; }
-    .sk-wire { width: 2px; height: 12px; border-radius: 2px; flex-shrink: 0; }
-    .sk-wire.w1 { background: var(--w1); }
-    .sk-wire.w2 { background: var(--w2); width: 3px; }
-    .sk-wire.w3 { background: var(--w3); }
+    .sk-wire { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; }
+    .sk-wire.w1 { background: var(--w1); box-shadow: 0 0 3px var(--w1glow); }
+    .sk-wire.w2 { background: var(--w2); width: 5px; box-shadow: 0 0 3px var(--w2glow); }
+    .sk-wire.w3 { background: var(--w3); box-shadow: 0 0 3px var(--w3glow); }
     .sk-wire.w4 { background: var(--w4); }
-    .sk-name { font-size: 11px; font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tx2); }
+    .sk-name { font-size: 13px; font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tx2); }
     .sk:hover .sk-name { color: var(--tx); }
-    .sk-tag { font-size: 10px; color: var(--tx3); opacity: 0; transition: opacity var(--t); flex-shrink: 0; }
+    .sk-tag { font-size: 11px; color: var(--tx3); opacity: 0; transition: opacity var(--t); flex-shrink: 0; }
     .sk:hover .sk-tag { opacity: 1; }
-    .sk-loop-icon { font-size: 9px; color: var(--w2); opacity: 0.7; flex-shrink: 0; margin-right: -2px; }
+    .sk-loop-icon { font-size: 10px; color: var(--w2); opacity: 0.7; flex-shrink: 0; margin-right: -4px; }
+    /* Collapsible skill groups */
+    .sb-head { cursor: pointer; user-select: none; }
+    .sb-head .chev { display: inline-block; transition: transform var(--t); margin-left: 4px; font-size: 10px; }
+    .sb-head.collapsed .chev { transform: rotate(-90deg); }
+    .sb-grp.collapsed { display: none; }
 
     .sb-btn {
       display: flex; align-items: center; gap: 6px; width: calc(100% - 24px);
@@ -1029,6 +1034,16 @@
         <span class="hd-name">${esc(currentUser.sub)}</span>
         <a class="hd-out" href="/logout">Logout</a>`;
       loadSkills();loadWorkflowData();loadSessions();
+      // Collapsible skill sections — restore state from localStorage
+      document.querySelectorAll('.sb-head[data-toggle]').forEach(h=>{
+        const key='loopCol_'+h.dataset.toggle,grp=$(h.dataset.toggle);
+        if(localStorage.getItem(key)==='1'){h.classList.add('collapsed');grp.classList.add('collapsed')}
+        h.addEventListener('click',()=>{
+          const c=h.classList.toggle('collapsed');
+          grp.classList.toggle('collapsed',c);
+          localStorage.setItem(key,c?'1':'0');
+        });
+      });
       Voice.init();pollStats();setInterval(pollStats,15000);pollClaudeUsage();setInterval(pollClaudeUsage,300000);
     }
 
