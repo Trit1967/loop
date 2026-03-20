@@ -490,6 +490,42 @@
       50% { opacity: 0.3; box-shadow: 0 0 2px var(--w2); }
     }
 
+    /* ═ Claude Prompt Overlay ═ */
+    .prompt-ov {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 16;
+      background: linear-gradient(transparent 0%, rgba(8,10,15,0.82) 28%, rgba(8,10,15,0.97) 100%);
+      padding: 48px 16px 14px;
+      display: none; flex-direction: column; gap: 8px;
+      transition: opacity 200ms;
+    }
+    .prompt-ov.vis { display: flex; }
+    .prompt-row { display: flex; gap: 8px; align-items: flex-end; }
+    .prompt-inp {
+      flex: 1; background: var(--sf2); border: 1px solid var(--line2);
+      border-radius: var(--r); padding: 10px 14px;
+      font-family: var(--sans); font-size: 14px; color: var(--tx);
+      outline: none; resize: none; min-height: 44px; max-height: 130px;
+      overflow-y: auto; line-height: 1.45;
+      transition: border-color var(--t), box-shadow var(--t);
+    }
+    .prompt-inp:focus { border-color: var(--w1); box-shadow: 0 0 10px rgba(255,107,26,0.18); }
+    .prompt-inp::placeholder { color: var(--tx3); }
+    .prompt-send {
+      background: var(--w1); border: none; border-radius: var(--r);
+      color: var(--void); font-family: var(--sans); font-size: 13px; font-weight: 700;
+      padding: 0 18px; cursor: pointer; transition: all var(--t); flex-shrink: 0; height: 44px;
+      box-shadow: 0 0 8px var(--w1glow); letter-spacing: 0.3px;
+    }
+    .prompt-send:hover { opacity: 0.88; box-shadow: 0 0 16px var(--w1glow); }
+    .prompt-hint { font-size: 11px; color: var(--tx3); font-family: var(--mono); padding: 0 2px; }
+    .prompt-tog {
+      background: none; border: 1px solid transparent; border-radius: var(--r);
+      color: var(--tx3); font-family: var(--sans); font-size: 11px; font-weight: 600;
+      padding: 2px 8px; cursor: pointer; transition: all var(--t); flex-shrink: 0; letter-spacing: 0.3px;
+    }
+    .prompt-tog:hover { color: var(--w1); border-color: var(--w1); background: var(--w1sub); }
+    .prompt-tog.active { color: var(--w1); border-color: rgba(255,107,26,0.4); background: var(--w1sub); }
+
     /* ═ Voice Overlay ═ */
     .voice-ov {
       position: absolute; bottom: 0; left: 0; right: 0; z-index: 15;
@@ -610,8 +646,8 @@
 
         <!-- Pane grid -->
         <div class="pane-grid layout-single" id="pane-grid">
-          <!-- Empty state — lives inside pane-grid so inset:0 only covers terminal area -->
-          <div class="term-empty" id="term-empty">
+          <!-- Empty state — hidden by default, shown only after load if no sessions -->
+          <div class="term-empty" id="term-empty" style="display:none">
             <div class="te-title">Ready to go</div>
             <div class="te-sub">Create a session to start Claude Code on a project, or create a workflow to group sessions across repos.</div>
             <button class="btn btn-go" onclick="openSession()" style="pointer-events:auto">+ New Session</button>
@@ -620,6 +656,7 @@
               <div class="te-shortcut"><span class="te-kbd">Alt W</span> Close tab</div>
               <div class="te-shortcut"><span class="te-kbd">Alt 1-9</span> Switch tab</div>
               <div class="te-shortcut"><span class="te-kbd">Alt M</span> Voice</div>
+              <div class="te-shortcut"><span class="te-kbd">Alt P</span> Prompt bar</div>
             </div>
           </div>
         </div>
@@ -1032,8 +1069,9 @@
 
     function mkPane(idx){
       const pane=document.createElement('div');pane.className='pane';pane.dataset.pane=idx;
-      pane.innerHTML=`<div class="pane-hd"><span class="pane-dot empty"></span><span class="pane-label">Pane ${idx+1}</span><button class="pane-assign" data-pane="${idx}">assign</button></div><div class="pane-body"><div class="pane-empty"><div class="pane-empty-txt">No session assigned</div><button class="pane-empty-btn" data-pane="${idx}">+ Assign Session</button></div></div>`;
+      pane.innerHTML=`<div class="pane-hd"><span class="pane-dot empty"></span><span class="pane-label">Pane ${idx+1}</span><button class="prompt-tog" data-pane="${idx}" title="Claude prompt bar (Alt+P)">≡ Prompt</button><button class="pane-assign" data-pane="${idx}">assign</button></div><div class="pane-body"><div class="pane-empty"><div class="pane-empty-txt">No session assigned</div><button class="pane-empty-btn" data-pane="${idx}">+ Assign Session</button></div></div>`;
       pane.querySelector('.pane-assign').addEventListener('click',()=>openAssign(idx));
+      pane.querySelector('.prompt-tog').addEventListener('click',()=>togglePromptOv());
       const eb=pane.querySelector('.pane-empty-btn');if(eb)eb.addEventListener('click',()=>openAssign(idx));
       pane.addEventListener('dragover',e=>e.preventDefault());
       pane.addEventListener('drop',e=>{e.preventDefault();const sk=e.dataTransfer.getData('text/plain');const a=activeWfId?workflows.get(activeWfId)?.sessions.find(s=>s.paneIndex===idx):null;const sid=a?.id||activeId;if(sk&&sid)fire(sid,sk)});
@@ -1107,6 +1145,58 @@
     async function pollClaudeUsage(){if(DEV)return;try{const d=await api('/api/claude-usage');if(!d.available){$('sys-claude-row').style.display='none';return}$('sys-claude-row').style.display='';const fh=d.five_hour;$('sys-claude').textContent=fh.pct+'%';const reset=fh.resets_at?new Date(fh.resets_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';$('sys-claude').title='5-hour window'+(reset?' · resets '+reset:'');$('sys-claude-b').style.width=fh.pct+'%';$('sys-claude-b').style.background=fh.pct>85?'var(--w1)':fh.pct>60?'var(--w4)':'var(--w3)'}catch{}}
 
 function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});activity.unshift({t,msg});if(activity.length>30)activity.length=30;const af=$('rp-af');if(af)af.innerHTML=activity.map(a=>`<div class="af-i"><span class="af-t">${a.t}</span><span class="af-m">${a.msg}</span></div>`).join('')}
+
+    /* ═ Claude Prompt Overlay ═ */
+    let _promptOv=null;
+    const promptHistory=[];let promptHistIdx=-1;
+    function getPromptOv(){
+      if(!_promptOv){
+        _promptOv=document.createElement('div');
+        _promptOv.className='prompt-ov';
+        _promptOv.innerHTML=`<div class="prompt-row"><textarea class="prompt-inp" id="prompt-inp" placeholder="Message Claude Code... (Enter to send, Shift+Enter for newline)" rows="1"></textarea><button class="prompt-send" id="prompt-send">↵ Send</button></div><div class="prompt-hint">↑↓ history · Shift+Enter newline · Esc to close · Alt+P to toggle</div>`;
+        const inp=_promptOv.querySelector('#prompt-inp');
+        _promptOv.querySelector('#prompt-send').addEventListener('click',sendPromptText);
+        inp.addEventListener('keydown',e=>{
+          if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendPromptText();return}
+          if(e.key==='Escape'){e.preventDefault();togglePromptOv();return}
+          if(e.key==='ArrowUp'&&inp.selectionStart===0){
+            e.preventDefault();
+            if(promptHistIdx<promptHistory.length-1){promptHistIdx++;inp.value=promptHistory[promptHistIdx];inp.selectionStart=inp.selectionEnd=inp.value.length}
+          }
+          if(e.key==='ArrowDown'){
+            e.preventDefault();
+            if(promptHistIdx>0){promptHistIdx--;inp.value=promptHistory[promptHistIdx]}
+            else{promptHistIdx=-1;inp.value=''}
+          }
+        });
+        inp.addEventListener('input',()=>{inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,130)+'px'});
+      }
+      return _promptOv;
+    }
+    function sendPromptText(){
+      const inp=document.getElementById('prompt-inp');if(!inp)return;
+      const text=inp.value.trim();if(!text)return;
+      if(!activeId){toast('No active session');return}
+      const s=sess.get(activeId);if(!s)return;
+      if(text!==promptHistory[0]){promptHistory.unshift(text);if(promptHistory.length>50)promptHistory.pop()}
+      promptHistIdx=-1;
+      if(DEV)s.term.write('\r\n'+text+'\r\n');
+      else if(s.ws&&s.ws.readyState===1)s.ws.send(text+'\n');
+      inp.value='';inp.style.height='auto';inp.focus();
+    }
+    function togglePromptOv(){
+      const ov=getPromptOv();
+      if(ov.classList.contains('vis')){
+        ov.classList.remove('vis');
+        if(activeId){const s=sess.get(activeId);if(s)s.term.focus()}
+      } else {
+        const pb=document.querySelector('.pane-body');
+        if(pb&&!pb.contains(ov))pb.appendChild(ov);
+        ov.classList.add('vis');
+        setTimeout(()=>_promptOv.querySelector('#prompt-inp')?.focus(),40);
+      }
+      document.querySelectorAll('.prompt-tog').forEach(b=>b.classList.toggle('active',ov.classList.contains('vis')));
+    }
 
     /* ═ Voice Overlay ═ */
     let _voiceOv=null;
@@ -1331,6 +1421,7 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
     function handleKey(e){
       if(e.altKey&&e.key==='n'){e.preventDefault&&e.preventDefault();openSession();return true}
       if(e.altKey&&e.key==='m'){e.preventDefault&&e.preventDefault();Voice.toggle();return true}
+      if(e.altKey&&e.key==='p'){e.preventDefault&&e.preventDefault();togglePromptOv();return true}
       if(e.key==='Escape'){document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));return false}
       if(e.altKey&&e.key==='w'&&activeId){e.preventDefault&&e.preventDefault();killSess(activeId);return true}
       if(e.altKey&&e.key>='1'&&e.key<='9'){e.preventDefault&&e.preventDefault();const ids=[...sess.keys()];const idx=parseInt(e.key)-1;if(idx<ids.length)switchTo(ids[idx]);return true}
