@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Loop Terminal — a remote Claude Code session manager at `loop.seafin.ai`. Three-panel dashboard (skills sidebar, terminal workspace, context panel) with GitHub OAuth, tmux session persistence, and cron scheduling.
+Loop Terminal — a remote Claude Code session manager at `loop.seafin.ai`. Three-panel dashboard (skills sidebar, terminal workspace, context panel) with GitHub OAuth, tmux session persistence, and workflow layouts.
 
 ## Design Context
 
@@ -55,10 +55,13 @@ Solo developer (Rob) managing multiple Claude Code sessions on a remote VPS. Pri
 
 ## Key Commands
 ```bash
-# Deploy
-scp -i ~/.ssh/id_ed25519 public/index.html root@VPS_IP:/opt/claude-terminal/public/
-ssh -i ~/.ssh/id_ed25519 root@VPS_IP "systemctl restart claude-terminal"
+# Deploy — push to master, GitHub Actions handles the rest
+git push origin master
+# Actions runs: git fetch && git reset --hard origin/master && systemctl restart claude-terminal
 
-# Logs
-ssh -i ~/.ssh/id_ed25519 root@VPS_IP "journalctl -u claude-terminal -n 20"
+# Logs (via SSH if needed)
+ssh -i ~/.ssh/VPS_KEY root@VPS_IP "journalctl -u claude-terminal -n 20"
+
+# Emergency manual deploy (if Actions is broken)
+ssh -i ~/.ssh/VPS_KEY root@VPS_IP "cd /opt/claude-terminal && git fetch origin master && git reset --hard origin/master && systemctl restart claude-terminal"
 ```

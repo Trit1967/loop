@@ -533,16 +533,17 @@
         </div>
 
         <!-- Pane grid -->
-        <div class="pane-grid layout-single" id="pane-grid"></div>
-
-        <!-- Empty state -->
-        <div class="term-empty" id="term-empty">
-          <div class="te-title">Ready to go</div>
-          <div class="te-sub">Create a session to start Claude Code on a project, or create a workflow to group sessions across repos.</div>
-          <div class="te-shortcuts">
-            <div class="te-shortcut"><span class="te-kbd">Alt N</span> New session</div>
-            <div class="te-shortcut"><span class="te-kbd">Alt W</span> Close tab</div>
-            <div class="te-shortcut"><span class="te-kbd">Alt 1-9</span> Switch tab</div>
+        <div class="pane-grid layout-single" id="pane-grid">
+          <!-- Empty state — lives inside pane-grid so inset:0 only covers terminal area -->
+          <div class="term-empty" id="term-empty">
+            <div class="te-title">Ready to go</div>
+            <div class="te-sub">Create a session to start Claude Code on a project, or create a workflow to group sessions across repos.</div>
+            <button class="btn btn-go" onclick="openSession()" style="pointer-events:auto">+ New Session</button>
+            <div class="te-shortcuts">
+              <div class="te-shortcut"><span class="te-kbd">Alt N</span> New session</div>
+              <div class="te-shortcut"><span class="te-kbd">Alt W</span> Close tab</div>
+              <div class="te-shortcut"><span class="te-kbd">Alt 1-9</span> Switch tab</div>
+            </div>
           </div>
         </div>
       </div>
