@@ -119,15 +119,15 @@
     .hd-brand span { color: var(--w1); font-weight: 500; text-shadow: 0 0 8px var(--w1glow); }
     .hd-sep { width: 1px; height: 20px; background: var(--line2); }
     .hd-live { width: 7px; height: 7px; border-radius: 50%; background: var(--w2); box-shadow: 0 0 4px var(--w2), 0 0 10px var(--w2glow); animation: pulse 2.5s ease-in-out infinite; }
-    .hd-stat { font-size: 13px; color: var(--tx2); display: flex; align-items: center; gap: 6px; }
+    .hd-stat { font-size: 14px; color: var(--tx2); display: flex; align-items: center; gap: 6px; }
     .hd-fill { flex: 1; }
     .hd-wires { display: flex; gap: 3px; align-items: center; }
     .hd-wire { width: 18px; height: 2px; border-radius: 1px; opacity: 0.7; }
     .hd-user { display: flex; align-items: center; gap: 10px; }
     .hd-avatar { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--sf3); }
-    .hd-name { font-size: 13px; color: var(--tx2); font-weight: 500; }
+    .hd-name { font-size: 14px; color: var(--tx2); font-weight: 500; }
     .hd-out {
-      font-size: 12px; color: var(--tx3); background: none; border: none; cursor: pointer;
+      font-size: 13px; color: var(--tx3); background: none; border: none; cursor: pointer;
       font-family: var(--sans); padding: 4px 8px; border-radius: var(--r); transition: all var(--t);
     }
     .hd-out:hover { color: var(--tx); background: var(--sf2); }
@@ -151,7 +151,7 @@
       overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; z-index: 5; padding: 12px 0; min-width: 0;
     }
     .sb-head {
-      font-size: 11px; font-weight: 600; color: var(--tx3); letter-spacing: 0.5px;
+      font-size: 12px; font-weight: 600; color: var(--tx3); letter-spacing: 0.5px;
       padding: 16px 16px 6px; display: flex; align-items: center; justify-content: space-between;
       cursor: pointer; user-select: none; transition: color var(--t);
     }
@@ -185,9 +185,9 @@
     .sk-wire.w2 { background: var(--w2); width: 5px; box-shadow: 0 0 3px var(--w2glow); }
     .sk-wire.w3 { background: var(--w3); box-shadow: 0 0 3px var(--w3glow); }
     .sk-wire.w4 { background: var(--w4); }
-    .sk-name { font-size: 13px; font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tx2); }
+    .sk-name { font-size: 14px; font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tx2); }
     .sk:hover .sk-name { color: var(--tx); }
-    .sk-tag { font-size: 11px; color: var(--tx3); opacity: 0; transition: opacity var(--t); flex-shrink: 0; }
+    .sk-tag { font-size: 12px; color: var(--tx3); opacity: 0; transition: opacity var(--t); flex-shrink: 0; }
     .sk:hover .sk-tag { opacity: 1; }
     .sk-loop-icon { font-size: 10px; color: var(--w2); opacity: 0.7; flex-shrink: 0; margin-right: -4px; }
     /* Collapsible skill groups */
@@ -203,7 +203,7 @@
       cursor: pointer; transition: all var(--t);
     }
     .sb-btn:hover { border-color: var(--line2); color: var(--tx); background: var(--sf2); }
-    .sb-foot { margin-top: auto; padding: 14px 16px; font-size: 11px; color: var(--tx3); font-family: var(--mono); }
+    .sb-foot { margin-top: auto; padding: 14px 16px; font-size: 12px; color: var(--tx3); font-family: var(--mono); }
 
     /* ═ Workspace ═ */
     .ws { position: relative; overflow: hidden; background: var(--void); }
@@ -220,7 +220,7 @@
     .wf-bar::-webkit-scrollbar { height: 0; }
     .wf-tab {
       display: flex; align-items: center; gap: 6px;
-      padding: 0 16px; font-family: var(--sans); font-size: 12px; font-weight: 600;
+      padding: 0 16px; font-family: var(--sans); font-size: 13px; font-weight: 600;
       color: var(--tx3); cursor: pointer; transition: all var(--t); white-space: nowrap;
       position: relative; letter-spacing: 0.3px; text-transform: uppercase; border-right: 1px solid var(--line);
     }
@@ -236,7 +236,7 @@
     .wf-tab-x:hover { opacity: 1; color: var(--w1); }
     .wf-add {
       padding: 0 14px; background: none; border: none; border-right: 1px solid var(--line);
-      color: var(--tx3); font-family: var(--sans); font-size: 12px; font-weight: 600;
+      color: var(--tx3); font-family: var(--sans); font-size: 13px; font-weight: 600;
       cursor: pointer; transition: all var(--t); flex-shrink: 0;
     }
     .wf-add:hover { color: var(--w1); background: var(--sf); }
@@ -257,13 +257,13 @@
 
     /* ═ Session Tabs (standalone mode) ═ */
     .tabs {
-      display: flex; align-items: stretch; height: 42px;
+      display: flex; align-items: stretch; height: 44px;
       border-bottom: 1px solid var(--line); background: var(--sf); flex-shrink: 0; overflow-x: auto;
     }
     .tabs::-webkit-scrollbar { height: 0; }
     .tab {
       display: flex; align-items: center; gap: 8px;
-      padding: 0 20px; font-family: var(--sans); font-size: 14px; font-weight: 500;
+      padding: 0 20px; font-family: var(--sans); font-size: 15px; font-weight: 500;
       color: var(--tx3); cursor: pointer; transition: all var(--t); white-space: nowrap; position: relative;
     }
     .tab:hover { color: var(--tx2); background: var(--sf2); }
@@ -304,7 +304,7 @@
       background: var(--sf); border-bottom: 1px solid var(--line); flex-shrink: 0; gap: 6px;
     }
     .pane-label {
-      font-family: var(--sans); font-size: 11px; font-weight: 600;
+      font-family: var(--sans); font-size: 13px; font-weight: 600;
       color: var(--tx3); letter-spacing: 0.3px; text-transform: uppercase; flex: 1;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
@@ -384,7 +384,7 @@
       padding: 0 3px; margin: 0 -3px; min-width: 40px;
     }
     .rp-sec { padding: 14px 16px; border-bottom: 1px solid var(--line); }
-    .rp-title { font-size: 12px; font-weight: 600; color: var(--tx3); margin-bottom: 10px; }
+    .rp-title { font-size: 13px; font-weight: 600; color: var(--tx3); margin-bottom: 10px; }
     .rp-title.w1 { color: var(--w1); text-shadow: 0 0 6px var(--w1glow); }
     .rp-title.w2 { color: var(--w2); text-shadow: 0 0 6px var(--w2glow); }
     .rp-title.w3 { color: var(--w3); text-shadow: 0 0 6px var(--w3glow); }
@@ -414,7 +414,7 @@
 
     .sys { margin-bottom: 8px; }
     .sys:last-child { margin-bottom: 0; }
-    .sys-lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--tx3); margin-bottom: 3px; }
+    .sys-lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--tx3); margin-bottom: 3px; }
     .sys-lbl span:last-child { font-family: var(--mono); color: var(--tx2); }
     .sys-bar { height: 4px; background: var(--sf3); border-radius: 2px; overflow: hidden; }
     .sys-fill { height: 100%; border-radius: 2px; transition: width 600ms ease-out; box-shadow: 0 0 4px currentColor; }
@@ -539,11 +539,10 @@
 
     <main class="ws">
       <div class="term-panel">
-        <!-- Workflow tab bar -->
-        <div class="wf-bar">
+        <!-- Workflow tab bar — only visible when workflows exist -->
+        <div class="wf-bar" id="wf-bar" style="display:none">
           <div id="wf-tabs" style="display:flex;"></div>
-          <button class="wf-add" id="btn-new-sess" title="New session (Alt+N)">+ Session</button>
-          <button class="wf-add" id="btn-wf" title="New workflow">+ Workflow</button>
+          <button class="wf-add" id="btn-wf-bar" title="New workflow (Alt+Shift+N)">+ Workflow</button>
           <div class="layout-bar" id="layout-bar" style="display:none">
             <button class="layout-btn active" data-layout="single" title="Single pane">
               <svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="1.5"/></svg>
@@ -563,9 +562,11 @@
           </div>
         </div>
 
-        <!-- Session tabs (standalone mode) -->
+        <!-- Session tabs — always visible in sessions mode, has action buttons when no workflows -->
         <div class="tabs" id="standalone-tabs">
           <div id="tab-list" style="display:flex;flex:1;overflow-x:auto;"></div>
+          <button class="wf-add" id="btn-new-sess" title="New session (Alt+N)">+ Session</button>
+          <button class="wf-add" id="btn-wf" title="New workflow (Alt+Shift+N)">+ Workflow</button>
         </div>
 
         <!-- Pane grid -->
@@ -853,6 +854,15 @@
 
     function renderWfTabs(){
       const c=$('wf-tabs');c.innerHTML='';
+      const bar=$('wf-bar');
+      const btnWf=$('btn-wf'); // + Workflow in standalone-tabs row
+      if(workflows.size===0){
+        bar.style.display='none';
+        if(btnWf)btnWf.style.display='';
+        return;
+      }
+      bar.style.display='flex';
+      if(btnWf)btnWf.style.display='none'; // hidden when wf-bar is visible
       const all=document.createElement('div');all.className='wf-tab'+(activeWfId===null?' active':'');all.textContent='Sessions';
       all.addEventListener('click',()=>{activeWfId=null;renderWfTabs();showStandaloneTabs();renderPanes()});
       c.appendChild(all);
@@ -1028,8 +1038,13 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
             }
           }
         };
-        this.rec.onerror=e=>{if(e.error!=='aborted')toast('Voice error: '+e.error);this.stop()};
-        this.rec.onend=()=>{if(this.listening){try{this.rec.start()}catch(e){this.stop()}}};
+        this.rec.onerror=e=>{if(e.error!=='no-speech')toast('Voice error: '+e.error);if(e.error==='not-allowed'||e.error==='service-not-allowed')this.stop()};
+        this.rec.onend=()=>{
+          if(this.listening){
+            clearTimeout(this._rt);
+            this._rt=setTimeout(()=>{if(this.listening)try{this.rec.start()}catch(e){this.stop()}},300);
+          }
+        };
       },
       toggle(){
         if(!this.rec){toast('Voice not supported — use Chrome or Edge');return}
@@ -1127,11 +1142,13 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
 
     function openSession(){$('i-sd').value='';$('i-sn').value='';$('i-clone').value='';loadProjects();openMo('mo-session')}
     $('btn-new-sess').addEventListener('click',openSession);
+    function openWorkflowModal(){editingWfId=null;$('mo-wf-title').textContent='New Workflow';$('i-wfn').value='';$('i-wfl').value='single';$('btn-wf-go').textContent='Create';openMo('mo-workflow')}
+    $('btn-wf').addEventListener('click',openWorkflowModal);
+    $('btn-wf-bar').addEventListener('click',openWorkflowModal);
     $('btn-mic').addEventListener('click',()=>Voice.toggle());
     $('sk-search').addEventListener('input',e=>renderSk(e.target.value));
     document.querySelectorAll('.sb-head[data-toggle]').forEach(h=>{h.addEventListener('click',()=>{h.classList.toggle('shut');const g=$(h.dataset.toggle);if(g)g.classList.toggle('shut')})});
 
-    $('btn-wf').addEventListener('click',()=>{editingWfId=null;$('mo-wf-title').textContent='New Workflow';$('i-wfn').value='';$('i-wfl').value='single';$('btn-wf-go').textContent='Create';openMo('mo-workflow')});
     $('f-workflow').addEventListener('submit',e=>{
       e.preventDefault();closeMo('mo-workflow');
       const name=$('i-wfn').value.trim(),layout=$('i-wfl').value;if(!name)return;
@@ -1174,7 +1191,7 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
       if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));
       if(e.altKey&&e.key==='w'&&activeId){e.preventDefault();killSess(activeId)}
       if(e.altKey&&e.key>='1'&&e.key<='9'){e.preventDefault();const ids=[...sess.keys()];const idx=parseInt(e.key)-1;if(idx<ids.length)switchTo(ids[idx])}
-      if(e.altKey&&e.shiftKey&&e.key==='N'){e.preventDefault();$('btn-wf').click()}
+      if(e.altKey&&e.shiftKey&&e.key==='N'){e.preventDefault();openWorkflowModal()}
     });
     window.addEventListener('resize',()=>refitAll());
 
