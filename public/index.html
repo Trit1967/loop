@@ -584,6 +584,7 @@
         <div class="sys"><div class="sys-lbl"><span>cpu</span><span id="sys-cpu">&mdash;</span></div><div class="sys-bar"><div class="sys-fill" id="sys-cpu-b" style="width:0%;background:var(--w1)"></div></div></div>
         <div class="sys"><div class="sys-lbl"><span>mem</span><span id="sys-mem">&mdash;</span></div><div class="sys-bar"><div class="sys-fill" id="sys-mem-b" style="width:0%;background:var(--w2)"></div></div></div>
         <div class="sys"><div class="sys-lbl"><span>disk</span><span id="sys-disk">&mdash;</span></div><div class="sys-bar"><div class="sys-fill" id="sys-disk-b" style="width:0%;background:var(--w4)"></div></div></div>
+        <div class="sys" id="sys-claude-row" style="display:none"><div class="sys-lbl"><span>claude</span><span id="sys-claude" title="">—</span></div><div class="sys-bar"><div class="sys-fill" id="sys-claude-b" style="width:0%;background:var(--w3)"></div></div></div>
       </div>
     </aside>
   </div>
@@ -920,6 +921,8 @@
     function upRP(){const s=activeId?sess.get(activeId):null;$('rp-sn').textContent=s?s.name:'\u2014';$('rp-sd').textContent=s?s.dir:'\u2014';$('rp-sd').title=s?s.dir:'';$('rp-ss').textContent=s?(DEV?'demo':'live'):'idle';$('rp-dot').style.background=s?(DEV?'var(--w4)':'var(--w2)'):'var(--tx3)';$('rp-sc').textContent=sess.size;if(DEV){$('sys-cpu').textContent='8%';$('sys-cpu-b').style.width='8%';$('sys-mem').textContent='1.1/4GB';$('sys-mem-b').style.width='28%';$('sys-disk').textContent='12/40GB';$('sys-disk-b').style.width='30%'}}
     function fmtBytes(b){if(b>1e9)return(b/1e9).toFixed(1)+'GB';if(b>1e6)return(b/1e6).toFixed(0)+'MB';return b+'B'}
     async function pollStats(){if(DEV)return;try{const d=await api('/api/stats');$('sys-cpu').textContent=d.cpu+'%';$('sys-cpu-b').style.width=d.cpu+'%';const mUsed=fmtBytes(d.mem.used),mTotal=fmtBytes(d.mem.total);$('sys-mem').textContent=mUsed+'/'+mTotal;$('sys-mem-b').style.width=d.mem.pct+'%';const dUsed=fmtBytes(d.disk.used),dTotal=fmtBytes(d.disk.total);$('sys-disk').textContent=dUsed+'/'+dTotal;$('sys-disk-b').style.width=d.disk.pct+'%'}catch{}}
+    function fmtTok(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'k';return String(n)}
+    async function pollClaudeUsage(){if(DEV)return;try{const d=await api('/api/claude-usage');if(!d.available){$('sys-claude-row').style.display='none';return}$('sys-claude-row').style.display='';const usedLabel=fmtTok(d.used)+'/'+fmtTok(d.limit);$('sys-claude').textContent=usedLabel;const reset=d.resetAt?new Date(d.resetAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';$('sys-claude').title=reset?'Rate limit resets '+reset:'';$('sys-claude-b').style.width=d.pct+'%';$('sys-claude-b').style.background=d.pct>85?'var(--w1)':d.pct>60?'var(--w4)':'var(--w3)'}catch{}}
 
     function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});activity.unshift({t,msg});if(activity.length>30)activity.length=30;$('rp-af').innerHTML=activity.map(a=>`<div class="af-i"><span class="af-t">${a.t}</span><span class="af-m">${a.msg}</span></div>`).join('')}
 
@@ -996,7 +999,7 @@
         <span class="hd-name">${esc(currentUser.sub)}</span>
         <a class="hd-out" href="/logout">Logout</a>`;
       loadSkills();loadCrons();loadWorkflowData();loadSessions();
-      Voice.init();pollStats();setInterval(pollStats,15000);
+      Voice.init();pollStats();setInterval(pollStats,15000);pollClaudeUsage();setInterval(pollClaudeUsage,300000);
     }
 
     async function loadSessions(){
