@@ -16,6 +16,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /opt/claude-terminal
-            git pull origin master
+            git fetch origin master
+            git reset --hard origin/master
             systemctl restart claude-terminal
             echo "Deployed $(git rev-parse --short HEAD)"
