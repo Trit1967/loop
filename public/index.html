@@ -1162,7 +1162,7 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
           }
           updateVoiceOv(this._lastFinal,interim);
         };
-        this.rec.onerror=e=>{if(e.error!=='no-speech')toast('Voice error: '+e.error);if(e.error==='not-allowed'||e.error==='service-not-allowed')this.stop()};
+        this.rec.onerror=e=>{if(e.error!=='no-speech'&&e.error!=='network')toast('Voice error: '+e.error);if(e.error==='not-allowed'||e.error==='service-not-allowed')this.stop()};
         this.rec.onend=()=>{
           if(this.listening){
             clearTimeout(this._rt);
