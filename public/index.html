@@ -489,6 +489,45 @@
       0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--w2), 0 0 10px var(--w2glow); }
       50% { opacity: 0.3; box-shadow: 0 0 2px var(--w2); }
     }
+
+    /* ═ Voice Overlay ═ */
+    .voice-ov {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 15;
+      background: linear-gradient(transparent 0%, rgba(5,5,8,0.72) 30%, rgba(5,5,8,0.93) 100%);
+      padding: 56px 20px 18px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 250ms ease-out;
+      font-family: var(--mono);
+    }
+    .voice-ov.vis { opacity: 1; }
+    .voice-ov-top {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+      pointer-events: auto;
+    }
+    .voice-pulse {
+      width: 9px; height: 9px; border-radius: 50%; background: var(--w1); flex-shrink: 0;
+      animation: voice-beat 1.2s ease-in-out infinite;
+    }
+    @keyframes voice-beat {
+      0%,100% { box-shadow: 0 0 4px var(--w1), 0 0 10px var(--w1glow); opacity: 1; transform: scale(1); }
+      50% { box-shadow: 0 0 16px var(--w1glow), 0 0 28px rgba(255,107,26,0.3); opacity: 0.7; transform: scale(1.25); }
+    }
+    .voice-label { font-family: var(--sans); font-size: 12px; font-weight: 700; color: var(--w1); letter-spacing: 0.8px; text-transform: uppercase; flex: 1; }
+    .voice-stop-btn {
+      pointer-events: auto; background: rgba(255,107,26,0.1); border: 1px solid rgba(255,107,26,0.3);
+      color: var(--w1); font-family: var(--sans); font-size: 12px; font-weight: 600;
+      border-radius: var(--r); padding: 3px 12px; cursor: pointer; transition: all var(--t);
+    }
+    .voice-stop-btn:hover { background: var(--w1sub); border-color: var(--w1); box-shadow: 0 0 8px var(--w1glow); }
+    .voice-interim-txt {
+      font-size: 14px; color: var(--tx3); font-style: italic; min-height: 20px; margin-bottom: 5px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.2px;
+    }
+    .voice-final-txt {
+      font-size: 15px; color: var(--tx); font-weight: 500; min-height: 22px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      text-shadow: 0 0 20px rgba(208,207,200,0.15);
+    }
   </style>
 </head>
 <body>
@@ -510,7 +549,7 @@
       <div class="hd-brand"><span>Loop</span> Terminal</div>
       <div class="hd-sep"></div>
       <div class="hd-stat"><div class="hd-live"></div> Online</div>
-      <button class="hd-mic" id="btn-mic" title="Voice input (Chrome/Edge)">
+      <button class="hd-mic" id="btn-mic" title="Voice input — Alt+M to toggle (Chrome/Edge)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="1" width="6" height="11" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
       </button>
       <div class="hd-sep"></div>
@@ -580,6 +619,7 @@
               <div class="te-shortcut"><span class="te-kbd">Alt N</span> New session</div>
               <div class="te-shortcut"><span class="te-kbd">Alt W</span> Close tab</div>
               <div class="te-shortcut"><span class="te-kbd">Alt 1-9</span> Switch tab</div>
+              <div class="te-shortcut"><span class="te-kbd">Alt M</span> Voice</div>
             </div>
           </div>
         </div>
@@ -732,6 +772,12 @@
       const el=document.createElement('div');el.className='ti hidden';el.dataset.session=id;
       // Don't attach to DOM yet — renderPanes will place it
       term.open(el);
+      // Intercept app shortcuts before xterm swallows them
+      term.attachCustomKeyEventHandler(ev=>{
+        if(ev.type!=='keydown')return true;
+        if(ev.altKey||ev.key==='Escape'){const handled=handleKey(ev);if(handled)return false}
+        return true;
+      });
       try{term.loadAddon(new WebglAddon.WebglAddon())}catch(e){}
       try{term.loadAddon(new WebLinksAddon.WebLinksAddon())}catch(e){}
       // TypeAhead — optimistic local echo for printable chars.
@@ -1016,14 +1062,42 @@
 
 function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});activity.unshift({t,msg});if(activity.length>30)activity.length=30;const af=$('rp-af');if(af)af.innerHTML=activity.map(a=>`<div class="af-i"><span class="af-t">${a.t}</span><span class="af-m">${a.msg}</span></div>`).join('')}
 
+    /* ═ Voice Overlay ═ */
+    let _voiceOv=null;
+    function getVoiceOv(){
+      if(!_voiceOv){
+        _voiceOv=document.createElement('div');
+        _voiceOv.className='voice-ov';
+        _voiceOv.innerHTML=`<div class="voice-ov-top"><span class="voice-pulse"></span><span class="voice-label">Listening</span><button class="voice-stop-btn" id="voice-stop-btn">✕ Stop</button></div><div class="voice-interim-txt" id="voice-interim"></div><div class="voice-final-txt" id="voice-final"></div>`;
+        _voiceOv.querySelector('#voice-stop-btn').addEventListener('click',()=>Voice.stop());
+      }
+      return _voiceOv;
+    }
+    function showVoiceOv(){
+      const ov=getVoiceOv();
+      const pb=document.querySelector('.pane-body:not(.hidden),.pane-body');
+      if(pb&&!pb.contains(ov))pb.appendChild(ov);
+      requestAnimationFrame(()=>ov.classList.add('vis'));
+    }
+    function hideVoiceOv(){
+      if(_voiceOv){_voiceOv.classList.remove('vis');setTimeout(()=>{if(_voiceOv&&_voiceOv.parentNode)_voiceOv.parentNode.removeChild(_voiceOv)},260)}
+    }
+    function updateVoiceOv(final,interim){
+      if(!_voiceOv)return;
+      const fi=$('voice-final'),ii=$('voice-interim');
+      if(fi)fi.textContent=final?`"${final}"`:'';
+      if(ii)ii.textContent=interim||'';
+    }
+
     /* ═ Voice ═ */
     const Voice={
-      rec:null,listening:false,
+      rec:null,listening:false,_rt:null,_lastFinal:'',
       init(){
         const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
         if(!SR){$('btn-mic').title='Voice not supported in this browser';return}
-        this.rec=new SR();this.rec.continuous=true;this.rec.interimResults=false;this.rec.lang='en-US';
+        this.rec=new SR();this.rec.continuous=true;this.rec.interimResults=true;this.rec.lang='en-US';
         this.rec.onresult=e=>{
+          let interim='';
           for(let i=e.resultIndex;i<e.results.length;i++){
             if(e.results[i].isFinal){
               const text=e.results[i][0].transcript.trim();
@@ -1032,11 +1106,14 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
                 if(s){
                   if(DEV)s.term.write(text);
                   else if(s.ws&&s.ws.readyState===1)s.ws.send(text);
-                  log(`Voice: <b>${esc(text.substring(0,50))}</b>`);
                 }
+                this._lastFinal=text;
               }
+            } else {
+              interim+=e.results[i][0].transcript;
             }
           }
+          updateVoiceOv(this._lastFinal,interim);
         };
         this.rec.onerror=e=>{if(e.error!=='no-speech')toast('Voice error: '+e.error);if(e.error==='not-allowed'||e.error==='service-not-allowed')this.stop()};
         this.rec.onend=()=>{
@@ -1048,11 +1125,21 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
       },
       toggle(){
         if(!this.rec){toast('Voice not supported — use Chrome or Edge');return}
-        if(!activeId){toast('No active session');return}
+        if(!activeId&&!DEV){toast('No active session');return}
         this.listening?this.stop():this.start();
       },
-      start(){this.listening=true;$('btn-mic').classList.add('listening');try{this.rec.start()}catch(e){this.stop()}log('Voice input started')},
-      stop(){this.listening=false;$('btn-mic').classList.remove('listening');try{this.rec.stop()}catch(e){}log('Voice input stopped')}
+      start(){
+        this.listening=true;this._lastFinal='';
+        $('btn-mic').classList.add('listening');
+        showVoiceOv();
+        try{this.rec.start()}catch(e){this.stop()}
+      },
+      stop(){
+        this.listening=false;clearTimeout(this._rt);
+        $('btn-mic').classList.remove('listening');
+        hideVoiceOv();
+        try{this.rec.stop()}catch(e){}
+      }
     };
 
     /* ═ CLAUDE.md Briefing ═ */
@@ -1186,13 +1273,16 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
     });
 
     document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
-    document.addEventListener('keydown',e=>{
-      if(e.altKey&&e.key==='n'){e.preventDefault();openSession()}
-      if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));
-      if(e.altKey&&e.key==='w'&&activeId){e.preventDefault();killSess(activeId)}
-      if(e.altKey&&e.key>='1'&&e.key<='9'){e.preventDefault();const ids=[...sess.keys()];const idx=parseInt(e.key)-1;if(idx<ids.length)switchTo(ids[idx])}
-      if(e.altKey&&e.shiftKey&&e.key==='N'){e.preventDefault();openWorkflowModal()}
-    });
+    function handleKey(e){
+      if(e.altKey&&e.key==='n'){e.preventDefault&&e.preventDefault();openSession();return true}
+      if(e.altKey&&e.key==='m'){e.preventDefault&&e.preventDefault();Voice.toggle();return true}
+      if(e.key==='Escape'){document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));return false}
+      if(e.altKey&&e.key==='w'&&activeId){e.preventDefault&&e.preventDefault();killSess(activeId);return true}
+      if(e.altKey&&e.key>='1'&&e.key<='9'){e.preventDefault&&e.preventDefault();const ids=[...sess.keys()];const idx=parseInt(e.key)-1;if(idx<ids.length)switchTo(ids[idx]);return true}
+      if(e.altKey&&e.shiftKey&&e.key==='N'){e.preventDefault&&e.preventDefault();openWorkflowModal();return true}
+      return false;
+    }
+    document.addEventListener('keydown',handleKey);
     window.addEventListener('resize',()=>refitAll());
 
     /* ═ Panel Resize & Collapse ═ */
