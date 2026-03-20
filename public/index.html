@@ -787,7 +787,7 @@
     const LAYOUT_PANES={single:1,'side-by-side':2,stacked:2,triple:3,quad:4};
 
     /* ═ API ═ */
-    async function api(p,o={}){const r=await fetch(p,{headers:{'Content-Type':'application/json'},...o,body:o.body?JSON.stringify(o.body):undefined});if(r.status===401){showLogin();throw Error('401')}if(!r.ok)throw Error(await r.text());return r.json()}
+    async function api(p,o={}){const r=await fetch(p,{headers:{'Content-Type':'application/json'},...o,body:o.body?JSON.stringify(o.body):undefined});if(r.status===401){showLogin();throw Error('401')}if(!r.ok){const txt=await r.text();const msg=txt.replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().slice(0,120)||`Server error ${r.status}`;throw Error(msg)}return r.json()}
 
     /* ═ Terminal — CRT Phosphor Theme ═ */
     const TH={

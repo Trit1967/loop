@@ -1,0 +1,69 @@
+{
+  "last_updated": "2026-03-20T18:00:00Z",
+  "project": "Loop Terminal",
+  "base_url": "https://loop.seafin.ai",
+  "local_file": "file:///C:/Projects/loop/public/index.html",
+  "routes": [
+    {"path": "/api/sessions", "method": "GET", "auth_required": true, "description": "List tmux sessions"},
+    {"path": "/api/sessions", "method": "POST", "auth_required": true, "description": "Create session"},
+    {"path": "/api/sessions/:id", "method": "DELETE", "auth_required": true, "description": "Kill session"},
+    {"path": "/api/sessions/:id/skill", "method": "POST", "auth_required": true, "description": "Inject skill"},
+    {"path": "/api/sessions/:id/claude-md", "method": "GET", "auth_required": true, "description": "Get CLAUDE.md"},
+    {"path": "/api/skills", "method": "GET", "auth_required": true, "description": "List skills+commands"},
+    {"path": "/api/crons", "method": "GET", "auth_required": true, "description": "List cron jobs"},
+    {"path": "/api/crons", "method": "POST", "auth_required": true, "description": "Create cron job"},
+    {"path": "/api/crons/:id", "method": "DELETE", "auth_required": true, "description": "Delete cron job"},
+    {"path": "/api/projects", "method": "GET", "auth_required": true, "description": "List cloned projects"},
+    {"path": "/api/projects/clone", "method": "POST", "auth_required": true, "description": "Clone GitHub repo"},
+    {"path": "/api/repos", "method": "GET", "auth_required": true, "description": "List GitHub repos"},
+    {"path": "/auth/login", "method": "GET", "auth_required": false, "description": "GitHub OAuth initiate"},
+    {"path": "/auth/callback", "method": "GET", "auth_required": false, "description": "GitHub OAuth callback"},
+    {"path": "/auth/logout", "method": "GET", "auth_required": false, "description": "Clear session"},
+    {"path": "/auth/me", "method": "GET", "auth_required": true, "description": "Current user info"}
+  ],
+  "pages": ["/"],
+  "components": [
+    "LoginCard", "Header", "Sidebar", "WorkflowBar", "LayoutSelector",
+    "TabBar", "PaneGrid", "RightPanel", "SessionInfo", "SkillInspect",
+    "SystemStats", "ParticleCanvas", "Toast", "CommandBar",
+    "SessionModal", "WorkflowModal", "AssignModal",
+    "MicButton", "BriefingOverlay", "EmptyState"
+  ],
+  "sidebar_sections": [
+    {"name": "Skills", "css_class": "w1", "data_toggle": "sk-skills", "type": "skill"},
+    {"name": "Loop Skills", "css_class": "w2", "data_toggle": "sk-loop", "type": "loop-skill"},
+    {"name": "Commands", "css_class": "w3", "data_toggle": "sk-cmds", "type": "command"}
+  ],
+  "layouts": ["single", "side-by-side", "stacked", "triple", "quad"],
+  "modals": [
+    {"id": "mo-session", "form_id": "f-session", "fields": ["i-proj", "i-clone", "i-sn", "i-mode", "i-sd"]},
+    {"id": "mo-workflow", "form_id": "f-workflow", "fields": ["i-wfn", "i-wfl"]},
+    {"id": "mo-assign", "form_id": "f-assign", "fields": ["i-assign-sess", "i-assign-proj-main", "i-assign-name", "i-assign-mode", "i-assign-alias", "i-assign-pane"]}
+  ],
+  "keyboard_shortcuts": [
+    {"keys": "Alt+N", "action": "Open new session modal"},
+    {"keys": "Alt+M", "action": "Toggle voice input"},
+    {"keys": "Alt+W", "action": "Close active tab"},
+    {"keys": "Alt+1-9", "action": "Switch to tab N"},
+    {"keys": "Alt+Shift+N", "action": "Open new workflow modal"},
+    {"keys": "Escape", "action": "Close open modals"}
+  ],
+  "css_variables": {
+    "wire_colors": ["--w1 (#ff6b1a)", "--w2 (#00e64d)", "--w3 (#9b6bff)", "--w4 (#b8c0cc)"],
+    "surfaces": ["--void (#050508)", "--base (#0a0c10)", "--sf (#0e1117)", "--sf2 (#141820)", "--sf3 (#1a1f2a)"]
+  },
+  "features": [
+    {"name": "Workflow System", "acceptance_criteria": ["Create workflow with name and layout", "Rename workflow via double-click", "Delete workflow", "Switch between workflows", "Persist workflows across reloads", "Sessions tab for standalone mode"]},
+    {"name": "Split Panes", "acceptance_criteria": ["Single pane layout", "Side-by-side layout (2 cols)", "Stacked layout (2 rows)", "Triple layout (1 big + 2 small)", "Quad layout (2x2)", "Assign session to pane without WebGL context loss", "Resizable panes via drag handles", "Layout selector buttons work"]},
+    {"name": "3-Section Sidebar", "acceptance_criteria": ["Skills section with orange wire", "Loop Skills section with green wire", "Commands section with purple wire", "All sections collapsible", "Search filters all sections", "Drag-drop skills to terminal"]},
+    {"name": "Voice Input", "acceptance_criteria": ["Mic button visible in header", "Command bar slides up on activation", "Interim speech shown as placeholder", "Final speech accumulates in input", "Enter sends to terminal", "Escape clears and hides bar", "No duplicate phrases on restart"]},
+    {"name": "CLAUDE.md Briefing", "acceptance_criteria": ["Briefing overlay appears after session create", "Shows project CLAUDE.md content", "Got it button dismisses", "Auto-dismiss after 10 seconds", "Click outside dismisses"]},
+    {"name": "Session Management", "acceptance_criteria": ["Create session via modal", "Close session via tab close button", "Switch sessions via tab click", "Terminal renders with WebGL", "Prompt stays at bottom after pane moves"]},
+    {"name": "Skill Interaction", "acceptance_criteria": ["Click skill shows inspect panel", "Double-click skill fires in active session", "Drag skill to terminal fires it", "Drag skill to tab fires in that session"]}
+  ],
+  "workflows": [
+    {"name": "session-lifecycle", "steps": ["click + New", "select project", "enter name", "submit", "verify terminal appears", "close tab", "verify empty state"]},
+    {"name": "workflow-lifecycle", "steps": ["click + Workflow", "enter name", "select layout", "submit", "verify workflow tab", "assign session to pane", "assign second session", "both terminals visible", "switch layout", "delete workflow"]},
+    {"name": "skill-execution", "steps": ["click skill in sidebar", "verify inspect panel", "double-click skill", "verify terminal output", "drag skill to terminal", "verify fired"]}
+  ]
+}
