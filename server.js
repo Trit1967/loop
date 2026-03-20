@@ -274,10 +274,12 @@ app.get('/api/claude-usage', async (_req, res, next) => {
     const data = await resp.json();
     const fh = data.five_hour || {};
     const sd = data.seven_day || {};
+    // utilization may be 0–1 fraction or already 0–100 percentage depending on API version
+    function toPct(v) { const n = v || 0; return Math.min(100, Math.round(n > 1 ? n : n * 100)); }
     res.json({
       available: true,
-      five_hour: { pct: Math.round((fh.utilization || 0) * 100), resets_at: fh.resets_at || null },
-      seven_day: { pct: Math.round((sd.utilization || 0) * 100), resets_at: sd.resets_at || null }
+      five_hour: { pct: toPct(fh.utilization), resets_at: fh.resets_at || null },
+      seven_day: { pct: toPct(sd.utilization), resets_at: sd.resets_at || null }
     });
   } catch (err) { next(err); }
 });
