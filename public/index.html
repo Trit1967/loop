@@ -583,17 +583,19 @@
       <h3>New Session</h3>
       <form id="f-session">
         <div class="ff">
-          <label>Directory</label>
-          <input id="i-sd" required placeholder="/home/claude/projects/my-app" autocomplete="off" />
-          <select id="i-proj" style="margin-top:6px;font-family:var(--sans);font-size:12px;color:var(--tx3);background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:4px 8px;width:100%;"><option value="">Recent projects...</option></select>
+          <label>Project</label>
+          <select id="i-proj" style="font-family:var(--sans);font-size:13px;color:var(--tx1);background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;width:100%;"><option value="">Select a cloned project...</option></select>
         </div>
         <div class="ff"><label>Session name</label><input id="i-sn" required placeholder="my-project" pattern="[a-zA-Z0-9_-]+" /></div>
         <div class="ff"><label>Mode</label><select id="i-mode" style="font-family:var(--sans);font-size:13px;"><option value="claude">Claude Code</option><option value="bash">Terminal (bash)</option></select></div>
         <details style="margin-top:4px">
-          <summary style="font-size:12px;color:var(--tx3);cursor:pointer;padding:6px 0;user-select:none">Clone a new repo</summary>
-          <div style="display:flex;gap:6px;margin-top:8px">
-            <input id="i-clone" placeholder="owner/repo or GitHub URL" style="flex:1" />
-            <button type="button" class="btn" id="btn-clone" style="padding:8px 14px;white-space:nowrap">Clone</button>
+          <summary style="font-size:12px;color:var(--tx3);cursor:pointer;padding:6px 0;user-select:none">Custom path or clone a repo</summary>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+            <input id="i-sd" placeholder="/home/claude/projects/my-app" autocomplete="off" />
+            <div style="display:flex;gap:6px">
+              <input id="i-clone" placeholder="owner/repo or GitHub URL" style="flex:1" />
+              <button type="button" class="btn" id="btn-clone" style="padding:8px 14px;white-space:nowrap">Clone</button>
+            </div>
           </div>
         </details>
         <div class="mo-act">
@@ -1011,7 +1013,7 @@
       if(DEV){['loop','clawdbot','seafin-hq'].forEach(n=>{const o=document.createElement('option');o.value='/home/claude/projects/'+n;o.textContent=n;sel.appendChild(o)});return}
       try{const ps=await api('/api/projects');ps.forEach(p=>{const o=document.createElement('option');o.value=p.path;o.textContent=p.name;sel.appendChild(o)})}catch(e){}
     }
-    $('i-proj').addEventListener('change',e=>{const v=e.target.value;if(v){$('i-sd').value=v;if(!$('i-sn').value)$('i-sn').value=v.split('/').pop();$('i-proj').value=''}});
+    $('i-proj').addEventListener('change',e=>{const v=e.target.value;if(v)$('i-sn').value=v.split('/').pop()});
     $('i-sd').addEventListener('input',e=>{const v=e.target.value.trim();if(v&&!$('i-sn').value)$('i-sn').value=v.split('/').pop().replace(/[^a-zA-Z0-9_-]/g,'-')});
     $('btn-clone').addEventListener('click',async()=>{
       const repo=$('i-clone').value.trim();if(!repo){toast('Enter owner/repo to clone');return}
@@ -1053,10 +1055,11 @@
     document.querySelectorAll('.layout-btn').forEach(btn=>{btn.addEventListener('click',()=>setLayout(btn.dataset.layout))});
 
     $('f-session').addEventListener('submit',async e=>{
-      e.preventDefault();closeMo('mo-session');
-      const name=$('i-sn').value.trim(), dir=$('i-sd').value.trim();
-      if(DEV){demo(name||'session');return}
-      if(!name||!dir){toast('Directory and session name are required');return}
+      e.preventDefault();
+      const name=$('i-sn').value.trim(), dir=($('i-proj').value||$('i-sd').value).trim();
+      if(DEV){closeMo('mo-session');demo(name||'session');return}
+      if(!name||!dir){toast('Select a project or enter a directory path');return}
+      closeMo('mo-session');
       const mode=$('i-mode').value;
       try{const s=await api('/api/sessions',{method:'POST',body:{name,directory:dir,mode}});mkTerm(s.id||name,name,dir);toast(`"${name}" started`)}catch(e){toast(e.message)}
     });
