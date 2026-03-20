@@ -192,12 +192,36 @@ app.get('/api/stats', async (_req, res, next) => {
 // REST API — Claude Usage
 // ---------------------------------------------------------------------------
 
-app.get('/api/claude-usage', (_req, res) => {
-  const { input, output } = sessions.getUsage();
-  const used  = input + output;
-  const limit = parseInt(process.env.CLAUDE_DAILY_TOKENS || '1000000');
-  const pct   = Math.min(100, Math.round(used * 100 / limit));
-  res.json({ available: true, used, limit, pct, input, output });
+app.get('/api/claude-usage', async (_req, res, next) => {
+  try {
+    const credsPath = path.join(process.env.HOME || '/root', '.claude', '.credentials.json');
+    let creds;
+    try { creds = JSON.parse(fs.readFileSync(credsPath, 'utf-8')); }
+    catch { return res.json({ available: false, reason: 'no_credentials' }); }
+
+    const oauth = creds.claudeAiOauth;
+    if (!oauth || !oauth.accessToken) return res.json({ available: false, reason: 'no_token' });
+    if (oauth.expiresAt && Date.now() > oauth.expiresAt) return res.json({ available: false, reason: 'token_expired' });
+
+    const resp = await fetch('https://api.anthropic.com/api/oauth/usage', {
+      headers: {
+        'Authorization': `Bearer ${oauth.accessToken}`,
+        'Content-Type': 'application/json',
+        'anthropic-beta': 'oauth-2025-04-20',
+        'User-Agent': 'claude-code/2.0.37'
+      }
+    });
+    if (!resp.ok) return res.json({ available: false, reason: `api_${resp.status}` });
+
+    const data = await resp.json();
+    const fh = data.five_hour || {};
+    const sd = data.seven_day || {};
+    res.json({
+      available: true,
+      five_hour: { pct: Math.round((fh.utilization || 0) * 100), resets_at: fh.resets_at || null },
+      seven_day: { pct: Math.round((sd.utilization || 0) * 100), resets_at: sd.resets_at || null }
+    });
+  } catch (err) { next(err); }
 });
 
 // ---------------------------------------------------------------------------
@@ -356,9 +380,8 @@ wss.on('connection', (ws) => {
       return;
     }
 
-    // PTY stdout → WebSocket (also scan for Claude token usage lines)
+    // PTY stdout → WebSocket
     pty.onData((data) => {
-      sessions.scanTokens(data);
       if (ws.readyState === ws.OPEN) {
         ws.send(data);
       }
