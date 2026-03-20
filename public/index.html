@@ -294,6 +294,10 @@
     .pane-grid.layout-triple { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
     .pane-grid.layout-quad { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
 
+    .pane-resizer { position: absolute; z-index: 10; opacity: 0; transition: opacity 120ms; }
+    .pane-resizer:hover, .pane-resizer.dragging { opacity: 1; }
+    .pane-resizer-col { top: 0; bottom: 0; width: 6px; cursor: col-resize; background: var(--teal); border-radius: 3px; }
+    .pane-resizer-row { left: 0; right: 0; height: 6px; cursor: row-resize; background: var(--teal); border-radius: 3px; }
     .pane {
       position: relative; overflow: hidden; background: var(--base);
       display: flex; flex-direction: column;
@@ -698,18 +702,13 @@
     <div class="mo-box">
       <h3>Assign Session to Pane</h3>
       <form id="f-assign">
-        <div class="ff">
-          <label>Session</label>
-          <select id="i-assign-sess" style="font-family:var(--sans);font-size:13px;"><option value="">Select a session...</option></select>
-        </div>
-        <div class="ff"><label>Alias (display name)</label><input id="i-assign-alias" placeholder="platform" /></div>
-        <div class="ff" style="text-align:center;padding:6px 0;color:var(--tx3);font-size:12px;">or start a new session</div>
-        <div class="ff">
-          <label>Directory</label>
-          <input id="i-assign-dir" placeholder="/home/claude/projects/my-app" autocomplete="off" />
-          <select id="i-assign-proj" style="margin-top:6px;font-family:var(--sans);font-size:12px;color:var(--tx3);background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:4px 8px;width:100%;"><option value="">Recent projects...</option></select>
-        </div>
+        <div class="ff"><label>Existing session</label><select id="i-assign-sess" style="font-family:var(--sans);font-size:13px;"><option value="">Select a session...</option></select></div>
+        <div class="ff" style="text-align:center;padding:4px 0;color:var(--tx3);font-size:12px;">— or start a new session —</div>
+        <div class="ff"><label>Project</label><select id="i-assign-proj-main" style="font-family:var(--sans);font-size:13px;color:var(--tx1);background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;width:100%;"><option value="">Select a cloned project...</option></select></div>
         <div class="ff"><label>Session name</label><input id="i-assign-name" placeholder="my-project" pattern="[a-zA-Z0-9_-]+" /></div>
+        <div class="ff"><label>Mode</label><select id="i-assign-mode" style="font-family:var(--sans);font-size:13px;"><option value="claude">Claude Code</option><option value="bash">Terminal (bash)</option></select></div>
+        <div class="ff"><label>Alias (display name)</label><input id="i-assign-alias" placeholder="platform" /></div>
+        <details style="margin-top:4px"><summary style="font-size:12px;color:var(--tx3);cursor:pointer;padding:6px 0;user-select:none">Custom path</summary><div style="margin-top:8px"><input id="i-assign-dir" placeholder="/home/claude/projects/my-app" autocomplete="off" style="width:100%;box-sizing:border-box" /></div></details>
         <input type="hidden" id="i-assign-pane" />
         <div class="mo-act">
           <button type="button" class="btn" onclick="closeMo('mo-assign')">Cancel</button>
@@ -968,7 +967,7 @@
       renderWfTabs();hideStandaloneTabs();
       document.querySelectorAll('.layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.layout===wf.layout));
       sess.forEach(s=>s.el.classList.add('hidden'));$('term-empty').style.display='none';
-      renderPanes();
+      renderPanes();setTimeout(addResizers,30);
     }
 
     /* ═ Panes ═ */
@@ -1034,6 +1033,7 @@
           }
         }
       }
+      setTimeout(addResizers,30);
     }
 
     function mkPane(idx){
@@ -1051,21 +1051,61 @@
     }
 
     function setLayout(layout){
-      if(activeWfId){const wf=workflows.get(activeWfId);if(wf){wf.layout=layout;saveWorkflows()}}
+      if(activeWfId){const wf=workflows.get(activeWfId);if(wf){wf.layout=layout;delete wf.colTemplate;delete wf.rowTemplate;saveWorkflows()}}
       document.querySelectorAll('.layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.layout===layout));
-      renderPanes();refitAll();
+      renderPanes();refitAll();addResizers();
     }
     function refitAll(){setTimeout(()=>{sess.forEach(s=>{if(!s.el.classList.contains('hidden'))try{s.fit.fit()}catch(e){}})},50)}
+
+    function addResizers(){
+      const grid=$('pane-grid');
+      grid.querySelectorAll('.pane-resizer').forEach(r=>r.remove());
+      if(!activeWfId)return;
+      const wf=workflows.get(activeWfId);if(!wf||wf.layout==='single')return;
+      if(wf.colTemplate)grid.style.gridTemplateColumns=wf.colTemplate;
+      if(wf.rowTemplate)grid.style.gridTemplateRows=wf.rowTemplate;
+      const hasCol=['side-by-side','triple','quad'].includes(wf.layout);
+      const hasRow=['stacked','triple','quad'].includes(wf.layout);
+      function makeResizer(isCol){
+        const r=document.createElement('div');
+        r.className='pane-resizer '+(isCol?'pane-resizer-col':'pane-resizer-row');
+        grid.appendChild(r);
+        function reposition(){
+          const cs=getComputedStyle(grid);
+          const px=parseFloat(cs[isCol?'gridTemplateColumns':'gridTemplateRows'].split(' ')[0]);
+          if(isCol)r.style.left=(px-3)+'px';else r.style.top=(px-3)+'px';
+        }
+        requestAnimationFrame(reposition);
+        r.addEventListener('mousedown',e=>{
+          e.preventDefault();r.classList.add('dragging');document.body.style.cursor=isCol?'col-resize':'row-resize';
+          const startXY=isCol?e.clientX:e.clientY;
+          const total=isCol?grid.clientWidth:grid.clientHeight;
+          const startPx=parseFloat(getComputedStyle(grid)[isCol?'gridTemplateColumns':'gridTemplateRows'].split(' ')[0]);
+          function onMove(e){
+            const newPx=Math.max(100,Math.min(total-100,startPx+(isCol?e.clientX:e.clientY)-startXY));
+            const pct=(newPx/total*100).toFixed(1);
+            const tmpl=pct+'% '+(100-parseFloat(pct)).toFixed(1)+'%';
+            if(isCol){grid.style.gridTemplateColumns=tmpl;wf.colTemplate=tmpl;}
+            else{grid.style.gridTemplateRows=tmpl;wf.rowTemplate=tmpl;}
+            reposition();refitAll();
+          }
+          function onUp(){r.classList.remove('dragging');document.body.style.cursor='';document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);saveWorkflows();}
+          document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
+        });
+      }
+      if(hasCol)makeResizer(true);
+      if(hasRow)makeResizer(false);
+    }
 
     function openAssign(paneIdx){
       const sel=$('i-assign-sess');sel.innerHTML='<option value="">Select a session...</option>';
       sess.forEach((s,id)=>{const o=document.createElement('option');o.value=id;o.textContent=s.name;sel.appendChild(o)});
-      const ps=$('i-assign-proj');ps.innerHTML='<option value="">Recent projects...</option>';
+      const ps=$('i-assign-proj-main');ps.innerHTML='<option value="">Select a cloned project...</option>';
       if(DEV){['loop','clawdbot','seafin-hq'].forEach(n=>{const o=document.createElement('option');o.value='/home/claude/projects/'+n;o.textContent=n;ps.appendChild(o)})}
       else{api('/api/projects').then(l=>l.forEach(p=>{const o=document.createElement('option');o.value=p.path;o.textContent=p.name;ps.appendChild(o)})).catch(()=>{})}
-      $('i-assign-pane').value=paneIdx;$('i-assign-alias').value='';$('i-assign-dir').value='';$('i-assign-name').value='';openMo('mo-assign');
+      $('i-assign-pane').value=paneIdx;$('i-assign-alias').value='';$('i-assign-dir').value='';$('i-assign-name').value='';$('i-assign-mode').value='claude';openMo('mo-assign');
     }
-    $('i-assign-proj').addEventListener('change',e=>{const v=e.target.value;if(v){$('i-assign-dir').value=v;if(!$('i-assign-name').value)$('i-assign-name').value=v.split('/').pop();$('i-assign-proj').value=''}});
+    $('i-assign-proj-main').addEventListener('change',e=>{const v=e.target.value;if(v&&!$('i-assign-name').value)$('i-assign-name').value=v.split('/').pop()});
     $('i-assign-dir').addEventListener('input',e=>{const v=e.target.value.trim();if(v&&!$('i-assign-name').value)$('i-assign-name').value=v.split('/').pop().replace(/[^a-zA-Z0-9_-]/g,'-')});
 
     /* ═ Skills ═ */
@@ -1307,10 +1347,10 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
       e.preventDefault();closeMo('mo-assign');
       const paneIdx=parseInt($('i-assign-pane').value);let sessId=$('i-assign-sess').value;let alias=$('i-assign-alias').value.trim();
       if(!sessId){
-        const dir=$('i-assign-dir').value.trim(),name=$('i-assign-name').value.trim();
-        if(!name||!dir){toast('Enter a directory and session name, or select an existing session');return}
+        const dir=($('i-assign-proj-main').value||$('i-assign-dir').value).trim(),name=$('i-assign-name').value.trim(),mode=$('i-assign-mode').value;
+        if(!name||!dir){toast('Select a project and enter a session name, or select an existing session');return}
         if(DEV){demo(name);sessId=name}
-        else{try{const s=await api('/api/sessions',{method:'POST',body:{name,directory:dir,mode:'claude'}});mkTerm(s.id||name,name,dir);sessId=s.id||name}catch(err){toast(err.message);return}}
+        else{try{const s=await api('/api/sessions',{method:'POST',body:{name,directory:dir,mode}});mkTerm(s.id||name,name,dir);sessId=s.id||name}catch(err){toast(err.message);return}}
         if(!alias)alias=name;
       }
       if(!alias){const s=sess.get(sessId);alias=s?s.name:sessId}
