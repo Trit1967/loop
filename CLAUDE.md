@@ -62,6 +62,6 @@ git push origin master
 # Logs (via SSH if needed)
 ssh -i ~/.ssh/VPS_KEY root@VPS_IP "journalctl -u claude-terminal -n 20"
 
-# Emergency manual deploy (if Actions is broken)
-ssh -i ~/.ssh/VPS_KEY root@VPS_IP "cd /opt/claude-terminal && git fetch origin master && git reset --hard origin/master && systemctl restart claude-terminal"
+# Self-hosted runner on VPS — push triggers deploy in ~10s, no SSH secrets needed
+# Runner installed at /opt/actions-runner, runs as systemd service (auto-starts)
 ```
