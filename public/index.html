@@ -633,9 +633,13 @@
           <select id="i-assign-sess" style="font-family:var(--sans);font-size:13px;"><option value="">Select a session...</option></select>
         </div>
         <div class="ff"><label>Alias (display name)</label><input id="i-assign-alias" placeholder="platform" /></div>
-        <div class="ff" style="text-align:center;padding:6px 0;color:var(--tx3);font-size:12px;">or create a new session</div>
-        <div class="ff"><label>On server</label><select id="i-assign-proj" style="font-family:var(--sans);font-size:13px;"><option value="">Select cloned project...</option></select></div>
-        <div class="ff"><label>Session name</label><input id="i-assign-name" placeholder="my-project" pattern="[a-zA-Z0-9\-_]+" /></div>
+        <div class="ff" style="text-align:center;padding:6px 0;color:var(--tx3);font-size:12px;">or start a new session</div>
+        <div class="ff">
+          <label>Directory</label>
+          <input id="i-assign-dir" placeholder="/home/claude/projects/my-app" autocomplete="off" />
+          <select id="i-assign-proj" style="margin-top:6px;font-family:var(--sans);font-size:12px;color:var(--tx3);background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:4px 8px;width:100%;"><option value="">Recent projects...</option></select>
+        </div>
+        <div class="ff"><label>Session name</label><input id="i-assign-name" placeholder="my-project" pattern="[a-zA-Z0-9_-]+" /></div>
         <input type="hidden" id="i-assign-pane" />
         <div class="mo-act">
           <button type="button" class="btn" onclick="closeMo('mo-assign')">Cancel</button>
@@ -784,16 +788,18 @@
     function renderPanes(){
       const grid=$('pane-grid');
       if(!activeWfId){
-        // Standalone mode
+        // Standalone mode — pane is just a terminal container, no assign UI
         grid.className='pane-grid layout-single';grid.innerHTML='';
-        const pane=mkPane(0);grid.appendChild(pane);
+        const pane=mkPane(0);
+        pane.querySelector('.pane-assign').style.display='none';
+        pane.querySelector('.pane-empty')?.remove();
+        grid.appendChild(pane);
         if(activeId){
           const s=sess.get(activeId);
           if(s){
             pane.querySelector('.pane-body').appendChild(s.el);s.el.classList.remove('hidden');
             pane.querySelector('.pane-label').innerHTML=`<span class="alias">${esc(s.name)}</span>`;
             pane.querySelector('.pane-dot').className='pane-dot live';
-            pane.querySelector('.pane-empty')?.remove();
             setTimeout(()=>s.fit.fit(),20);
           }
         }
@@ -844,11 +850,13 @@
     function openAssign(paneIdx){
       const sel=$('i-assign-sess');sel.innerHTML='<option value="">Select a session...</option>';
       sess.forEach((s,id)=>{const o=document.createElement('option');o.value=id;o.textContent=s.name;sel.appendChild(o)});
-      const ps=$('i-assign-proj');ps.innerHTML='<option value="">Select cloned project...</option>';
+      const ps=$('i-assign-proj');ps.innerHTML='<option value="">Recent projects...</option>';
       if(DEV){['loop','clawdbot','seafin-hq'].forEach(n=>{const o=document.createElement('option');o.value='/home/claude/projects/'+n;o.textContent=n;ps.appendChild(o)})}
       else{api('/api/projects').then(l=>l.forEach(p=>{const o=document.createElement('option');o.value=p.path;o.textContent=p.name;ps.appendChild(o)})).catch(()=>{})}
-      $('i-assign-pane').value=paneIdx;$('i-assign-alias').value='';$('i-assign-name').value='';openMo('mo-assign');
+      $('i-assign-pane').value=paneIdx;$('i-assign-alias').value='';$('i-assign-dir').value='';$('i-assign-name').value='';openMo('mo-assign');
     }
+    $('i-assign-proj').addEventListener('change',e=>{const v=e.target.value;if(v){$('i-assign-dir').value=v;if(!$('i-assign-name').value)$('i-assign-name').value=v.split('/').pop();$('i-assign-proj').value=''}});
+    $('i-assign-dir').addEventListener('input',e=>{const v=e.target.value.trim();if(v&&!$('i-assign-name').value)$('i-assign-name').value=v.split('/').pop().replace(/[^a-zA-Z0-9_-]/g,'-')});
 
     /* ═ Skills ═ */
     const MOCK=[
@@ -1020,10 +1028,10 @@
       e.preventDefault();closeMo('mo-assign');
       const paneIdx=parseInt($('i-assign-pane').value);let sessId=$('i-assign-sess').value;let alias=$('i-assign-alias').value.trim();
       if(!sessId){
-        const projPath=$('i-assign-proj').value,name=$('i-assign-name').value.trim();
-        if(!name||!projPath){toast('Select a session or create one');return}
+        const dir=$('i-assign-dir').value.trim(),name=$('i-assign-name').value.trim();
+        if(!name||!dir){toast('Enter a directory and session name, or select an existing session');return}
         if(DEV){demo(name);sessId=name}
-        else{try{const s=await api('/api/sessions',{method:'POST',body:{name,directory:projPath,mode:'claude'}});mkTerm(s.id||name,name,projPath);sessId=s.id||name}catch(err){toast(err.message);return}}
+        else{try{const s=await api('/api/sessions',{method:'POST',body:{name,directory:dir,mode:'claude'}});mkTerm(s.id||name,name,dir);sessId=s.id||name}catch(err){toast(err.message);return}}
         if(!alias)alias=name;
       }
       if(!alias){const s=sess.get(sessId);alias=s?s.name:sessId}
