@@ -581,15 +581,23 @@
     <div class="mo-box">
       <h3>New Session</h3>
       <form id="f-session">
-        <div class="ff"><label>On server</label><select id="i-proj" style="font-family:var(--sans);font-size:13px;"><option value="">Select cloned project...</option></select></div>
-        <div class="ff"><label>From GitHub</label><select id="i-ghrepo" style="font-family:var(--sans);font-size:13px;"><option value="">Select a repo to clone...</option></select></div>
-        <div class="ff" style="display:flex;gap:6px;align-items:center;"><span style="font-size:12px;color:var(--tx3);">or</span><input id="i-clone" placeholder="owner/repo" style="flex:1" /><button type="button" class="btn" id="btn-clone" style="padding:8px 14px;">Clone</button></div>
-        <div class="ff"><label>Session name</label><input id="i-sn" required placeholder="my-project" pattern="[a-zA-Z0-9\-_]+" /></div>
+        <div class="ff">
+          <label>Directory</label>
+          <input id="i-sd" required placeholder="/home/claude/projects/my-app" autocomplete="off" />
+          <select id="i-proj" style="margin-top:6px;font-family:var(--sans);font-size:12px;color:var(--tx3);background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:4px 8px;width:100%;"><option value="">Recent projects...</option></select>
+        </div>
+        <div class="ff"><label>Session name</label><input id="i-sn" required placeholder="my-project" pattern="[a-zA-Z0-9_-]+" /></div>
         <div class="ff"><label>Mode</label><select id="i-mode" style="font-family:var(--sans);font-size:13px;"><option value="claude">Claude Code</option><option value="bash">Terminal (bash)</option></select></div>
-        <div class="ff" style="display:none;"><input id="i-sd" /></div>
+        <details style="margin-top:4px">
+          <summary style="font-size:12px;color:var(--tx3);cursor:pointer;padding:6px 0;user-select:none">Clone a new repo</summary>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <input id="i-clone" placeholder="owner/repo or GitHub URL" style="flex:1" />
+            <button type="button" class="btn" id="btn-clone" style="padding:8px 14px;white-space:nowrap">Clone</button>
+          </div>
+        </details>
         <div class="mo-act">
           <button type="button" class="btn" onclick="closeMo('mo-session')">Cancel</button>
-          <button type="submit" class="btn btn-go">Create Session</button>
+          <button type="submit" class="btn btn-go">Start Session</button>
         </div>
       </form>
     </div>
@@ -983,23 +991,20 @@
 
     /* ═ Events ═ */
     async function loadProjects(){
-      const sel=$('i-proj');sel.innerHTML='<option value="">Select cloned project...</option>';
+      const sel=$('i-proj');sel.innerHTML='<option value="">Recent projects...</option>';
       if(DEV){['loop','clawdbot','seafin-hq'].forEach(n=>{const o=document.createElement('option');o.value='/home/claude/projects/'+n;o.textContent=n;sel.appendChild(o)});return}
       try{const ps=await api('/api/projects');ps.forEach(p=>{const o=document.createElement('option');o.value=p.path;o.textContent=p.name;sel.appendChild(o)})}catch(e){}
     }
-    async function loadGHRepos(){
-      const sel=$('i-ghrepo');sel.innerHTML='<option value="">Select a repo to clone...</option>';
-      if(DEV){['loop','project-a','project-b'].forEach(n=>{const o=document.createElement('option');o.value='user/'+n;o.textContent=n;sel.appendChild(o)});return}
-      try{const repos=await api('/api/repos');repos.forEach(r=>{const o=document.createElement('option');o.value=r.full_name;o.textContent=`${r.name}${r.private?' (private)':''}`;sel.appendChild(o)})}catch(e){sel.innerHTML='<option value="">Re-login to see repos</option>'}
-    }
-    $('i-proj').addEventListener('change',e=>{const v=e.target.value;if(v){$('i-sd').value=v;$('i-sn').value=v.split('/').pop();$('i-ghrepo').value=''}});
-    $('i-ghrepo').addEventListener('change',e=>{const v=e.target.value;if(v){$('i-clone').value=v;$('i-sn').value=v.split('/').pop();$('i-proj').value=''}});
+    $('i-proj').addEventListener('change',e=>{const v=e.target.value;if(v){$('i-sd').value=v;if(!$('i-sn').value)$('i-sn').value=v.split('/').pop();$('i-proj').value=''}});
+    $('i-sd').addEventListener('input',e=>{const v=e.target.value.trim();if(v&&!$('i-sn').value)$('i-sn').value=v.split('/').pop().replace(/[^a-zA-Z0-9_-]/g,'-')});
     $('btn-clone').addEventListener('click',async()=>{
-      const repo=$('i-clone').value.trim()||$('i-ghrepo').value.trim();if(!repo){toast('Select or enter a repo');return}toast('Cloning '+repo.split('/').pop()+'...');
+      const repo=$('i-clone').value.trim();if(!repo){toast('Enter owner/repo to clone');return}
+      toast('Cloning '+repo.split('/').pop()+'...');
       try{const r=await api('/api/projects/clone',{method:'POST',body:{repo}});toast(`Cloned ${r.name}`);$('i-sd').value=r.path;$('i-sn').value=r.name;loadProjects()}catch(e){toast(e.message)}
     });
 
-    $('btn-tab').addEventListener('click',()=>{loadProjects();loadGHRepos();openMo('mo-session')});
+    function openSession(){$('i-sd').value='';$('i-sn').value='';$('i-clone').value='';loadProjects();openMo('mo-session')}
+    $('btn-tab').addEventListener('click',openSession);
     $('btn-mic').addEventListener('click',()=>Voice.toggle());
     $('sk-search').addEventListener('input',e=>renderSk(e.target.value));
     document.querySelectorAll('.sb-head[data-toggle]').forEach(h=>{h.addEventListener('click',()=>{h.classList.toggle('shut');const g=$(h.dataset.toggle);if(g)g.classList.toggle('shut')})});
@@ -1033,24 +1038,16 @@
 
     $('f-session').addEventListener('submit',async e=>{
       e.preventDefault();closeMo('mo-session');
-      let name=$('i-sn').value.trim(), dir=$('i-sd').value.trim();
-      const ghRepo=$('i-ghrepo').value.trim()||$('i-clone').value.trim();
+      const name=$('i-sn').value.trim(), dir=$('i-sd').value.trim();
       if(DEV){demo(name||'session');return}
-      if(ghRepo&&!dir){
-        toast('Cloning '+ghRepo.split('/').pop()+'...');
-        try{const r=await api('/api/projects/clone',{method:'POST',body:{repo:ghRepo}});dir=r.path;if(!name)name=r.name;}catch(e){
-          if(e.message.includes('already exists')){dir='/home/claude/projects/'+ghRepo.split('/').pop();if(!name)name=ghRepo.split('/').pop();}
-          else{toast(e.message);return}
-        }
-      }
-      if(!name||!dir){toast('Pick a project or enter a name');return}
+      if(!name||!dir){toast('Directory and session name are required');return}
       const mode=$('i-mode').value;
       try{const s=await api('/api/sessions',{method:'POST',body:{name,directory:dir,mode}});mkTerm(s.id||name,name,dir);toast(`"${name}" started`)}catch(e){toast(e.message)}
     });
 
     document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
     document.addEventListener('keydown',e=>{
-      if(e.altKey&&e.key==='n'){e.preventDefault();loadProjects();loadGHRepos();openMo('mo-session')}
+      if(e.altKey&&e.key==='n'){e.preventDefault();openSession()}
       if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));
       if(e.altKey&&e.key==='w'&&activeId){e.preventDefault();killSess(activeId)}
       if(e.altKey&&e.key>='1'&&e.key<='9'){e.preventDefault();const ids=[...sess.keys()];const idx=parseInt(e.key)-1;if(idx<ids.length)switchTo(ids[idx])}
