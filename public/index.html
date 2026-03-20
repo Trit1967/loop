@@ -749,6 +749,47 @@
 
     /* ═ Workflow State ═ */
     const workflows=new Map();let activeWfId=null,editingWfId=null;
+    const tabColors=new Map(); // sessionId → color key
+
+    /* ═ Server-side User State ═ */
+    let _saveTimer=null;
+    function saveUserState(){
+      if(DEV){const d=[];workflows.forEach(wf=>d.push(wf));localStorage.setItem('loop-workflows',JSON.stringify(d));return}
+      clearTimeout(_saveTimer);
+      _saveTimer=setTimeout(async()=>{
+        const app=document.querySelector('.app');
+        const panel={
+          sbW:app.style.getPropertyValue('--sb-w')||null,
+          rpW:app.style.getPropertyValue('--rp-w')||null,
+          sbC:app.classList.contains('sb-collapsed'),
+          rpC:app.classList.contains('rp-collapsed'),
+        };
+        // Mirror panel to localStorage for fast-paint on next load
+        if(panel.sbW)localStorage.setItem('loop-sb-w',panel.sbW);
+        if(panel.rpW)localStorage.setItem('loop-rp-w',panel.rpW);
+        localStorage.setItem('loop-sb-collapsed',panel.sbC?'1':'0');
+        localStorage.setItem('loop-rp-collapsed',panel.rpC?'1':'0');
+        const wfs=[];workflows.forEach(wf=>wfs.push(wf));
+        const tcs={};tabColors.forEach((v,k)=>tcs[k]=v);
+        try{await api('/api/user-state',{method:'POST',body:{workflows:wfs,panel,tabColors:tcs}})}
+        catch(e){console.warn('state save failed:',e)}
+      },800);
+    }
+    async function loadUserState(){
+      if(DEV){try{const raw=localStorage.getItem('loop-workflows');if(raw)JSON.parse(raw).forEach(wf=>workflows.set(wf.id,wf))}catch(e){}return}
+      try{
+        const state=await api('/api/user-state');
+        if(state.workflows)state.workflows.forEach(wf=>workflows.set(wf.id,wf));
+        if(state.tabColors)Object.entries(state.tabColors).forEach(([k,v])=>tabColors.set(k,v));
+        if(state.panel){
+          const app=document.querySelector('.app');
+          if(state.panel.sbW){app.style.setProperty('--sb-w',state.panel.sbW);localStorage.setItem('loop-sb-w',state.panel.sbW)}
+          if(state.panel.rpW){app.style.setProperty('--rp-w',state.panel.rpW);localStorage.setItem('loop-rp-w',state.panel.rpW)}
+          if(state.panel.sbC){app.classList.add('sb-collapsed');localStorage.setItem('loop-sb-collapsed','1')}
+          if(state.panel.rpC){app.classList.add('rp-collapsed');localStorage.setItem('loop-rp-collapsed','1')}
+        }
+      }catch(e){console.warn('state load failed:',e)}
+    }
     const LAYOUT_PANES={single:1,'side-by-side':2,stacked:2,triple:3,quad:4};
 
     /* ═ API ═ */
@@ -855,13 +896,13 @@
       const COLORS=['w1','w2','w3','w4','teal','rose'];
       const dotC={w1:'var(--w1)',w2:'var(--w2)',w3:'var(--w3)',w4:'var(--w4)',teal:'#4db8c2',rose:'#c75878'};
       const dotS={w1:'0 0 4px var(--w1),0 0 8px var(--w1glow)',w2:'0 0 4px var(--w2),0 0 8px var(--w2glow)',w3:'0 0 4px var(--w3),0 0 8px var(--w3glow)',w4:'0 0 3px var(--w4glow)',teal:'0 0 4px rgba(77,184,194,0.5)',rose:'0 0 4px rgba(199,88,120,0.5)'};
-      const getCol=()=>localStorage.getItem('loop-tab-color-'+id)||'w1';
+      const getCol=()=>tabColors.get(id)||'w1';
       const t=document.createElement('div');t.className='tab';t.dataset.session=id;
       // Color dot — click to cycle
       const dot=document.createElement('span');dot.className='tab-dot'+(DEV?' demo':' live');
       dot.style.background=dotC[getCol()];dot.style.boxShadow=dotS[getCol()];
       dot.style.cursor='pointer';dot.title='Click to change color';
-      dot.addEventListener('click',e=>{e.stopPropagation();const c=COLORS.indexOf(getCol()),n=COLORS[(c+1)%COLORS.length];localStorage.setItem('loop-tab-color-'+id,n);dot.style.background=dotC[n];dot.style.boxShadow=dotS[n]});
+      dot.addEventListener('click',e=>{e.stopPropagation();const c=COLORS.indexOf(getCol()),n=COLORS[(c+1)%COLORS.length];tabColors.set(id,n);saveUserState();dot.style.background=dotC[n];dot.style.boxShadow=dotS[n]});
       // Name span — double-click to rename inline
       const ns=document.createElement('span');ns.textContent=name;ns.style.userSelect='none';
       let editing=false;
@@ -892,8 +933,8 @@
 
     /* ═ Workflows ═ */
     function genId(){return 'wf-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
-    function saveWorkflows(){const d=[];workflows.forEach(wf=>d.push(wf));localStorage.setItem('loop-workflows',JSON.stringify(d))}
-    function loadWorkflowData(){try{const raw=localStorage.getItem('loop-workflows');if(raw)JSON.parse(raw).forEach(wf=>workflows.set(wf.id,wf))}catch(e){}renderWfTabs()}
+    function saveWorkflows(){saveUserState()}
+    function loadWorkflowData(){renderWfTabs()} // data already loaded by loadUserState()
     function createWf(name,layout){const wf={id:genId(),name,layout:layout||'single',sessions:[]};workflows.set(wf.id,wf);renderWfTabs();activateWf(wf.id);saveWorkflows();log(`Workflow <b>${esc(name)}</b> created`);return wf}
     function renameWf(id,name){const wf=workflows.get(id);if(!wf)return;wf.name=name;renderWfTabs();saveWorkflows()}
     function deleteWf(id){const wf=workflows.get(id);if(!wf)return;workflows.delete(id);if(activeWfId===id){activeWfId=null;if(workflows.size>0)activateWf(workflows.keys().next().value);else{showStandaloneTabs();renderPanes()}}renderWfTabs();saveWorkflows();log(`Workflow <b>${esc(wf.name)}</b> deleted`)}
@@ -1175,12 +1216,12 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
     /* ═ Auth ═ */
     async function checkAuth(){if(DEV){currentUser={sub:'dev-user',avatar:null};showApp();return}try{currentUser=await api('/auth/me');showApp()}catch(e){showLogin()}}
     function showLogin(){$('login').style.display='flex';$('app').style.display='none'}
-    function showApp(){
+    async function showApp(){
       $('login').style.display='none';$('app').style.display='grid';
       if(currentUser)$('hd-user').innerHTML=`${currentUser.avatar?`<img class="hd-avatar" src="${esc(currentUser.avatar)}">`:''}
         <span class="hd-name">${esc(currentUser.sub)}</span>
         <a class="hd-out" href="/logout">Logout</a>`;
-      loadSkills();loadWorkflowData();loadSessions();
+      loadSkills();await loadUserState();loadWorkflowData();loadSessions();
       // Collapsible skill sections — restore state from localStorage
       document.querySelectorAll('.sb-head[data-toggle]').forEach(h=>{
         const key='loopCol_'+h.dataset.toggle,grp=$(h.dataset.toggle);
@@ -1300,8 +1341,8 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
         if(tr){tr.textContent=rc?'◀':'▶';tr.title=rc?'Expand panel':'Collapse panel'}
       }
       sync();
-      $('tog-sb').addEventListener('click',e=>{e.stopPropagation();const c=app.classList.toggle('sb-collapsed');localStorage.setItem('loop-sb-collapsed',c?'1':'0');sync();setTimeout(refitAll,160)});
-      $('tog-rp').addEventListener('click',e=>{e.stopPropagation();const c=app.classList.toggle('rp-collapsed');localStorage.setItem('loop-rp-collapsed',c?'1':'0');sync();setTimeout(refitAll,160)});
+      $('tog-sb').addEventListener('click',e=>{e.stopPropagation();const c=app.classList.toggle('sb-collapsed');localStorage.setItem('loop-sb-collapsed',c?'1':'0');sync();saveUserState();setTimeout(refitAll,160)});
+      $('tog-rp').addEventListener('click',e=>{e.stopPropagation();const c=app.classList.toggle('rp-collapsed');localStorage.setItem('loop-rp-collapsed',c?'1':'0');sync();saveUserState();setTimeout(refitAll,160)});
       function startDrag(e,side){
         e.preventDefault();
         const dh=$(side==='sb'?'dh-sb':'dh-rp');dh.classList.add('dragging');
@@ -1318,7 +1359,7 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
           }
           sync();
         };
-        const onUp=()=>{dh.classList.remove('dragging');document.body.style.cursor='';document.body.style.userSelect='';document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);setTimeout(refitAll,20)};
+        const onUp=()=>{dh.classList.remove('dragging');document.body.style.cursor='';document.body.style.userSelect='';document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);saveUserState();setTimeout(refitAll,20)};
         document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
       }
       $('dh-sb').addEventListener('mousedown',e=>{if(!e.target.closest('.panel-tog'))startDrag(e,'sb')});

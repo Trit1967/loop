@@ -25,6 +25,9 @@ const skills = require('./lib/skills');
 // ---------------------------------------------------------------------------
 
 const PORT = parseInt(process.env.PORT, 10) || 3100;
+
+const DATA_DIR = path.join(__dirname, 'data');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 const JWT_SECRET = process.env.JWT_SECRET;
 const TLS_CERT = process.env.TLS_CERT;
 const TLS_KEY = process.env.TLS_KEY;
@@ -152,6 +155,36 @@ app.post('/api/sessions/:id/skill', async (req, res, next) => {
       return res.status(400).json({ error: 'skill is required' });
     }
     await sessions.sendSkill(req.params.id, skill);
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ---------------------------------------------------------------------------
+// REST API — System Stats
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// REST API — User State (workflows, panel layout, tab colors)
+// ---------------------------------------------------------------------------
+
+app.get('/api/user-state', requireAuth, (req, res) => {
+  const userId = req.user.sub.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const file = path.join(DATA_DIR, `${userId}.json`);
+  try {
+    const data = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
+    res.json(data);
+  } catch {
+    res.json({});
+  }
+});
+
+app.post('/api/user-state', requireAuth, (req, res) => {
+  const userId = req.user.sub.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const file = path.join(DATA_DIR, `${userId}.json`);
+  try {
+    const body = JSON.stringify(req.body);
+    if (body.length > 512 * 1024) return res.status(413).json({ error: 'State too large' });
+    fs.writeFileSync(file, body, 'utf8');
     res.json({ ok: true });
   } catch (err) { next(err); }
 });
