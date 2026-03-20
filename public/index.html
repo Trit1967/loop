@@ -809,7 +809,7 @@
       brightBlue:'#9b6bff',brightMagenta:'#d080f0',brightCyan:'#60d0e0',brightWhite:'#e8e6e0'
     };
 
-    function mkTerm(id,name,dir){
+    function mkTerm(id,name,dir,autoSwitch=true){
       if(sess.has(id))return sess.get(id); // guard against duplicate sessions
       const term=new Terminal({fontFamily:"'JetBrains Mono',monospace",fontSize:15,lineHeight:1.35,theme:TH,cursorBlink:true,cursorStyle:'bar',scrollback:5000});
       const fit=new FitAddon.FitAddon();term.loadAddon(fit);
@@ -860,7 +860,7 @@
       }
       sess.set(id,{term,ws,el,fit,name,dir:dir||'/home/claude/projects/'+name});
       addTab(id,name);
-      if(!activeWfId){switchTo(id)}
+      if(!activeWfId&&autoSwitch){switchTo(id)}
       $('term-empty').style.display='none';
       new ResizeObserver(()=>{if(!el.classList.contains('hidden'))fit.fit()}).observe(el);
       log(`Session <b>${esc(name)}</b> started`);
@@ -1244,16 +1244,19 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
       if(DEV){demo('loop');demo('seafin-hq');log('Dashboard loaded');upRP();return}
       try{
         const l=await api('/api/sessions');
-        l.forEach(s=>mkTerm(s.id||s.name,s.name,s.directory));
-        // Restore active workflow — it will show sessions in the correct panes
+        // Read saved IDs BEFORE the loop — mkTerm would overwrite localStorage otherwise
+        const savedActiveId=_restoredActiveId||localStorage.getItem('loopActiveSession');
+        // autoSwitch=false: don't call switchTo() per-session during restore
+        l.forEach(s=>mkTerm(s.id||s.name,s.name,s.directory,false));
+        // Restore active workflow — shows sessions in correct panes
         if(_restoredActiveWfId&&workflows.has(_restoredActiveWfId)){
           activateWf(_restoredActiveWfId);
-        } else {
-          // Restore active session tab (server-side preferred, localStorage fallback)
-          const last=_restoredActiveId||localStorage.getItem('loopActiveSession');
-          if(last&&sess.has(last))switchTo(last);
-          else if(sess.size>0)switchTo(sess.keys().next().value);
+        } else if(savedActiveId&&sess.has(savedActiveId)){
+          switchTo(savedActiveId);
+        } else if(sess.size>0){
+          switchTo(sess.keys().next().value);
         }
+        if(sess.size>0)$('term-empty').style.display='none';
       }catch(e){}
     }
     function demo(name){const{term}=mkTerm(name,name);setTimeout(()=>{const s=sess.get(name);if(s)s.fit.fit();[`\x1b[2m$ claude --project ~/projects/${name}\x1b[0m`,'',`\x1b[36m\u25c6\x1b[0m \x1b[1mClaude Code\x1b[0m  \x1b[2mOpus 4.6 \xb7 /projects/${name}\x1b[0m`,'',`  \x1b[2mReady. Type a message or drag a skill from the sidebar.\x1b[0m`,'','\x1b[36m>\x1b[0m \x1b[5m\u2588\x1b[0m'].forEach((l,i)=>setTimeout(()=>term.writeln(l),i*30))},150)}
