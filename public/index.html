@@ -700,13 +700,31 @@
       term.open(el);
       try{term.loadAddon(new WebglAddon.WebglAddon())}catch(e){}
       try{term.loadAddon(new WebLinksAddon.WebLinksAddon())}catch(e){}
+      // TypeAhead — optimistic local echo for printable chars.
+      // Chars typed are written to the terminal immediately, then stripped
+      // from the server's echo when it arrives to avoid double-printing.
+      // Control chars from the server (CR, ESC) always win — they mean the
+      // app is rewriting the line, so our prediction is naturally overwritten.
+      const ta=[];
       let ws=null;
       if(!DEV){
         const proto=location.protocol==='https:'?'wss':'ws';ws=new WebSocket(`${proto}://${location.host}/ws/terminal/${id}`);ws.binaryType='arraybuffer';
         ws.onopen=()=>{fit.fit();ws.send(JSON.stringify({type:'resize',cols:term.cols,rows:term.rows}))};
-        ws.onmessage=e=>term.write(e.data instanceof ArrayBuffer?new Uint8Array(e.data):e.data);
-        ws.onclose=()=>term.write('\r\n\x1b[2m--- disconnected ---\x1b[0m\r\n');
-        term.onData(d=>{if(ws.readyState===1)ws.send(d)});
+        ws.onmessage=e=>{
+          let d=e.data instanceof ArrayBuffer?new Uint8Array(e.data):e.data;
+          if(typeof d==='string'&&ta.length){
+            if(d.charCodeAt(0)<32||d[0]!==ta[0]){ta.length=0}  // control char or mismatch — server wins
+            else{let i=0;while(i<ta.length&&i<d.length&&d[i]===ta[i])i++;ta.splice(0,i);d=d.slice(i)}  // strip echo
+          }
+          if(d.length)term.write(d);
+        };
+        ws.onclose=()=>{ta.length=0;term.write('\r\n\x1b[2m--- disconnected ---\x1b[0m\r\n')};
+        term.onData(d=>{
+          if(ws.readyState!==1)return;
+          ws.send(d);
+          // Predict printable ASCII only — escape sequences, enter, ctrl chars go straight through
+          if(d.length===1){const c=d.charCodeAt(0);if(c>=32&&c<127&&ta.length<32){term.write(d);ta.push(d)}}
+        });
         term.onResize(({cols,rows})=>{if(ws.readyState===1)ws.send(JSON.stringify({type:'resize',cols,rows}))});
       }
       sess.set(id,{term,ws,el,fit,name,dir:dir||'/home/claude/projects/'+name});
