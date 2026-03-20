@@ -512,7 +512,7 @@
         <div class="wf-bar">
           <div id="wf-tabs" style="display:flex;"></div>
           <button class="wf-add" id="btn-wf" title="New workflow">+ Workflow</button>
-          <div class="layout-bar" id="layout-bar">
+          <div class="layout-bar" id="layout-bar" style="display:none">
             <button class="layout-btn active" data-layout="single" title="Single pane">
               <svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="1.5"/></svg>
             </button>
@@ -561,17 +561,12 @@
         <div class="si"><span class="si-k">Directory</span><span class="si-v" id="rp-sd">&mdash;</span></div>
         <div class="si"><span class="si-k">Status</span><span class="si-v"><span class="si-live"><span class="si-dot" id="rp-dot" style="background:var(--tx3)"></span> <span id="rp-ss">idle</span></span></span></div>
         <div class="si"><span class="si-k">Sessions</span><span class="si-v" id="rp-sc">0</span></div>
-        <button id="btn-reauth" class="btn" onclick="reauth()" style="margin-top:10px;width:100%;display:none;font-size:12px;padding:6px 10px;background:var(--w1sub);color:var(--w1);border:1px solid rgba(255,107,26,0.25)">Re-auth Claude</button>
       </div>
       <div class="rp-sec skd" id="rp-skd">
         <div class="rp-title w3">Inspect</div>
         <div class="skd-name" id="rp-skn"></div>
         <div class="skd-type" id="rp-skt"></div>
         <div class="skd-desc" id="rp-skdesc"></div>
-      </div>
-      <div class="rp-sec" style="flex:1;overflow-y:auto;">
-        <div class="rp-title w2">Activity</div>
-        <div class="af" id="rp-af"></div>
       </div>
       <div class="rp-sec">
         <div class="rp-title w4">System</div>
@@ -721,7 +716,7 @@
           const s=sess.get(id);if(s)s.ws=sock;
           sock.onopen=()=>{
             fit.fit();sock.send(JSON.stringify({type:'resize',cols:term.cols,rows:term.rows}));
-            if(didConnect)term.write('\r\n\x1b[32m✓ reconnected\x1b[0m\r\n');
+            if(didConnect)toast('✓ reconnected');
             didConnect=true;
           };
           sock.onmessage=e=>{
@@ -730,7 +725,7 @@
           };
           sock.onclose=()=>{
             if(!sess.has(id))return;
-            term.write('\r\n\x1b[33m⟳ reconnecting...\x1b[0m\r\n');
+            toast('⟳ reconnecting...');
             setTimeout(connect,2500);
           };
           if(wsData)wsData.dispose();
@@ -945,21 +940,12 @@
 
 
     /* ═ Right Panel ═ */
-    function upRP(){const s=activeId?sess.get(activeId):null;$('rp-sn').textContent=s?s.name:'\u2014';$('rp-sd').textContent=s?s.dir:'\u2014';$('rp-sd').title=s?s.dir:'';$('rp-ss').textContent=s?(DEV?'demo':'live'):'idle';$('rp-dot').style.background=s?(DEV?'var(--w4)':'var(--w2)'):'var(--tx3)';$('rp-sc').textContent=sess.size;$('btn-reauth').style.display=s?'':'none';if(DEV){$('sys-cpu').textContent='8%';$('sys-cpu-b').style.width='8%';$('sys-mem').textContent='1.1/4GB';$('sys-mem-b').style.width='28%';$('sys-disk').textContent='12/40GB';$('sys-disk-b').style.width='30%'}}
+    function upRP(){const s=activeId?sess.get(activeId):null;$('rp-sn').textContent=s?s.name:'\u2014';$('rp-sd').textContent=s?s.dir:'\u2014';$('rp-sd').title=s?s.dir:'';$('rp-ss').textContent=s?(DEV?'demo':'live'):'idle';$('rp-dot').style.background=s?(DEV?'var(--w4)':'var(--w2)'):'var(--tx3)';$('rp-sc').textContent=sess.size;if(DEV){$('sys-cpu').textContent='8%';$('sys-cpu-b').style.width='8%';$('sys-mem').textContent='1.1/4GB';$('sys-mem-b').style.width='28%';$('sys-disk').textContent='12/40GB';$('sys-disk-b').style.width='30%'}}
     function fmtBytes(b){if(b>1e9)return(b/1e9).toFixed(1)+'GB';if(b>1e6)return(b/1e6).toFixed(0)+'MB';return b+'B'}
     async function pollStats(){if(DEV)return;try{const d=await api('/api/stats');$('sys-cpu').textContent=d.cpu+'%';$('sys-cpu-b').style.width=d.cpu+'%';const mUsed=fmtBytes(d.mem.used),mTotal=fmtBytes(d.mem.total);$('sys-mem').textContent=mUsed+'/'+mTotal;$('sys-mem-b').style.width=d.mem.pct+'%';const dUsed=fmtBytes(d.disk.used),dTotal=fmtBytes(d.disk.total);$('sys-disk').textContent=dUsed+'/'+dTotal;$('sys-disk-b').style.width=d.disk.pct+'%'}catch{}}
     async function pollClaudeUsage(){if(DEV)return;try{const d=await api('/api/claude-usage');if(!d.available){$('sys-claude-row').style.display='none';return}$('sys-claude-row').style.display='';const fh=d.five_hour;$('sys-claude').textContent=fh.pct+'%';const reset=fh.resets_at?new Date(fh.resets_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';$('sys-claude').title='5-hour window'+(reset?' · resets '+reset:'');$('sys-claude-b').style.width=fh.pct+'%';$('sys-claude-b').style.background=fh.pct>85?'var(--w1)':fh.pct>60?'var(--w4)':'var(--w3)'}catch{}}
 
-    function reauth(){
-      if(!activeId){toast('No active session');return}
-      const s=sess.get(activeId);
-      if(!s||!s.ws||s.ws.readyState!==1){toast('Session not connected');return}
-      s.ws.send('claude login\n');
-      toast('Login command sent — check the terminal');
-      log(`Re-auth triggered for <b>${esc(s.name)}</b>`);
-    }
-
-    function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});activity.unshift({t,msg});if(activity.length>30)activity.length=30;$('rp-af').innerHTML=activity.map(a=>`<div class="af-i"><span class="af-t">${a.t}</span><span class="af-m">${a.msg}</span></div>`).join('')}
+function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});activity.unshift({t,msg});if(activity.length>30)activity.length=30;$('rp-af').innerHTML=activity.map(a=>`<div class="af-i"><span class="af-t">${a.t}</span><span class="af-m">${a.msg}</span></div>`).join('')}
 
     /* ═ Voice ═ */
     const Voice={
