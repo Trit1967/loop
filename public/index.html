@@ -250,11 +250,11 @@
     .tab:hover .tab-close { opacity: 0.6; }
     .tab-close:hover { opacity: 1; color: var(--w1); }
     .tab-add {
-      padding: 0 16px; background: var(--w1sub); border: none; border-left: 1px solid var(--line);
-      color: var(--w1); font-family: var(--sans); font-size: 13px; font-weight: 600;
+      padding: 0 16px; background: var(--w1); border: none; border-left: 1px solid var(--line);
+      color: var(--void); font-family: var(--sans); font-size: 13px; font-weight: 700;
       cursor: pointer; transition: all var(--t); flex-shrink: 0; display: flex; align-items: center; gap: 6px;
     }
-    .tab-add:hover { background: var(--w1); color: var(--void); box-shadow: 0 0 8px var(--w1glow); }
+    .tab-add:hover { background: var(--w1); color: var(--void); filter: brightness(1.15); }
 
     /* ═ Split Pane Layouts ═ */
     .pane-grid {
@@ -790,7 +790,8 @@
       const grid=$('pane-grid');
       if(!activeWfId){
         // Standalone mode — pane is just a terminal container, no assign UI
-        grid.className='pane-grid layout-single';grid.innerHTML='';
+        grid.className='pane-grid layout-single';
+        Array.from(grid.children).forEach(c=>{if(c.id!=='term-empty')c.remove()});
         const pane=mkPane(0);
         pane.querySelector('.pane-assign').style.display='none';
         pane.querySelector('.pane-empty')?.remove();
@@ -810,7 +811,8 @@
       const wf=workflows.get(activeWfId);if(!wf)return;
       $('term-empty').style.display='none';
       const count=LAYOUT_PANES[wf.layout]||1;
-      grid.className='pane-grid layout-'+wf.layout;grid.innerHTML='';
+      grid.className='pane-grid layout-'+wf.layout;
+      Array.from(grid.children).forEach(c=>{if(c.id!=='term-empty')c.remove()});
       for(let i=0;i<count;i++){
         const pane=mkPane(i);
         if(wf.layout==='triple'&&i===0)pane.classList.add('pane-triple-0');
