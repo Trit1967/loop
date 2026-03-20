@@ -556,6 +556,7 @@
         <div class="si"><span class="si-k">Directory</span><span class="si-v" id="rp-sd">&mdash;</span></div>
         <div class="si"><span class="si-k">Status</span><span class="si-v"><span class="si-live"><span class="si-dot" id="rp-dot" style="background:var(--tx3)"></span> <span id="rp-ss">idle</span></span></span></div>
         <div class="si"><span class="si-k">Sessions</span><span class="si-v" id="rp-sc">0</span></div>
+        <button id="btn-reauth" class="btn" onclick="reauth()" style="margin-top:10px;width:100%;display:none;font-size:12px;padding:6px 10px;background:var(--w1sub);color:var(--w1);border:1px solid rgba(255,107,26,0.25)">Re-auth Claude</button>
       </div>
       <div class="rp-sec skd" id="rp-skd">
         <div class="rp-title w3">Inspect</div>
@@ -656,6 +657,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-webgl@0.16.0/lib/xterm-addon-webgl.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.min.js"></script>
 
   <script>
     /* ═ Particles — CRT phosphor wire colors ═ */
@@ -697,6 +699,7 @@
       // Don't attach to DOM yet — renderPanes will place it
       term.open(el);
       try{term.loadAddon(new WebglAddon.WebglAddon())}catch(e){}
+      try{term.loadAddon(new WebLinksAddon.WebLinksAddon())}catch(e){}
       let ws=null;
       if(!DEV){
         const proto=location.protocol==='https:'?'wss':'ws';ws=new WebSocket(`${proto}://${location.host}/ws/terminal/${id}`);ws.binaryType='arraybuffer';
@@ -911,10 +914,19 @@
 
 
     /* ═ Right Panel ═ */
-    function upRP(){const s=activeId?sess.get(activeId):null;$('rp-sn').textContent=s?s.name:'\u2014';$('rp-sd').textContent=s?s.dir:'\u2014';$('rp-sd').title=s?s.dir:'';$('rp-ss').textContent=s?(DEV?'demo':'live'):'idle';$('rp-dot').style.background=s?(DEV?'var(--w4)':'var(--w2)'):'var(--tx3)';$('rp-sc').textContent=sess.size;if(DEV){$('sys-cpu').textContent='8%';$('sys-cpu-b').style.width='8%';$('sys-mem').textContent='1.1/4GB';$('sys-mem-b').style.width='28%';$('sys-disk').textContent='12/40GB';$('sys-disk-b').style.width='30%'}}
+    function upRP(){const s=activeId?sess.get(activeId):null;$('rp-sn').textContent=s?s.name:'\u2014';$('rp-sd').textContent=s?s.dir:'\u2014';$('rp-sd').title=s?s.dir:'';$('rp-ss').textContent=s?(DEV?'demo':'live'):'idle';$('rp-dot').style.background=s?(DEV?'var(--w4)':'var(--w2)'):'var(--tx3)';$('rp-sc').textContent=sess.size;$('btn-reauth').style.display=s?'':'none';if(DEV){$('sys-cpu').textContent='8%';$('sys-cpu-b').style.width='8%';$('sys-mem').textContent='1.1/4GB';$('sys-mem-b').style.width='28%';$('sys-disk').textContent='12/40GB';$('sys-disk-b').style.width='30%'}}
     function fmtBytes(b){if(b>1e9)return(b/1e9).toFixed(1)+'GB';if(b>1e6)return(b/1e6).toFixed(0)+'MB';return b+'B'}
     async function pollStats(){if(DEV)return;try{const d=await api('/api/stats');$('sys-cpu').textContent=d.cpu+'%';$('sys-cpu-b').style.width=d.cpu+'%';const mUsed=fmtBytes(d.mem.used),mTotal=fmtBytes(d.mem.total);$('sys-mem').textContent=mUsed+'/'+mTotal;$('sys-mem-b').style.width=d.mem.pct+'%';const dUsed=fmtBytes(d.disk.used),dTotal=fmtBytes(d.disk.total);$('sys-disk').textContent=dUsed+'/'+dTotal;$('sys-disk-b').style.width=d.disk.pct+'%'}catch{}}
     async function pollClaudeUsage(){if(DEV)return;try{const d=await api('/api/claude-usage');if(!d.available){$('sys-claude-row').style.display='none';return}$('sys-claude-row').style.display='';const fh=d.five_hour;$('sys-claude').textContent=fh.pct+'%';const reset=fh.resets_at?new Date(fh.resets_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'';$('sys-claude').title='5-hour window'+(reset?' · resets '+reset:'');$('sys-claude-b').style.width=fh.pct+'%';$('sys-claude-b').style.background=fh.pct>85?'var(--w1)':fh.pct>60?'var(--w4)':'var(--w3)'}catch{}}
+
+    function reauth(){
+      if(!activeId){toast('No active session');return}
+      const s=sess.get(activeId);
+      if(!s||!s.ws||s.ws.readyState!==1){toast('Session not connected');return}
+      s.ws.send('claude login\n');
+      toast('Login command sent — check the terminal');
+      log(`Re-auth triggered for <b>${esc(s.name)}</b>`);
+    }
 
     function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});activity.unshift({t,msg});if(activity.length>30)activity.length=30;$('rp-af').innerHTML=activity.map(a=>`<div class="af-i"><span class="af-t">${a.t}</span><span class="af-m">${a.msg}</span></div>`).join('')}
 
