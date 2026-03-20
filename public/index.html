@@ -169,16 +169,6 @@
     .sk:hover .sk-tag { opacity: 1; }
     .sk-loop-icon { font-size: 10px; color: var(--w2); opacity: 0.7; flex-shrink: 0; margin-right: -4px; }
 
-    .cron { padding: 8px 10px; border-radius: var(--r); border-left: 3px solid var(--w4); background: var(--sf); margin: 0 8px 4px; box-shadow: -2px 0 6px rgba(184,192,204,0.06); }
-    .cron-top { display: flex; align-items: center; justify-content: space-between; }
-    .cron-name { font-size: 13px; font-weight: 500; color: var(--tx2); }
-    .cron-sched { font-family: var(--mono); font-size: 12px; color: var(--w4); margin-top: 2px; }
-    .cron-skill { font-size: 12px; color: var(--tx3); }
-    .cron-x { background: none; border: none; color: var(--tx3); cursor: pointer; font-size: 14px; padding: 2px 4px; border-radius: 3px; transition: all var(--t); }
-    .cron-x:hover { color: #ff4040; background: rgba(255,64,64,0.1); }
-
-    .sb-drop { margin: 8px 12px; padding: 14px; border: 1px dashed var(--line2); border-radius: var(--r); text-align: center; font-size: 12px; color: var(--tx3); transition: all var(--t); }
-    .sb-drop.over { border-color: var(--w1); background: var(--w1sub); color: var(--w1); box-shadow: 0 0 8px var(--w1glow); }
     .sb-btn {
       display: flex; align-items: center; gap: 6px; width: calc(100% - 24px);
       margin: 4px 12px; padding: 7px 10px; background: var(--sf); border: 1px solid var(--line);
@@ -508,11 +498,7 @@
       <div class="sb-grp" id="sk-loop"></div>
       <div class="sb-head w3" data-toggle="sk-cmds">Commands <span class="chev">&#9662;</span></div>
       <div class="sb-grp" id="sk-cmds"></div>
-      <div class="sb-head w4" data-toggle="sk-crons">Scheduled <span class="chev">&#9662;</span></div>
-      <div class="sb-grp" id="sk-crons"></div>
-      <button class="sb-btn" id="btn-cron">+ Schedule</button>
-      <div class="sb-drop" id="cron-zone">Drop skill here to schedule</div>
-      <div class="sb-foot">loop.seafin.ai</div>
+<div class="sb-foot">loop.seafin.ai</div>
     </aside>
 
     <main class="ws">
@@ -608,21 +594,6 @@
       </form>
     </div>
   </div>
-  <div class="mo" id="mo-cron">
-    <div class="mo-box">
-      <h3>Schedule Skill</h3>
-      <form id="f-cron">
-        <div class="ff"><label>Job name</label><input id="i-cn" required placeholder="nightly-tests" /></div>
-        <div class="ff"><label>Skill</label><input id="i-cs" required placeholder="full-stack-tester" /></div>
-        <div class="ff"><label>Schedule (cron)</label><input id="i-cc" required placeholder="0 2 * * *" /></div>
-        <div class="ff"><label>Directory <span style="color:var(--tx3);font-weight:400">(optional)</span></label><input id="i-cd" placeholder="/home/claude/projects/my-app" /></div>
-        <div class="mo-act">
-          <button type="button" class="btn" onclick="closeMo('mo-cron')">Cancel</button>
-          <button type="submit" class="btn btn-go">Schedule</button>
-        </div>
-      </form>
-    </div>
-  </div>
   <div class="mo" id="mo-workflow">
     <div class="mo-box">
       <h3 id="mo-wf-title">New Workflow</h3>
@@ -683,7 +654,7 @@
 
     /* ═ State ═ */
     const DEV=location.protocol==='file:'||location.hostname==='localhost';
-    const sess=new Map();let activeId=null,currentUser=null,allSkills=[],cronJobs=[];const activity=[];
+    const sess=new Map();let activeId=null,currentUser=null,allSkills=[];const activity=[];
 
     /* ═ Workflow State ═ */
     const workflows=new Map();let activeWfId=null,editingWfId=null;
@@ -912,11 +883,6 @@
       });
     }
 
-    /* ═ Crons ═ */
-    async function loadCrons(){cronJobs=DEV?[{id:'c1',name:'nightly-tests',skill:'full-stack-tester',schedule:'0 2 * * *'},{id:'c2',name:'weekly-audit',skill:'audit',schedule:'0 9 * * 1'}]:await api('/api/crons').catch(()=>[]);renderCr()}
-    function renderCr(){$('sk-crons').innerHTML=cronJobs.length?cronJobs.map(c=>`<div class="cron"><div class="cron-top"><span class="cron-name">${esc(c.name)}</span><button class="cron-x" onclick="delCr('${esc(c.id)}')">&times;</button></div><div class="cron-sched">${esc(c.schedule)}</div><div class="cron-skill">/${esc(c.skill)}</div></div>`).join(''):'<div style="font-size:12px;color:var(--tx3);padding:6px 10px">No scheduled jobs</div>'}
-    async function mkCr(d){if(DEV){cronJobs.push({id:'c'+Date.now(),...d});renderCr();toast(`Scheduled /${d.skill}`);return}try{await api('/api/crons',{method:'POST',body:d});toast(`Scheduled /${d.skill}`);loadCrons()}catch(e){toast(e.message)}}
-    async function delCr(id){if(DEV){cronJobs=cronJobs.filter(c=>c.id!==id);renderCr();return}try{await api(`/api/crons/${id}`,{method:'DELETE'});loadCrons()}catch(e){toast(e.message)}}
 
     /* ═ Right Panel ═ */
     function upRP(){const s=activeId?sess.get(activeId):null;$('rp-sn').textContent=s?s.name:'\u2014';$('rp-sd').textContent=s?s.dir:'\u2014';$('rp-sd').title=s?s.dir:'';$('rp-ss').textContent=s?(DEV?'demo':'live'):'idle';$('rp-dot').style.background=s?(DEV?'var(--w4)':'var(--w2)'):'var(--tx3)';$('rp-sc').textContent=sess.size;if(DEV){$('sys-cpu').textContent='8%';$('sys-cpu-b').style.width='8%';$('sys-mem').textContent='1.1/4GB';$('sys-mem-b').style.width='28%';$('sys-disk').textContent='12/40GB';$('sys-disk-b').style.width='30%'}}
@@ -998,7 +964,7 @@
       if(currentUser)$('hd-user').innerHTML=`${currentUser.avatar?`<img class="hd-avatar" src="${esc(currentUser.avatar)}">`:''}
         <span class="hd-name">${esc(currentUser.sub)}</span>
         <a class="hd-out" href="/logout">Logout</a>`;
-      loadSkills();loadCrons();loadWorkflowData();loadSessions();
+      loadSkills();loadWorkflowData();loadSessions();
       Voice.init();pollStats();setInterval(pollStats,15000);pollClaudeUsage();setInterval(pollClaudeUsage,300000);
     }
 
@@ -1034,15 +1000,9 @@
     });
 
     $('btn-tab').addEventListener('click',()=>{loadProjects();loadGHRepos();openMo('mo-session')});
-    $('btn-cron').addEventListener('click',()=>openMo('mo-cron'));
     $('btn-mic').addEventListener('click',()=>Voice.toggle());
     $('sk-search').addEventListener('input',e=>renderSk(e.target.value));
     document.querySelectorAll('.sb-head[data-toggle]').forEach(h=>{h.addEventListener('click',()=>{h.classList.toggle('shut');const g=$(h.dataset.toggle);if(g)g.classList.toggle('shut')})});
-
-    const cz=$('cron-zone');
-    cz.addEventListener('dragover',e=>{e.preventDefault();cz.classList.add('over')});
-    cz.addEventListener('dragleave',()=>cz.classList.remove('over'));
-    cz.addEventListener('drop',e=>{e.preventDefault();cz.classList.remove('over');const sk=e.dataTransfer.getData('text/plain');if(sk){$('i-cs').value=sk;$('i-cn').value=sk+'-job';openMo('mo-cron')}});
 
     $('btn-wf').addEventListener('click',()=>{editingWfId=null;$('mo-wf-title').textContent='New Workflow';$('i-wfn').value='';$('i-wfl').value='single';$('btn-wf-go').textContent='Create';openMo('mo-workflow')});
     $('f-workflow').addEventListener('submit',e=>{
@@ -1087,7 +1047,6 @@
       const mode=$('i-mode').value;
       try{const s=await api('/api/sessions',{method:'POST',body:{name,directory:dir,mode}});mkTerm(s.id||name,name,dir);toast(`"${name}" started`)}catch(e){toast(e.message)}
     });
-    $('f-cron').addEventListener('submit',async e=>{e.preventDefault();closeMo('mo-cron');await mkCr({name:$('i-cn').value.trim(),skill:$('i-cs').value.trim(),schedule:$('i-cc').value.trim(),directory:$('i-cd').value.trim()})});
 
     document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
     document.addEventListener('keydown',e=>{

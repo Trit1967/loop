@@ -19,7 +19,6 @@ const jwt = require('jsonwebtoken');
 const { router: authRouter, requireAuth, validateJWT } = require('./lib/auth');
 const sessions = require('./lib/sessions');
 const skills = require('./lib/skills');
-const cron = require('./lib/cron');
 
 // ---------------------------------------------------------------------------
 // Environment
@@ -261,42 +260,6 @@ app.get('/api/skills', async (_req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// ---------------------------------------------------------------------------
-// REST API — Crons
-// ---------------------------------------------------------------------------
-
-app.get('/api/crons', async (_req, res, next) => {
-  try {
-    const list = await cron.list();
-    res.json(list);
-  } catch (err) { next(err); }
-});
-
-app.post('/api/crons', async (req, res, next) => {
-  try {
-    const { skill, schedule, directory } = req.body;
-    if (!skill || !schedule) {
-      return res.status(400).json({ error: 'skill and schedule are required' });
-    }
-    const dir = directory || process.env.HOME || '/root';
-    const job = await cron.create({ skill, schedule, directory: dir });
-    res.status(201).json(job);
-  } catch (err) { next(err); }
-});
-
-app.delete('/api/crons/:id', async (req, res, next) => {
-  try {
-    await cron.remove(req.params.id);
-    res.status(204).end();
-  } catch (err) { next(err); }
-});
-
-app.get('/api/crons/:id/history', async (req, res, next) => {
-  try {
-    const history = await cron.history(req.params.id);
-    res.json(history);
-  } catch (err) { next(err); }
-});
 
 // ---------------------------------------------------------------------------
 // Error handler
@@ -479,10 +442,7 @@ function shutdown(signal) {
   server.close(() => {
     console.log('[Server] HTTP server closed');
 
-    // Clean up cron jobs
-    try { cron.shutdown(); } catch { /* ignore */ }
-
-    process.exit(0);
+process.exit(0);
   });
 
   // Force exit after 5 seconds if graceful shutdown stalls
