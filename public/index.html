@@ -490,44 +490,36 @@
       50% { opacity: 0.3; box-shadow: 0 0 2px var(--w2); }
     }
 
-    /* ═ Voice Overlay ═ */
-    .voice-ov {
+    /* ═ Command Bar ═ */
+    .cmd-bar {
       position: absolute; bottom: 0; left: 0; right: 0; z-index: 15;
-      background: linear-gradient(transparent 0%, rgba(5,5,8,0.72) 30%, rgba(5,5,8,0.93) 100%);
-      padding: 56px 20px 18px;
-      opacity: 0; pointer-events: none;
-      transition: opacity 250ms ease-out;
-      font-family: var(--mono);
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(10,10,14,0.93); border-top: 1px solid rgba(255,255,255,0.07);
+      padding: 7px 10px 7px 12px; backdrop-filter: blur(6px);
+      transform: translateY(100%); opacity: 0; pointer-events: none;
+      transition: transform 200ms ease-out, opacity 200ms ease-out;
     }
-    .voice-ov.vis { opacity: 1; }
-    .voice-ov-top {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-      pointer-events: auto;
-    }
-    .voice-pulse {
-      width: 9px; height: 9px; border-radius: 50%; background: var(--w1); flex-shrink: 0;
+    .cmd-bar.vis { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .cmd-bar-pulse {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--w1); flex-shrink: 0;
       animation: voice-beat 1.2s ease-in-out infinite;
     }
+    .cmd-bar-pulse.off { display: none; }
     @keyframes voice-beat {
       0%,100% { box-shadow: 0 0 4px var(--w1), 0 0 10px var(--w1glow); opacity: 1; transform: scale(1); }
       50% { box-shadow: 0 0 16px var(--w1glow), 0 0 28px rgba(255,107,26,0.3); opacity: 0.7; transform: scale(1.25); }
     }
-    .voice-label { font-family: var(--sans); font-size: 12px; font-weight: 700; color: var(--w1); letter-spacing: 0.8px; text-transform: uppercase; flex: 1; }
-    .voice-stop-btn {
-      pointer-events: auto; background: rgba(255,107,26,0.1); border: 1px solid rgba(255,107,26,0.3);
-      color: var(--w1); font-family: var(--sans); font-size: 12px; font-weight: 600;
-      border-radius: var(--r); padding: 3px 12px; cursor: pointer; transition: all var(--t);
+    .cmd-bar-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-family: var(--mono); font-size: 14px; color: var(--tx); caret-color: var(--teal);
     }
-    .voice-stop-btn:hover { background: var(--w1sub); border-color: var(--w1); box-shadow: 0 0 8px var(--w1glow); }
-    .voice-interim-txt {
-      font-size: 14px; color: var(--tx3); font-style: italic; min-height: 20px; margin-bottom: 5px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.2px;
+    .cmd-bar-input::placeholder { color: var(--tx3); font-style: italic; }
+    .cmd-bar-send {
+      background: rgba(77,184,194,0.1); border: 1px solid rgba(77,184,194,0.22);
+      color: var(--teal); font-family: var(--sans); font-size: 12px; font-weight: 600;
+      border-radius: var(--r); padding: 3px 10px; cursor: pointer; transition: all var(--t); flex-shrink: 0;
     }
-    .voice-final-txt {
-      font-size: 15px; color: var(--tx); font-weight: 500; min-height: 22px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      text-shadow: 0 0 20px rgba(208,207,200,0.15);
-    }
+    .cmd-bar-send:hover { background: rgba(77,184,194,0.2); border-color: var(--teal); }
   </style>
 </head>
 <body>
@@ -1033,9 +1025,13 @@
 
     function mkPane(idx){
       const pane=document.createElement('div');pane.className='pane';pane.dataset.pane=idx;
-      pane.innerHTML=`<div class="pane-hd"><span class="pane-dot empty"></span><span class="pane-label">Pane ${idx+1}</span><button class="pane-assign" data-pane="${idx}">assign</button></div><div class="pane-body"><div class="pane-empty"><div class="pane-empty-txt">No session assigned</div><button class="pane-empty-btn" data-pane="${idx}">+ Assign Session</button></div></div>`;
+      pane.innerHTML=`<div class="pane-hd"><span class="pane-dot empty"></span><span class="pane-label">Pane ${idx+1}</span><button class="pane-assign" data-pane="${idx}">assign</button></div><div class="pane-body"><div class="pane-empty"><div class="pane-empty-txt">No session assigned</div><button class="pane-empty-btn" data-pane="${idx}">+ Assign Session</button></div><div class="cmd-bar"><span class="cmd-bar-pulse off"></span><input class="cmd-bar-input" type="text" placeholder="Speak or type a command…" /><button class="cmd-bar-send">↵ Send</button></div></div>`;
       pane.querySelector('.pane-assign').addEventListener('click',()=>openAssign(idx));
       const eb=pane.querySelector('.pane-empty-btn');if(eb)eb.addEventListener('click',()=>openAssign(idx));
+      const cb=pane.querySelector('.cmd-bar'),ci=cb.querySelector('.cmd-bar-input'),cs=cb.querySelector('.cmd-bar-send');
+      function sendCmd(){const v=ci.value.trim();if(!v)return;let sid=null;for(const[id,s]of sess){if(s.el&&s.el.closest('.pane')===pane){sid=id;break;}}if(!sid&&activeId)sid=activeId;if(sid){const s=sess.get(sid);if(s?.ws?.readyState===1)s.ws.send(v+'\n');}ci.value='';ci.placeholder='Speak or type a command…';if(!Voice.listening)cb.classList.remove('vis');}
+      ci.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendCmd();}if(e.key==='Escape'){ci.value='';if(!Voice.listening)cb.classList.remove('vis');}});
+      cs.addEventListener('click',sendCmd);
       pane.addEventListener('dragover',e=>e.preventDefault());
       pane.addEventListener('drop',e=>{e.preventDefault();const sk=e.dataTransfer.getData('text/plain');const a=activeWfId?workflows.get(activeWfId)?.sessions.find(s=>s.paneIndex===idx):null;const sid=a?.id||activeId;if(sk&&sid)fire(sid,sk)});
       return pane;
@@ -1109,31 +1105,29 @@
 
 function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});activity.unshift({t,msg});if(activity.length>30)activity.length=30;const af=$('rp-af');if(af)af.innerHTML=activity.map(a=>`<div class="af-i"><span class="af-t">${a.t}</span><span class="af-m">${a.msg}</span></div>`).join('')}
 
-    /* ═ Voice Overlay ═ */
-    let _voiceOv=null;
-    function getVoiceOv(){
-      if(!_voiceOv){
-        _voiceOv=document.createElement('div');
-        _voiceOv.className='voice-ov';
-        _voiceOv.innerHTML=`<div class="voice-ov-top"><span class="voice-pulse"></span><span class="voice-label">Listening</span><button class="voice-stop-btn" id="voice-stop-btn">✕ Stop</button></div><div class="voice-interim-txt" id="voice-interim"></div><div class="voice-final-txt" id="voice-final"></div>`;
-        _voiceOv.querySelector('#voice-stop-btn').addEventListener('click',()=>Voice.stop());
-      }
-      return _voiceOv;
+    /* ═ Command Bar helpers ═ */
+    function getActiveCmdBar(){
+      if(activeId){const s=sess.get(activeId);if(s?.el){const p=s.el.closest('.pane');if(p)return p.querySelector('.cmd-bar');}}
+      return document.querySelector('.cmd-bar');
     }
-    function showVoiceOv(){
-      const ov=getVoiceOv();
-      const pb=document.querySelector('.pane-body:not(.hidden),.pane-body');
-      if(pb&&!pb.contains(ov))pb.appendChild(ov);
-      requestAnimationFrame(()=>ov.classList.add('vis'));
+    function showCmdBar(){
+      const cb=getActiveCmdBar();if(!cb)return;
+      cb.classList.add('vis');
+      cb.querySelector('.cmd-bar-pulse').classList.remove('off');
+      const ci=cb.querySelector('.cmd-bar-input');ci.placeholder='Listening…';ci.focus();
     }
-    function hideVoiceOv(){
-      if(_voiceOv){_voiceOv.classList.remove('vis');setTimeout(()=>{if(_voiceOv&&_voiceOv.parentNode)_voiceOv.parentNode.removeChild(_voiceOv)},260)}
+    function hideCmdBar(){
+      const cb=getActiveCmdBar();if(!cb)return;
+      cb.querySelector('.cmd-bar-pulse').classList.add('off');
+      const ci=cb.querySelector('.cmd-bar-input');
+      if(!ci.value.trim())cb.classList.remove('vis');
+      ci.placeholder='Speak or type a command…';
     }
-    function updateVoiceOv(final,interim){
-      if(!_voiceOv)return;
-      const fi=$('voice-final'),ii=$('voice-interim');
-      if(fi)fi.textContent=final?`"${final}"`:'';
-      if(ii)ii.textContent=interim||'';
+    function updateCmdBar(final,interim){
+      const cb=getActiveCmdBar();if(!cb)return;
+      const ci=cb.querySelector('.cmd-bar-input');
+      if(final){ci.value=(ci.value+' '+final).trim();ci.placeholder='Listening…';}
+      else if(interim){if(!ci.value)ci.placeholder=interim;}
     }
 
     /* ═ Voice ═ */
@@ -1151,8 +1145,7 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
               if(text&&activeId){
                 const s=sess.get(activeId);
                 if(s){
-                  if(DEV)s.term.write(text);
-                  else if(s.ws&&s.ws.readyState===1)s.ws.send(text);
+                  updateCmdBar(text,null);
                 }
                 this._lastFinal=text;
               }
@@ -1160,7 +1153,7 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
               interim+=e.results[i][0].transcript;
             }
           }
-          updateVoiceOv(this._lastFinal,interim);
+          updateCmdBar(null,interim);
         };
         this.rec.onerror=e=>{if(e.error!=='no-speech'&&e.error!=='network')toast('Voice error: '+e.error);if(e.error==='not-allowed'||e.error==='service-not-allowed')this.stop()};
         this.rec.onend=()=>{
@@ -1178,13 +1171,13 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
       start(){
         this.listening=true;this._lastFinal='';
         $('btn-mic').classList.add('listening');
-        showVoiceOv();
+        showCmdBar();
         try{this.rec.start()}catch(e){this.stop()}
       },
       stop(){
         this.listening=false;clearTimeout(this._rt);
         $('btn-mic').classList.remove('listening');
-        hideVoiceOv();
+        hideCmdBar();
         try{this.rec.stop()}catch(e){}
       }
     };
