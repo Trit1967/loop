@@ -1132,23 +1132,19 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
 
     /* ═ Voice ═ */
     const Voice={
-      rec:null,listening:false,_rt:null,_lastFinal:'',_recentFinals:new Map(),
+      rec:null,listening:false,_rt:null,_lastFinal:'',_recentFinals:new Map(),_processed:new Set(),
       init(){
         const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
         if(!SR){$('btn-mic').title='Voice not supported in this browser';return}
         this.rec=new SR();this.rec.continuous=true;this.rec.interimResults=true;this.rec.lang='en-US';
         this.rec.onresult=e=>{
           let interim='';
-          for(let i=e.resultIndex;i<e.results.length;i++){
+          for(let i=0;i<e.results.length;i++){
             if(e.results[i].isFinal){
-              const text=e.results[i][0].transcript.trim();
-              if(text){
-                const norm=text.toLowerCase().replace(/[.,!?'"]/g,'').trim();
-                const now=Date.now();
-                if(now-(this._recentFinals.get(norm)||0)>2500){
-                  this._recentFinals.set(norm,now);
-                  updateCmdBar(text,null);
-                }
+              if(!this._processed.has(i)){
+                this._processed.add(i);
+                const text=e.results[i][0].transcript.trim();
+                if(text)updateCmdBar(text,null);
               }
             } else {
               interim+=e.results[i][0].transcript;
@@ -1159,6 +1155,7 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
         this.rec.onerror=e=>{if(e.error!=='no-speech'&&e.error!=='network')toast('Voice error: '+e.error);if(e.error==='not-allowed'||e.error==='service-not-allowed')this.stop()};
         this.rec.onend=()=>{
           if(this.listening){
+            this._processed.clear();
             clearTimeout(this._rt);
             this._rt=setTimeout(()=>{if(this.listening)try{this.rec.start()}catch(e){this.stop()}},300);
           }
