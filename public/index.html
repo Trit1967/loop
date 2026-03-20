@@ -152,22 +152,22 @@
     .sb-search:focus { border-color: var(--w1); box-shadow: 0 0 6px rgba(255,107,26,0.15); }
 
     .sk {
-      display: flex; align-items: center; gap: 10px;
-      padding: 7px 10px; border-radius: var(--r); cursor: grab;
-      transition: all var(--t); border: 1px solid transparent; margin-bottom: 1px;
+      display: flex; align-items: center; gap: 6px;
+      padding: 3px 8px; border-radius: var(--r); cursor: grab;
+      transition: all var(--t); border: 1px solid transparent;
     }
     .sk:hover { background: var(--sf2); }
     .sk.dragging { opacity: 0.3; }
-    .sk-wire { width: 3px; height: 16px; border-radius: 2px; flex-shrink: 0; }
-    .sk-wire.w1 { background: var(--w1); box-shadow: 0 0 3px var(--w1glow); }
-    .sk-wire.w2 { background: var(--w2); width: 5px; box-shadow: 0 0 3px var(--w2glow); }
-    .sk-wire.w3 { background: var(--w3); box-shadow: 0 0 3px var(--w3glow); }
+    .sk-wire { width: 2px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+    .sk-wire.w1 { background: var(--w1); }
+    .sk-wire.w2 { background: var(--w2); width: 3px; }
+    .sk-wire.w3 { background: var(--w3); }
     .sk-wire.w4 { background: var(--w4); }
-    .sk-name { font-size: 13px; font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tx2); }
+    .sk-name { font-size: 11px; font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tx2); }
     .sk:hover .sk-name { color: var(--tx); }
-    .sk-tag { font-size: 11px; color: var(--tx3); opacity: 0; transition: opacity var(--t); flex-shrink: 0; }
+    .sk-tag { font-size: 10px; color: var(--tx3); opacity: 0; transition: opacity var(--t); flex-shrink: 0; }
     .sk:hover .sk-tag { opacity: 1; }
-    .sk-loop-icon { font-size: 10px; color: var(--w2); opacity: 0.7; flex-shrink: 0; margin-right: -4px; }
+    .sk-loop-icon { font-size: 9px; color: var(--w2); opacity: 0.7; flex-shrink: 0; margin-right: -2px; }
 
     .sb-btn {
       display: flex; align-items: center; gap: 6px; width: calc(100% - 24px);
@@ -746,6 +746,7 @@
 
     function switchTo(id){
       activeId=id;
+      localStorage.setItem('loopActiveSession',id);
       if(!activeWfId){
         sess.forEach((s,sid)=>{s.el.classList.toggle('hidden',sid!==id);if(sid===id)setTimeout(()=>s.fit.fit(),10)});
         renderPanes();
@@ -1033,7 +1034,13 @@
 
     async function loadSessions(){
       if(DEV){demo('loop');demo('seafin-hq');log('Dashboard loaded');upRP();return}
-      try{const l=await api('/api/sessions');l.forEach(s=>mkTerm(s.id||s.name,s.name,s.directory))}catch(e){}
+      try{
+        const l=await api('/api/sessions');
+        l.forEach(s=>mkTerm(s.id||s.name,s.name,s.directory));
+        // Restore last active session — skip if a workflow already set activeId
+        const last=localStorage.getItem('loopActiveSession');
+        if(last&&sess.has(last))switchTo(last);
+      }catch(e){}
     }
     function demo(name){const{term}=mkTerm(name,name);setTimeout(()=>{const s=sess.get(name);if(s)s.fit.fit();[`\x1b[2m$ claude --project ~/projects/${name}\x1b[0m`,'',`\x1b[36m\u25c6\x1b[0m \x1b[1mClaude Code\x1b[0m  \x1b[2mOpus 4.6 \xb7 /projects/${name}\x1b[0m`,'',`  \x1b[2mReady. Type a message or drag a skill from the sidebar.\x1b[0m`,'','\x1b[36m>\x1b[0m \x1b[5m\u2588\x1b[0m'].forEach((l,i)=>setTimeout(()=>term.writeln(l),i*30))},150)}
 
