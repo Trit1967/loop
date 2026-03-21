@@ -1385,12 +1385,12 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
 
     document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
     function handleKey(e){
-      if(e.altKey&&e.key==='n'){e.preventDefault&&e.preventDefault();openSession();return true}
+      if(e.altKey&&e.shiftKey&&e.key.toLowerCase()==='n'){e.preventDefault&&e.preventDefault();openWorkflowModal();return true}
+      if(e.altKey&&e.key.toLowerCase()==='n'){e.preventDefault&&e.preventDefault();openSession();return true}
       if(e.altKey&&e.key==='m'){e.preventDefault&&e.preventDefault();Voice.toggle();return true}
-      if(e.key==='Escape'){document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));return false}
+      if(e.key==='Escape'){document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));if(Voice.listening)Voice.stop();return false}
       if(e.altKey&&e.key==='w'&&activeId){e.preventDefault&&e.preventDefault();killSess(activeId);return true}
       if(e.altKey&&e.key>='1'&&e.key<='9'){e.preventDefault&&e.preventDefault();const ids=[...sess.keys()];const idx=parseInt(e.key)-1;if(idx<ids.length)switchTo(ids[idx]);return true}
-      if(e.altKey&&e.shiftKey&&e.key==='N'){e.preventDefault&&e.preventDefault();openWorkflowModal();return true}
       return false;
     }
     document.addEventListener('keydown',handleKey);
