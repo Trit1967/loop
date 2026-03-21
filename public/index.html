@@ -1184,9 +1184,9 @@
     async function loadSkills(){allSkills=DEV?MOCK:await api('/api/skills').catch(()=>[]);renderSk()}
     function renderSk(q=''){
       const f=q.toLowerCase();
-      const sk=allSkills.filter(s=>s.type==='skill'&&(!f||s.name.includes(f)||(s.description||'').toLowerCase().includes(f)));
-      const ls=allSkills.filter(s=>s.type==='loop-skill'&&(!f||s.name.includes(f)||(s.description||'').toLowerCase().includes(f)));
-      const cm=allSkills.filter(s=>s.type==='command'&&(!f||s.name.includes(f)||(s.description||'').toLowerCase().includes(f)));
+      const sk=allSkills.filter(s=>s.type==='skill'&&(!f||s.name.toLowerCase().includes(f)));
+      const ls=allSkills.filter(s=>s.type==='loop-skill'&&(!f||s.name.toLowerCase().includes(f)));
+      const cm=allSkills.filter(s=>s.type==='command'&&(!f||s.name.toLowerCase().includes(f)));
       $('sk-skills').innerHTML=sk.map(s=>`<div class="sk" draggable="true" data-skill="${esc(s.name)}" data-type="skill" data-desc="${esc(s.description||'')}"><span class="sk-wire w1"></span><span class="sk-name">${esc(s.name)}</span><span class="sk-tag">drag</span></div>`).join('');
       $('sk-loop').innerHTML=ls.map(s=>`<div class="sk" draggable="true" data-skill="${esc(s.name)}" data-type="loop-skill" data-desc="${esc(s.description||'')}"><span class="sk-wire w2"></span><span class="sk-loop-icon">&#x21bb;</span><span class="sk-name">${esc(s.name)}</span><span class="sk-tag">drag</span></div>`).join('');
       $('sk-cmds').innerHTML=cm.map(s=>`<div class="sk" draggable="true" data-skill="${esc(s.name)}" data-type="command" data-desc="${esc(s.description||'')}"><span class="sk-wire w3"></span><span class="sk-name">${esc(s.name)}</span><span class="sk-tag">drag</span></div>`).join('');
