@@ -1418,8 +1418,8 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
       const name=$('i-sn').value.trim(), dir=($('i-proj').value||$('i-sd').value).trim();
       if(DEV){closeMo('mo-session');demo(name||'session');return}
       if(!name||!dir){
-        if(!dir)$('i-proj').style.borderColor='var(--w4)';else $('i-proj').style.borderColor='';
-        if(!name)$('i-sn').style.borderColor='var(--w4)';else $('i-sn').style.borderColor='';
+        if(!dir)$('i-proj').style.borderColor='#c75878';else $('i-proj').style.borderColor='';
+        if(!name)$('i-sn').style.borderColor='#c75878';else $('i-sn').style.borderColor='';
         toast('Select a project and enter a session name');return}
       $('i-proj').style.borderColor='';$('i-sn').style.borderColor='';
       closeMo('mo-session');
