@@ -60,15 +60,14 @@
     ::-webkit-scrollbar-thumb:hover { background: var(--raised); }
     /* Custom overlay scrollbar for xterm.js (WebGL canvas blocks native scrollbar) */
     .term-sb {
-      position: absolute; right: 2px; top: 4px; bottom: 4px; width: 5px;
-      z-index: 20; pointer-events: none; opacity: 0; transition: opacity 150ms;
+      position: absolute; right: 3px; top: 6px; bottom: 6px; width: 8px;
+      z-index: 20; pointer-events: none;
+      background: rgba(255,255,255,0.05); border-radius: 4px;
     }
-    .ti:hover .term-sb { opacity: 1; }
     .term-sb-thumb {
-      position: absolute; left: 0; right: 0; width: 5px; border-radius: 3px;
-      background: rgba(184,192,204,0.28); min-height: 24px; transition: background 120ms;
+      position: absolute; left: 0; right: 0; width: 8px; border-radius: 4px;
+      background: rgba(155,107,255,0.7); min-height: 28px;
     }
-    .ti:hover .term-sb-thumb { background: rgba(184,192,204,0.52); }
     ::selection { background: rgba(255,107,26,0.18); color: #fff; }
 
     #cv { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
