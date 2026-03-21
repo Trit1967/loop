@@ -63,10 +63,12 @@
       position: absolute; right: 3px; top: 6px; bottom: 6px; width: 8px;
       z-index: 20; pointer-events: none;
       background: rgba(255,255,255,0.05); border-radius: 4px;
+      opacity: 0; transition: opacity 150ms;
     }
+    .ti:hover .term-sb { opacity: 1; }
     .term-sb-thumb {
       position: absolute; left: 0; right: 0; width: 8px; border-radius: 4px;
-      background: rgba(155,107,255,0.7); min-height: 28px;
+      background: rgba(155,107,255,0.75); min-height: 28px;
     }
     ::selection { background: rgba(255,107,26,0.18); color: #fff; }
 
@@ -824,9 +826,19 @@
       // Custom overlay scrollbar (WebGL canvas blocks native scrollbar)
       {const sb=document.createElement('div');sb.className='term-sb';
       const sbt=document.createElement('div');sbt.className='term-sb-thumb';
+      sbt.style.pointerEvents='auto';sbt.style.cursor='grab';
       sb.appendChild(sbt);el.appendChild(sb);
-      function syncSb(){const vp=el.querySelector('.xterm-viewport');if(!vp||vp.scrollHeight<=vp.clientHeight){sbt.style.height='0';return;}const ratio=vp.clientHeight/vp.scrollHeight;const trackH=sb.clientHeight||100;const thumbH=Math.max(24,trackH*ratio);sbt.style.height=thumbH+'px';sbt.style.top=(vp.scrollTop/(vp.scrollHeight-vp.clientHeight)*(trackH-thumbH))+'px';}
-      term.onRender(syncSb);setTimeout(()=>{const vp=el.querySelector('.xterm-viewport');if(vp)vp.addEventListener('scroll',syncSb);},300);}
+      function syncSb(){const vp=el.querySelector('.xterm-viewport');if(!vp||vp.scrollHeight<=vp.clientHeight){sbt.style.height='0';return;}const ratio=vp.clientHeight/vp.scrollHeight;const trackH=sb.clientHeight||100;const thumbH=Math.max(28,trackH*ratio);sbt.style.height=thumbH+'px';const pct=vp.scrollTop/(vp.scrollHeight-vp.clientHeight)||0;sbt.style.top=(pct*(trackH-thumbH))+'px';}
+      term.onScroll(syncSb);term.onRender(syncSb);
+      setTimeout(()=>{const vp=el.querySelector('.xterm-viewport');if(vp)vp.addEventListener('scroll',syncSb);},300);
+      // Drag thumb to scroll
+      sbt.addEventListener('mousedown',e=>{
+        e.preventDefault();const vp=el.querySelector('.xterm-viewport');if(!vp)return;
+        const startY=e.clientY,startTop=parseFloat(sbt.style.top)||0;sbt.style.cursor='grabbing';
+        function mv(e){const trackH=sb.clientHeight,thumbH=sbt.clientHeight;const newTop=Math.max(0,Math.min(trackH-thumbH,startTop+e.clientY-startY));vp.scrollTop=(newTop/(trackH-thumbH))*(vp.scrollHeight-vp.clientHeight);}
+        function up(){sbt.style.cursor='grab';document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}
+        document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+      });}
       // Intercept app shortcuts before xterm swallows them
       term.attachCustomKeyEventHandler(ev=>{
         if(ev.type!=='keydown')return true;
