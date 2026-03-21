@@ -582,6 +582,7 @@
         <!-- Workflow tab bar — only visible when workflows exist -->
         <div class="wf-bar" id="wf-bar" style="display:none">
           <div id="wf-tabs" style="display:flex;"></div>
+          <button class="wf-add" id="btn-new-sess-wf" title="New session (Alt+N)">+ Session</button>
           <button class="wf-add" id="btn-wf-bar" title="New workflow (Alt+Shift+N)">+ Workflow</button>
           <div class="layout-bar" id="layout-bar" style="display:none">
             <button class="layout-btn active" data-layout="single" title="Single pane">
@@ -1355,6 +1356,7 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
 
     function openSession(){$('i-sd').value='';$('i-sn').value='';$('i-clone').value='';$('i-proj').value='';loadProjects();openMo('mo-session')}
     $('btn-new-sess').addEventListener('click',openSession);
+    $('btn-new-sess-wf').addEventListener('click',openSession);
     function openWorkflowModal(){editingWfId=null;$('mo-wf-title').textContent='New Workflow';$('i-wfn').value='';$('i-wfl').value='single';$('btn-wf-go').textContent='Create';openMo('mo-workflow')}
     $('btn-wf').addEventListener('click',openWorkflowModal);
     $('btn-wf-bar').addEventListener('click',openWorkflowModal);
