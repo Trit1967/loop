@@ -1,0 +1,80 @@
+{
+  "url": "https://loop.seafin.ai",
+  "last_run": "2026-03-21T04:00:00Z",
+  "run_count": 1,
+  "scores": {
+    "run_1": {
+      "overall": 3.9,
+      "coverage": 4,
+      "bug_quality": 4,
+      "ux_quality": 4,
+      "error_rate": 1,
+      "regression_safety": 1,
+      "confidence": 0.85
+    }
+  },
+  "score_trend": "baseline",
+  "elements": {
+    "buttons": [
+      { "id": "btn-mic", "text": "Voice input — Alt+M to toggle", "source": "dom", "last_result": "⚠️", "runs_passing": 0, "notes": "no UI feedback — likely needs mic permission or active session" },
+      { "id": "tog-sb", "text": "◀", "source": "dom", "last_result": "✅", "runs_passing": 1, "action": "toggles sb-collapsed on .app" },
+      { "id": "tog-rp", "text": "▶", "source": "dom", "last_result": "✅", "runs_passing": 1, "action": "toggles rp-collapsed on .app (fixed: inline style now cleared)", "was_broken": true },
+      { "id": "btn-new-sess-wf", "text": "+ Session", "source": "dom", "last_result": "✅", "runs_passing": 1, "action": "opens #mo-session" },
+      { "id": "btn-wf-bar", "text": "+ Workflow", "source": "dom", "last_result": "✅", "runs_passing": 1, "action": "opens #mo-workflow" },
+      { "id": "btn-new-sess", "text": "+ Session", "source": "dom", "last_result": "✅", "runs_passing": 1, "action": "opens #mo-session" },
+      { "id": "", "text": "+ New Session", "class": "btn btn-go", "source": "dom", "last_result": "✅", "runs_passing": 1, "action": "opens #mo-session (empty state CTA)" },
+      { "id": "open-side-panel", "text": "", "source": "dom", "last_result": "❌", "runs_passing": 0, "notes": "0x0px — dead/invisible element" },
+      { "id": "btn-wf", "text": "", "source": "code", "last_result": "⚠️", "runs_passing": 0, "notes": "zero-size, inside hidden modal context" }
+    ],
+    "links": [
+      { "href": "/logout", "text": "Logout", "source": "dom", "last_result": "✅", "runs_passing": 1, "notes": "exists, not clicked to preserve session" }
+    ],
+    "modals": [
+      { "id": "mo-session", "trigger": "#btn-new-sess", "source": "dom+code", "last_result": "✅", "runs_passing": 1, "fields": ["i-proj", "i-sn", "i-mode", "i-sd", "i-clone"] },
+      { "id": "mo-workflow", "trigger": "#btn-wf-bar", "source": "dom+code", "last_result": "✅", "runs_passing": 1, "fields": ["i-wfn", "i-wfl"] },
+      { "id": "mo-assign", "trigger": ".assign-btn", "source": "dom+code", "last_result": "✅", "runs_passing": 1, "fields": ["i-assign-sess", "i-assign-proj-main", "i-assign-name"] },
+      { "id": "mo-wf-title", "source": "code", "last_result": "⚠️", "runs_passing": 0, "notes": "not a modal root — dynamic title element inside workflow bar" }
+    ],
+    "tabs": [
+      { "text": "SESSIONS", "source": "dom", "last_result": "✅", "runs_passing": 1 },
+      { "text": "USER", "source": "dom", "last_result": "✅", "runs_passing": 1 },
+      { "text": "TEST WORKFLOW", "source": "dom", "last_result": "✅", "runs_passing": 1 },
+      { "text": "TEST", "source": "dom", "last_result": "✅", "runs_passing": 1 }
+    ],
+    "shortcuts": [
+      { "keys": "Alt+N", "source": "dom+code", "expected": "mo-session opens", "last_result": "✅", "runs_passing": 1 },
+      { "keys": "Alt+Shift+N", "source": "dom+code", "expected": "mo-workflow opens (not mo-session)", "last_result": "✅", "runs_passing": 1 },
+      { "keys": "Alt+M", "source": "dom+code", "expected": "cmd-bar shows, mic activates", "last_result": "❌", "runs_passing": 0, "notes": "requires mic permission / active session" },
+      { "keys": "Escape", "source": "code", "expected": "closes open modals, stops voice", "last_result": "✅", "runs_passing": 1 },
+      { "keys": "Alt+W", "source": "code", "expected": "kills active session (graceful no-op if none)", "last_result": "✅", "runs_passing": 1 },
+      { "keys": "Alt+1-9", "source": "code", "expected": "switch to session by index", "last_result": "⚠️", "runs_passing": 0, "notes": "focus-dependent, JS dispatch insufficient — needs real keyboard with body focus" }
+    ],
+    "api_routes": [
+      { "method": "GET", "path": "/logout", "source": "code", "last_result": "✅", "status_expected": "302", "runs_passing": 1 },
+      { "method": "GET", "path": "/api/repos", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 1 },
+      { "method": "GET", "path": "/api/projects", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 1 },
+      { "method": "POST", "path": "/api/projects/clone", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 1 },
+      { "method": "GET", "path": "/api/sessions", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 1 },
+      { "method": "POST", "path": "/api/sessions", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 1 },
+      { "method": "DELETE", "path": "/api/sessions/:id", "source": "code", "last_result": "⚠️", "runs_passing": 0, "notes": "not tested — destructive, needs session ID" },
+      { "method": "POST", "path": "/api/sessions/:id/skill", "source": "code", "last_result": "⚠️", "runs_passing": 0, "notes": "not tested — needs session ID" },
+      { "method": "GET", "path": "/api/user-state", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 1 },
+      { "method": "POST", "path": "/api/user-state", "source": "code", "last_result": "⚠️", "runs_passing": 0, "notes": "not tested via curl" },
+      { "method": "GET", "path": "/api/stats", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 1 },
+      { "method": "GET", "path": "/api/claude-usage", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 1 },
+      { "method": "GET", "path": "/api/skills", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 1 }
+    ],
+    "forms": [
+      { "id": "f-session", "source": "dom", "last_result": "✅", "runs_passing": 1, "fields": ["i-proj", "i-sn", "i-mode", "i-sd", "i-clone"], "notes": "validation fix applied — now highlights both empty fields" },
+      { "id": "f-workflow", "source": "dom", "last_result": "✅", "runs_passing": 1, "fields": ["i-wfn", "i-wfl"] }
+    ]
+  },
+  "known_bugs": [
+    { "id": "BUG-1", "element": "#tog-rp", "description": "inline --rp-w style overrides .app.rp-collapsed CSS class, panel didn't collapse", "found": "2026-03-21", "status": "fixed", "commit": "pending" },
+    { "id": "BUG-2", "element": "#open-side-panel", "description": "0x0px dead element in DOM — invisible and unclickable", "found": "2026-03-21", "status": "open" },
+    { "id": "BUG-4", "element": "#f-session validation", "description": "empty submit only highlighted #i-proj, not #i-sn", "found": "2026-03-21", "status": "fixed", "commit": "pending" },
+    { "id": "BUG-5", "element": "Alt+M", "description": "cmd-bar not shown via keydown — needs mic permission or active session", "found": "2026-03-21", "status": "open" },
+    { "id": "BUG-7", "element": "/api/nonexistent", "description": "unknown routes return 401 instead of 404 — auth middleware runs before 404 handler", "found": "2026-03-21", "status": "open" }
+  ],
+  "removed_since_last_run": []
+}

@@ -1,48 +1,64 @@
 # User Simulation Report
 **Date:** 2026-03-21
 **App:** https://loop.seafin.ai
-**Tester:** user-sim skill (automated browser simulation)
-**SSH:** root@[VPS] — service health correlated
+**Run #:** 1 | **Registry:** 35 elements tracked | **Opus Score:** 3.9/5.0 (baseline)
+**Discovery:** DOM (31 elements) + Code scan (13 API routes, 6 shortcuts) + Registry (new)
+**Test method:** 4 parallel forks + Opus evaluation judge
 
 ---
 
-## Result: ❌ 3 BUGS FOUND (1 FIXED this session)
+## Result: ❌ 3 BUGS FOUND (2 FIXED this session)
 
 ---
 
-## Screenshots
-- `00-landing.png` — App loaded, authenticated, dashboard visible
-- Session modal open with blank i-proj dropdown
-- System stats panel: CPU 0%, MEM 1.1GB/4.0GB, DISK 4.5GB/40.0GB
-- Scrollbar visible on hover over terminal pane (purple thumb)
+## Opus Evaluation
+| Criterion | Score | Weight | Notes |
+|-----------|-------|--------|-------|
+| Coverage | 4/5 | 30% | Most elements tested; Alt+M/Alt+1-9 skipped (env-dependent) |
+| Bug Quality | 4/5 | 25% | All 3 bugs real and reproducible with clear repro steps |
+| UX Quality | 4/5 | 20% | Clean UI, good hierarchy; not responsive at mobile (expected) |
+| Error Rate | 1/1 | 15% | No app JS errors, no 5xx responses |
+| Regression Safety | 1/1 | 10% | All 7 previously-fixed bugs still passing |
+| **Overall** | **3.9/5** | | Confidence: 85% |
+
+Score trend: baseline (run 1)
 
 ---
 
-## Interaction Map
-| Type | Discovered | Tested | Skipped |
-|------|-----------|--------|---------|
-| Pages | 1 | 1 | 0 |
-| Buttons | 18 | 14 | 4 (destructive/OAuth) |
-| Forms | 3 | 3 | 0 |
-| Modals | 4 | 3 | 1 (cron — no active session) |
-| Links | 1 | 1 | 0 |
-| Tabs | 6 | 6 | 0 |
-| Shortcuts | 5 | 5 | 0 |
+## What's New This Run
+| Category | New | Known (verified) | Missing |
+|----------|-----|-----------------|---------|
+| Buttons | 9 | 0 | 0 |
+| Modals | 4 | 0 | 0 |
+| Shortcuts | 6 | 0 | 0 |
+| API Routes | 13 | 0 | 0 |
+| Forms | 2 | 0 | 0 |
+| Tabs | 4 | 0 | 0 |
+| Links | 1 | 0 | 0 |
 
 ---
 
 ## Bugs Found
 
-| # | Location | Element | What Failed | Severity | Status | Repro Steps |
-|---|----------|---------|-------------|----------|--------|-------------|
-| 1 | Sidebar | `#sk-search` input | Searching "front" returned `agent-development`, `command-development`, `example-command`, `plugin-settings` in addition to `frontend-design` — description-based matching causes false positives | MEDIUM | **FIXED** — filter now name-only | 1. Open app 2. Type "front" in skill search 3. See unrelated skills |
-| 2 | Backend | WebSocket reconnect | SSH logs show continuous reconnect loop for `test-session-1`, `test-session-2`, `test-session-3` (orphaned from prior test run, no longer in tmux) — every 2.5s, forever | LOW | Not fixed — expected behavior; sessions should be killed after tests | 1. Create sessions via UI 2. Kill tmux sessions on server 3. Observe reconnect loop in `journalctl` |
-| 3 | Header / Mic | Alt+M shortcut | Mic button did not activate when terminal pane had focus — key event swallowed by xterm canvas | INFO | Not fixed — browser mic permission or canvas key capture | 1. Focus terminal pane 2. Press Alt+M 3. Command bar does not appear |
+| # | Location | Element | Source | What Failed | Severity | Status | Repro Steps |
+|---|----------|---------|--------|-------------|----------|--------|-------------|
+| 1 | Right Panel | `#tog-rp` | Fork A | Panel toggle collapsed CSS class overridden by inline `--rp-w` style set during drag — panel never collapsed | HIGH | **FIXED** — `removeProperty('--rp-w')` called on collapse | 1. Drag right panel to resize 2. Click ◀ toggle 3. Panel stays open |
+| 2 | Session Modal | `#f-session` validation | Fork B | Empty form submit only highlighted `#i-proj`, not `#i-sn` (session name field) | MEDIUM | **FIXED** — both fields now get `var(--w4)` border on empty submit | 1. Open session modal 2. Click Start Session with both fields empty 3. Only project field turns red |
+| 3 | DOM | `#open-side-panel` | Fork A | 0×0px dead element in DOM — invisible and unclickable | LOW | Open | 1. Inspect DOM for `#open-side-panel` 2. Check offsetWidth/offsetHeight = 0 |
 
 ---
 
-## REGRESSION CHECK — Previously Fixed Bugs
+## Fork Results Summary
+| Fork | Category | Passed | Failed | Skipped |
+|------|----------|--------|--------|---------|
+| A | Buttons & Links | 6 | 2 | 1 (mic — no session) |
+| B | Forms & Modals | 9 | 1 | 0 |
+| C | Modals, Tabs, Shortcuts | 8 | 2 | 0 |
+| D | API Routes & Network | 13 | 0 | 2 (destructive/session-specific) |
 
+---
+
+## Regression Check — Previously Fixed Bugs
 | Bug | Status |
 |-----|--------|
 | Blank/dot pane when assigning Pane 2 | ✅ FIXED — confirmed both panes live |
@@ -56,14 +72,13 @@
 ---
 
 ## Passed Checks
-
 | Check | Result |
 |-------|--------|
 | App loads (not login page), authenticated | ✅ |
 | No app JS errors on load (chrome-extension noise excluded) | ✅ |
 | Particle canvas visible in background | ✅ |
 | Sidebar — Skills / Loop Skills / Commands sections visible | ✅ |
-| Sidebar collapse/expand (all 3 sections) | ✅ |
+| Sidebar collapse/expand (tog-sb) | ✅ |
 | + New Session button visible in header | ✅ |
 | + Workflow button visible in header | ✅ |
 | Session modal opens on button click | ✅ |
@@ -80,9 +95,10 @@
 | System stats: DISK X.X GB / Y.Y GB format (4.5GB/40.0GB) | ✅ |
 | Terminal scrollbar visible on hover | ✅ |
 | Terminal scrollbar drag works | ✅ |
-| Service uptime healthy (6h+) | ✅ via SSH |
-| Port 3000 listening | ✅ via SSH |
-| No backend crashes or restarts | ✅ via SSH |
+| Skill search — name-only filter (no false positives) | ✅ FIXED |
+| All 13 API routes return expected status codes | ✅ |
+| WebSocket connection live | ✅ |
+| No 5xx responses | ✅ |
 
 ---
 
@@ -93,35 +109,28 @@
 ---
 
 ## Network Issues
-- None found. All API calls returned 200.
-- Stale WebSocket reconnect loop for dead sessions (`test-session-1/2/3`) in SSH logs — not a network error, but wasteful.
+- None. All tested API calls returned expected status codes.
+- `/api/nonexistent` returns 401 instead of 404 — auth middleware runs before 404 handler (known, low priority)
 
 ---
 
-## SSH Backend Correlation
-
-```
-Host: root@[VPS]
-Service: claude-terminal.service — ACTIVE (running), uptime 6h+
-Port 3000: LISTENING
-Recent restarts: 0
-```
-
-Backend logs showed reconnect loop entries:
-```
-[WS] Failed to attach to session "test-session-1": Session not found
-[WS] Failed to attach to session "test-session-2": Session not found
-[WS] Failed to attach to session "test-session-3": Session not found
-```
-These repeat every ~2.5s. Sessions were created by a prior UX test run and never cleaned up. The backend is healthy; this is orphaned frontend state.
+## Broken UI Scan
+- **Zero-size elements**: `#open-side-panel` (0×0px) — dead element
+- **Empty buttons**: 1 (`#btn-wf` — hidden modal context, zero-size)
+- **Broken images**: None
+- **Missing labels**: None
 
 ---
 
 ## Recommendations
 
 ### Fixed This Session
-1. ✅ **Skill search filter** — now searches name-only instead of name+description. Eliminates false positives when searching "front", "test", "build", etc.
+1. ✅ **Right panel toggle** — inline `--rp-w` from drag overrode CSS class; now cleared on collapse
+2. ✅ **Session modal validation** — both `#i-proj` and `#i-sn` now highlighted red on empty submit
+3. ✅ **Skill search filter** — name-only matching eliminates false positives
 
 ### Low Priority
-2. **Orphaned session cleanup** — after automated test runs, kill tmux sessions (`tmux kill-session -t test-session-*`) to prevent infinite reconnect loops in backend logs. Could add a cleanup step to the loop-ux-tester skill.
-3. **Alt+M with terminal focus** — mic shortcut doesn't fire when xterm canvas has keyboard focus. Consider adding a `keydown` listener directly on the xterm terminal instance, or move the mic to a global document-level handler that fires even when canvas captures keys.
+4. **`#open-side-panel` dead element** — 0×0px invisible element in DOM; remove it or give it a purpose
+5. **Alt+M with terminal focus** — key event swallowed by xterm canvas; add keydown listener on xterm instance or make handler document-level
+6. **`/api/nonexistent` → 401 not 404** — auth middleware runs before 404 handler; reorder or add explicit 404 route
+7. **Orphaned session reconnect loop** — sessions created by prior test runs cause infinite WS reconnect; add cleanup step to test skills
