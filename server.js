@@ -65,6 +65,13 @@ app.get('/logout', (req, res) => {
 // Auth routes (login, callback, logout, me)
 app.use('/auth', authRouter);
 
+// Return 404 for unknown /api paths before auth runs
+const API_PATHS = /^\/(repos|projects|sessions|user-state|stats|claude-usage|skills)(\/.*)?$/;
+app.use('/api', (req, res, next) => {
+  if (API_PATHS.test(req.path)) return next();
+  res.status(404).json({ error: 'Not found' });
+});
+
 // All /api/* routes require authentication
 app.use('/api', requireAuth);
 
