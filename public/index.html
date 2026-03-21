@@ -58,6 +58,11 @@
     ::-webkit-scrollbar-track { background: var(--void); }
     ::-webkit-scrollbar-thumb { background: var(--sf3); border-radius: 2px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--raised); }
+    /* xterm.js terminal scrollbar */
+    .xterm-viewport::-webkit-scrollbar { width: 6px; }
+    .xterm-viewport::-webkit-scrollbar-track { background: transparent; }
+    .xterm-viewport::-webkit-scrollbar-thumb { background: rgba(176,182,198,0.3); border-radius: 3px; }
+    .xterm-viewport::-webkit-scrollbar-thumb:hover { background: rgba(176,182,198,0.6); }
     ::selection { background: rgba(255,107,26,0.18); color: #fff; }
 
     #cv { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
