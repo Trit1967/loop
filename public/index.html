@@ -58,11 +58,17 @@
     ::-webkit-scrollbar-track { background: var(--void); }
     ::-webkit-scrollbar-thumb { background: var(--sf3); border-radius: 2px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--raised); }
-    /* xterm.js terminal scrollbar */
-    .xterm-viewport::-webkit-scrollbar { width: 6px; }
-    .xterm-viewport::-webkit-scrollbar-track { background: transparent; }
-    .xterm-viewport::-webkit-scrollbar-thumb { background: rgba(176,182,198,0.3); border-radius: 3px; }
-    .xterm-viewport::-webkit-scrollbar-thumb:hover { background: rgba(176,182,198,0.6); }
+    /* Custom overlay scrollbar for xterm.js (WebGL canvas blocks native scrollbar) */
+    .term-sb {
+      position: absolute; right: 2px; top: 4px; bottom: 4px; width: 5px;
+      z-index: 20; pointer-events: none; opacity: 0; transition: opacity 150ms;
+    }
+    .ti:hover .term-sb { opacity: 1; }
+    .term-sb-thumb {
+      position: absolute; left: 0; right: 0; width: 5px; border-radius: 3px;
+      background: rgba(184,192,204,0.28); min-height: 24px; transition: background 120ms;
+    }
+    .ti:hover .term-sb-thumb { background: rgba(184,192,204,0.52); }
     ::selection { background: rgba(255,107,26,0.18); color: #fff; }
 
     #cv { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
@@ -156,11 +162,11 @@
       overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; z-index: 5; padding: 12px 0; min-width: 0;
     }
     .sb-head {
-      font-size: 12px; font-weight: 600; color: var(--tx3); letter-spacing: 0.5px;
+      font-size: 12px; font-weight: 600; color: var(--tx2); letter-spacing: 0.5px;
       padding: 16px 16px 6px; display: flex; align-items: center; justify-content: space-between;
       cursor: pointer; user-select: none; transition: color var(--t);
     }
-    .sb-head:hover { color: var(--tx2); }
+    .sb-head:hover { color: var(--tx); }
     .sb-head.w1 { color: var(--w1); text-shadow: 0 0 6px var(--w1glow); }
     .sb-head.w2 { color: var(--w2); text-shadow: 0 0 6px var(--w2glow); }
     .sb-head.w3 { color: var(--w3); text-shadow: 0 0 6px var(--w3glow); }
@@ -226,10 +232,10 @@
     .wf-tab {
       display: flex; align-items: center; gap: 6px;
       padding: 0 16px; font-family: var(--sans); font-size: 13px; font-weight: 600;
-      color: var(--tx3); cursor: pointer; transition: all var(--t); white-space: nowrap;
+      color: var(--tx2); cursor: pointer; transition: all var(--t); white-space: nowrap;
       position: relative; letter-spacing: 0.3px; text-transform: uppercase; border-right: 1px solid var(--line);
     }
-    .wf-tab:hover { color: var(--tx2); background: var(--sf); }
+    .wf-tab:hover { color: var(--tx); background: var(--sf); }
     .wf-tab.active { color: var(--w1); background: var(--base); }
     .wf-tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--w1); box-shadow: 0 0 6px var(--w1glow); }
     .wf-tab-x {
@@ -269,9 +275,9 @@
     .tab {
       display: flex; align-items: center; gap: 8px;
       padding: 0 20px; font-family: var(--sans); font-size: 15px; font-weight: 500;
-      color: var(--tx3); cursor: pointer; transition: all var(--t); white-space: nowrap; position: relative;
+      color: var(--tx2); cursor: pointer; transition: all var(--t); white-space: nowrap; position: relative;
     }
-    .tab:hover { color: var(--tx2); background: var(--sf2); }
+    .tab:hover { color: var(--tx); background: var(--sf2); }
     .tab.active { color: var(--tx); background: var(--base); }
     .tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--w1); box-shadow: 0 0 6px var(--w1glow), 0 1px 12px rgba(255,107,26,0.15); }
     .tab.drop-target { background: var(--w1sub); color: var(--w1); }
@@ -314,7 +320,7 @@
     }
     .pane-label {
       font-family: var(--sans); font-size: 13px; font-weight: 600;
-      color: var(--tx3); letter-spacing: 0.3px; text-transform: uppercase; flex: 1;
+      color: var(--tx2); letter-spacing: 0.3px; text-transform: uppercase; flex: 1;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .pane-label .alias { color: var(--w1); }
@@ -334,7 +340,7 @@
       position: absolute; inset: 0; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 8px;
     }
-    .pane-empty-txt { font-size: 12px; color: var(--tx3); }
+    .pane-empty-txt { font-size: 12px; color: var(--tx2); }
     .pane-empty-btn {
       font-family: var(--sans); font-size: 12px; font-weight: 600;
       color: var(--w1); background: var(--w1sub); border: 1px solid transparent;
@@ -393,14 +399,14 @@
       padding: 0 3px; margin: 0 -3px; min-width: 40px;
     }
     .rp-sec { padding: 14px 16px; border-bottom: 1px solid var(--line); }
-    .rp-title { font-size: 13px; font-weight: 600; color: var(--tx3); margin-bottom: 10px; }
+    .rp-title { font-size: 13px; font-weight: 600; color: var(--tx2); margin-bottom: 10px; }
     .rp-title.w1 { color: var(--w1); text-shadow: 0 0 6px var(--w1glow); }
     .rp-title.w2 { color: var(--w2); text-shadow: 0 0 6px var(--w2glow); }
     .rp-title.w3 { color: var(--w3); text-shadow: 0 0 6px var(--w3glow); }
     .rp-title.w4 { color: var(--w4); text-shadow: 0 0 4px var(--w4glow); }
 
     .si { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
-    .si-k { color: var(--tx3); }
+    .si-k { color: var(--tx2); }
     .si-v { color: var(--tx2); font-weight: 500; text-align: right; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .si-live { display: inline-flex; align-items: center; gap: 5px; }
     .si-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
@@ -423,7 +429,7 @@
 
     .sys { margin-bottom: 8px; }
     .sys:last-child { margin-bottom: 0; }
-    .sys-lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--tx3); margin-bottom: 3px; }
+    .sys-lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--tx2); margin-bottom: 3px; }
     .sys-lbl span:last-child { font-family: var(--mono); color: var(--tx2); }
     .sys-bar { height: 4px; background: var(--sf3); border-radius: 2px; overflow: hidden; }
     .sys-fill { height: 100%; border-radius: 2px; transition: width 600ms ease-out; box-shadow: 0 0 4px currentColor; }
@@ -816,6 +822,12 @@
       // .ti.hidden now uses visibility:hidden (not display:none) so WebGL context survives
       document.body.appendChild(el);
       term.open(el);
+      // Custom overlay scrollbar (WebGL canvas blocks native scrollbar)
+      {const sb=document.createElement('div');sb.className='term-sb';
+      const sbt=document.createElement('div');sbt.className='term-sb-thumb';
+      sb.appendChild(sbt);el.appendChild(sb);
+      function syncSb(){const vp=el.querySelector('.xterm-viewport');if(!vp||vp.scrollHeight<=vp.clientHeight){sbt.style.height='0';return;}const ratio=vp.clientHeight/vp.scrollHeight;const trackH=sb.clientHeight||100;const thumbH=Math.max(24,trackH*ratio);sbt.style.height=thumbH+'px';sbt.style.top=(vp.scrollTop/(vp.scrollHeight-vp.clientHeight)*(trackH-thumbH))+'px';}
+      term.onRender(syncSb);setTimeout(()=>{const vp=el.querySelector('.xterm-viewport');if(vp)vp.addEventListener('scroll',syncSb);},300);}
       // Intercept app shortcuts before xterm swallows them
       term.attachCustomKeyEventHandler(ev=>{
         if(ev.type!=='keydown')return true;
