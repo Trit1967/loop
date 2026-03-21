@@ -834,13 +834,12 @@
           const s=sess.get(id);if(s)s.ws=sock;
           sock.onopen=()=>{
             fit.fit();sock.send(JSON.stringify({type:'resize',cols:term.cols,rows:term.rows}));
-            setTimeout(()=>term.scrollToBottom(),300);
             if(didConnect)toast('✓ reconnected');
             didConnect=true;
           };
           sock.onmessage=e=>{
             const d=e.data instanceof ArrayBuffer?new Uint8Array(e.data):e.data;
-            if(d.length)term.write(d);
+            if(d.length)term.write(d,()=>term.scrollToBottom());
           };
           sock.onclose=()=>{
             if(!sess.has(id))return;
