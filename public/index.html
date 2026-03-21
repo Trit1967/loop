@@ -860,7 +860,7 @@
       }
       sess.set(id,{term,ws,el,fit,name,dir:dir||'/home/claude/projects/'+name});
       addTab(id,name);
-      if(!activeWfId&&autoSwitch){switchTo(id)}
+      if(autoSwitch){if(!activeWfId)switchTo(id);else if(!activeId)activeId=id;}
       $('term-empty').style.display='none';
       new ResizeObserver(()=>{if(!el.classList.contains('hidden'))fit.fit()}).observe(el);
       log(`Session <b>${esc(name)}</b> started`);
@@ -955,7 +955,7 @@
       bar.style.display='flex';
       if(btnWf)btnWf.style.display='none'; // hidden when wf-bar is visible
       const all=document.createElement('div');all.className='wf-tab'+(activeWfId===null?' active':'');all.textContent='Sessions';
-      all.addEventListener('click',()=>{activeWfId=null;renderWfTabs();showStandaloneTabs();renderPanes()});
+      all.addEventListener('click',()=>{activeWfId=null;if(!activeId&&sess.size>0)switchTo(sess.keys().next().value);renderWfTabs();showStandaloneTabs();renderPanes()});
       c.appendChild(all);
       workflows.forEach(wf=>{
         const t=document.createElement('div');t.className='wf-tab'+(activeWfId===wf.id?' active':'');t.dataset.wf=wf.id;
