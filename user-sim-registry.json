@@ -1,7 +1,7 @@
 {
   "url": "https://loop.seafin.ai",
-  "last_run": "2026-03-21T08:00:00Z",
-  "run_count": 2,
+  "last_run": "2026-03-21T09:30:00Z",
+  "run_count": 3,
   "scores": {
     "run_1": {
       "overall": 3.9,
@@ -20,73 +20,121 @@
       "error_rate": 1,
       "regression_safety": 1,
       "confidence": 0.85
+    },
+    "run_3": {
+      "overall": 4.2,
+      "coverage": 4,
+      "bug_quality": 5,
+      "ux_quality": 4,
+      "error_rate": 1,
+      "regression_safety": 1,
+      "confidence": 0.88
     }
   },
   "score_trend": "improving",
   "elements": {
     "buttons": [
-      { "id": "btn-mic", "text": "Voice input — Alt+M to toggle", "source": "dom", "last_result": "⚠️", "runs_passing": 0, "notes": "no UI feedback — requires mic permission or active session; xterm canvas captures keydown" },
-      { "id": "tog-sb", "text": "◀", "source": "dom", "last_result": "✅", "runs_passing": 2, "action": "toggles sidebar collapse; inline --sb-w cleared on collapse" },
-      { "id": "tog-rp", "text": "▶", "source": "dom", "last_result": "✅", "runs_passing": 2, "action": "toggles right panel collapse; inline --rp-w cleared on collapse", "fix_validated": true },
-      { "id": "btn-new-sess-wf", "text": "+ Session", "source": "dom", "last_result": "✅", "runs_passing": 2, "action": "opens #mo-session (workflow bar)" },
-      { "id": "btn-wf-bar", "text": "+ Workflow", "source": "dom", "last_result": "✅", "runs_passing": 2, "action": "opens #mo-workflow" },
-      { "id": "btn-new-sess", "text": "+ Session", "source": "dom", "last_result": "✅", "runs_passing": 2, "action": "opens #mo-session (empty state CTA)" },
-      { "id": "open-side-panel", "text": "", "source": "dom", "last_result": "❌", "runs_passing": 0, "notes": "0x0px — dead/invisible element, persists across runs" },
-      { "id": "btn-wf", "text": "", "source": "code", "last_result": "⚠️", "runs_passing": 0, "notes": "zero-size, inside hidden modal context" },
-      { "id": "btn-clone", "text": "Clone", "source": "dom", "last_result": "✅", "runs_passing": 1, "action": "toggles custom path/clone section inside #mo-session" },
-      { "id": "btn-wf-go", "text": "Create", "source": "dom", "last_result": "✅", "runs_passing": 1, "action": "submit button inside #mo-workflow; validates name field on empty submit" }
+      { "id": "btn-mic", "text": "Voice input — Alt+M to toggle", "source": "dom", "last_result": "⚠️", "runs_passing": 0, "runs_tested": 3, "flakiness": 1.0, "notes": "no UI feedback — requires mic permission or active session; xterm canvas captures keydown" },
+      { "id": "tog-sb", "text": "◀", "source": "dom", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0, "action": "toggles sidebar collapse; adds sb-collapsed class" },
+      { "id": "tog-rp", "text": "▶", "source": "dom", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0, "action": "toggles right panel collapse; adds rp-collapsed class", "fix_validated": true },
+      { "id": "btn-new-sess-wf", "text": "+ Session", "source": "dom", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0, "action": "opens #mo-session (header/workflow bar)" },
+      { "id": "btn-wf-bar", "text": "+ Workflow", "source": "dom", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0, "action": "opens #mo-workflow" },
+      { "id": "btn-new-sess", "text": "+ Session", "source": "dom", "last_result": "✅", "runs_passing": 2, "runs_tested": 2, "flakiness": 0, "action": "opens #mo-session (empty state CTA)", "notes": "only visible when no sessions exist; skipped when sessions active" },
+      { "id": "open-side-panel", "text": "", "source": "dom", "last_result": "❌", "runs_passing": 0, "runs_tested": 3, "flakiness": 1.0, "notes": "0x0px — dead/invisible element, persists across runs" },
+      { "id": "btn-wf", "text": "", "source": "code", "last_result": "⚠️", "runs_passing": 0, "runs_tested": 3, "flakiness": 1.0, "notes": "zero-size, inside hidden modal context" },
+      { "id": "btn-clone", "text": "Clone", "source": "dom", "last_result": "✅", "runs_passing": 2, "runs_tested": 2, "flakiness": 0, "action": "fires async repo clone from #i-clone value; lives inside <details> in #mo-session. To expand the section, click the <details> <summary> ('Custom path or clone a repo'), NOT btn-clone. Registry previously described this as a toggle — incorrect.", "zone": "session_modal" },
+      { "id": "btn-wf-go", "text": "Create", "source": "dom", "last_result": "✅", "runs_passing": 2, "runs_tested": 2, "flakiness": 0, "action": "submit button inside #mo-workflow; validates name field on empty submit" }
     ],
     "links": [
-      { "href": "/logout", "text": "Logout", "source": "dom", "last_result": "✅", "runs_passing": 2, "notes": "exists, not clicked to preserve session" }
+      { "href": "/logout", "text": "Logout", "source": "dom", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0, "notes": "exists, not clicked to preserve session; GET /logout returns 200 HTML page (intentional — not a redirect)" }
     ],
     "modals": [
-      { "id": "mo-session", "trigger": "#btn-new-sess-wf, #btn-new-sess, Alt+N", "source": "dom+code", "last_result": "✅", "runs_passing": 2, "fields": ["i-proj", "i-sn", "i-mode", "i-sd", "i-clone"] },
-      { "id": "mo-workflow", "trigger": "#btn-wf-bar, Alt+Shift+N", "source": "dom+code", "last_result": "✅", "runs_passing": 2, "fields": ["i-wfn", "i-wfl"] },
-      { "id": "mo-assign", "trigger": ".pane-assign", "source": "dom+code", "last_result": "✅", "runs_passing": 2, "fields": ["i-assign-sess", "i-assign-proj-main", "i-assign-name", "i-assign-alias", "i-assign-dir", "i-assign-mode", "i-assign-pane"], "notes": "trigger class is .pane-assign (not .assign-btn as previously noted)" },
-      { "id": "mo-wf-title", "source": "code", "last_result": "⚠️", "runs_passing": 0, "notes": "not a modal root — dynamic title element inside workflow bar" },
-      { "id": "mo-act", "source": "code", "last_result": "⚠️", "runs_passing": 0, "notes": "not yet implemented — no DOM element found, no trigger functions found" },
-      { "id": "mo-box", "source": "code", "last_result": "⚠️", "runs_passing": 0, "notes": "not yet implemented — no DOM element found, no trigger functions found" }
+      { "id": "mo-session", "trigger": "#btn-new-sess-wf, #btn-new-sess, Alt+N", "source": "dom+code", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0, "fields": ["i-proj", "i-sn", "i-mode", "i-sd", "i-clone"], "zone": "session_modal" },
+      { "id": "mo-workflow", "trigger": "#btn-wf-bar, Alt+Shift+N", "source": "dom+code", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0, "fields": ["i-wfn", "i-wfl"] },
+      { "id": "mo-assign", "trigger": ".pane-assign", "source": "dom+code", "last_result": "✅", "runs_passing": 2, "runs_tested": 2, "flakiness": 0, "fields": ["i-assign-sess", "i-assign-proj-main", "i-assign-name", "i-assign-alias", "i-assign-dir", "i-assign-mode", "i-assign-pane"], "notes": "trigger class is .pane-assign; skipped run 3 (no active sessions)" },
+      { "id": "mo-wf-title", "source": "code", "last_result": "⚠️", "runs_passing": 0, "runs_tested": 3, "flakiness": 1.0, "notes": "not a modal root — dynamic title element inside workflow bar" },
+      { "id": "mo-act", "source": "code", "last_result": "⚠️", "runs_passing": 0, "runs_tested": 3, "flakiness": 1.0, "notes": "not yet implemented — no DOM element found, no trigger functions found" },
+      { "id": "mo-box", "source": "code", "last_result": "⚠️", "runs_passing": 0, "runs_tested": 3, "flakiness": 1.0, "notes": "not yet implemented — no DOM element found, no trigger functions found" }
     ],
     "tabs": [
-      { "text": "SESSIONS", "source": "dom", "last_result": "✅", "runs_passing": 2 },
-      { "text": "USER", "source": "dom", "last_result": "✅", "runs_passing": 2 },
-      { "text": "TEST WORKFLOW", "source": "dom", "last_result": "✅", "runs_passing": 2 },
-      { "text": "TEST", "source": "dom", "last_result": "✅", "runs_passing": 2 }
+      { "text": "SESSIONS", "source": "dom", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "text": "USER", "source": "dom", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "text": "TEST WORKFLOW", "source": "dom", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "text": "TEST", "source": "dom", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0 }
     ],
     "shortcuts": [
-      { "keys": "Alt+N", "source": "dom+code", "expected": "mo-session opens", "last_result": "✅", "runs_passing": 2 },
-      { "keys": "Alt+Shift+N", "source": "dom+code", "expected": "mo-workflow opens (not mo-session)", "last_result": "✅", "runs_passing": 2 },
-      { "keys": "Alt+M", "source": "dom+code", "expected": "cmd-bar shows, mic activates", "last_result": "❌", "runs_passing": 0, "notes": "xterm canvas captures keydown; cmd-bar exists (opacity:0, below viewport); requires terminal focus or mic permission", "test_override": "check Voice.listening via javascript_tool instead of keyboard dispatch" },
-      { "keys": "Escape", "source": "code", "expected": "closes open modals, stops voice", "last_result": "✅", "runs_passing": 2 },
-      { "keys": "Alt+W", "source": "code", "expected": "kills active session (graceful no-op if none)", "last_result": "✅", "runs_passing": 2 },
-      { "keys": "Alt+1-9", "source": "code", "expected": "switch to session by index", "last_result": "⚠️", "runs_passing": 0, "notes": "focus-dependent; skip direct keydown dispatch — needs real keyboard with body focus", "test_override": "verify handler exists in code rather than dispatch key event" }
+      { "keys": "Alt+N", "source": "dom+code", "expected": "mo-session opens with blank i-proj", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "keys": "Alt+Shift+N", "source": "dom+code", "expected": "mo-workflow opens (not mo-session)", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "keys": "Alt+M", "source": "dom+code", "expected": "cmd-bar shows, mic activates", "last_result": "❌", "runs_passing": 0, "runs_tested": 3, "flakiness": 1.0, "notes": "xterm canvas captures keydown; Voice object confirmed (Voice.listening, Voice.toggle exist); env-dependent", "test_override": "check Voice.listening via javascript_tool instead of keyboard dispatch" },
+      { "keys": "Escape", "source": "code", "expected": "closes open modals, stops voice", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "keys": "Alt+W", "source": "code", "expected": "kills active session (graceful no-op if none)", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "keys": "Alt+1-9", "source": "code", "expected": "switch to session by index", "last_result": "⚠️", "runs_passing": 0, "runs_tested": 3, "flakiness": 1.0, "notes": "focus-dependent; handler confirmed in page source (altKey+digit at HTML offset 107075); skip direct keydown dispatch", "test_override": "verify handler exists in code rather than dispatch key event" }
     ],
     "api_routes": [
-      { "method": "GET", "path": "/logout", "source": "code", "last_result": "✅", "status_expected": "302", "runs_passing": 2 },
-      { "method": "GET", "path": "/api/repos", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 2 },
-      { "method": "GET", "path": "/api/projects", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 2 },
-      { "method": "POST", "path": "/api/projects/clone", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 2 },
-      { "method": "GET", "path": "/api/sessions", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 2 },
-      { "method": "POST", "path": "/api/sessions", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 2 },
-      { "method": "DELETE", "path": "/api/sessions/:id", "source": "code", "last_result": "⚠️", "runs_passing": 0, "notes": "not tested — destructive, needs session ID" },
-      { "method": "POST", "path": "/api/sessions/:id/skill", "source": "code", "last_result": "⚠️", "runs_passing": 0, "notes": "not tested — needs session ID" },
-      { "method": "GET", "path": "/api/user-state", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 2 },
-      { "method": "POST", "path": "/api/user-state", "source": "code", "last_result": "⚠️", "runs_passing": 0, "notes": "not tested via curl" },
-      { "method": "GET", "path": "/api/stats", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 2 },
-      { "method": "GET", "path": "/api/claude-usage", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 2 },
-      { "method": "GET", "path": "/api/skills", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 2 }
+      { "method": "GET", "path": "/logout", "source": "code", "last_result": "✅", "status_expected": "200", "runs_passing": 3, "runs_tested": 3, "flakiness": 0, "notes": "returns 200 HTML logout page (intentional — was incorrectly listed as 302 in registry)" },
+      { "method": "GET", "path": "/api/repos", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "method": "GET", "path": "/api/projects", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "method": "POST", "path": "/api/projects/clone", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "method": "GET", "path": "/api/sessions", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "method": "POST", "path": "/api/sessions", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "method": "DELETE", "path": "/api/sessions/:id", "source": "code", "last_result": "⚠️", "runs_passing": 0, "runs_tested": 0, "flakiness": 0, "notes": "not tested — destructive, needs session ID" },
+      { "method": "POST", "path": "/api/sessions/:id/skill", "source": "code", "last_result": "⚠️", "runs_passing": 0, "runs_tested": 0, "flakiness": 0, "notes": "not tested — needs session ID" },
+      { "method": "GET", "path": "/api/user-state", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "method": "POST", "path": "/api/user-state", "source": "code", "last_result": "⚠️", "runs_passing": 0, "runs_tested": 0, "flakiness": 0, "notes": "not tested via curl" },
+      { "method": "GET", "path": "/api/stats", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "method": "GET", "path": "/api/claude-usage", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 3, "runs_tested": 3, "flakiness": 0 },
+      { "method": "GET", "path": "/api/skills", "source": "code", "last_result": "✅", "status_expected": 401, "runs_passing": 3, "runs_tested": 3, "flakiness": 0 }
     ],
     "forms": [
-      { "id": "f-session", "source": "dom", "last_result": "✅", "runs_passing": 2, "fields": ["i-proj", "i-sn", "i-mode", "i-sd", "i-clone"], "notes": "validation now uses #c75878 (dusty rose) for error border — visible; run 1 fix used var(--w4) which was invisible" },
-      { "id": "f-workflow", "source": "dom", "last_result": "✅", "runs_passing": 2, "fields": ["i-wfn", "i-wfl"] },
-      { "id": "f-assign", "source": "dom", "last_result": "✅", "runs_passing": 1, "fields": ["i-assign-sess", "i-assign-proj-main", "i-assign-name", "i-assign-alias", "i-assign-dir", "i-assign-mode", "i-assign-pane"] }
+      { "id": "f-session", "source": "dom", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0, "fields": ["i-proj", "i-sn", "i-mode", "i-sd", "i-clone"], "zone": "session_modal", "notes": "validation uses #c75878 (dusty rose) for error border when i-sn filled but i-proj empty. i-sn has required attr — browser native validation fires when both fields empty, blocking JS handler. Fix verified via form submit event dispatch." },
+      { "id": "f-workflow", "source": "dom", "last_result": "✅", "runs_passing": 3, "runs_tested": 3, "flakiness": 0, "fields": ["i-wfn", "i-wfl"] },
+      { "id": "f-assign", "source": "dom", "last_result": "✅", "runs_passing": 2, "runs_tested": 2, "flakiness": 0, "fields": ["i-assign-sess", "i-assign-proj-main", "i-assign-name", "i-assign-alias", "i-assign-dir", "i-assign-mode", "i-assign-pane"], "notes": "skipped run 3 (no active sessions to assign)" }
     ]
   },
   "known_bugs": [
-    { "id": "BUG-2", "element": "#open-side-panel", "description": "0x0px dead element in DOM — invisible and unclickable", "found": "2026-03-21", "status": "open", "runs_seen": 2 },
-    { "id": "BUG-5", "element": "Alt+M", "description": "cmd-bar not shown via keydown — xterm canvas captures key; cmd-bar exists but opacity:0", "found": "2026-03-21", "status": "open", "runs_seen": 2 },
-    { "id": "BUG-4", "element": "#f-session validation", "description": "error border used var(--w4)=#b8c0cc (same as default, invisible) — fixed run 2 with #c75878", "found": "2026-03-21", "status": "fixed", "commit": "b9c0b51", "fix_validated": true, "ab_confidence": 0.97 },
-    { "id": "BUG-7", "element": "/api/nonexistent", "description": "unknown routes return 401 instead of 404 — auth middleware runs before 404 handler", "found": "2026-03-21", "status": "open", "runs_seen": 2 }
+    { "id": "BUG-2", "element": "#open-side-panel", "description": "0x0px dead element in DOM — invisible and unclickable", "found": "2026-03-21", "status": "open", "runs_seen": 3 },
+    { "id": "BUG-5", "element": "Alt+M", "description": "cmd-bar not shown via keydown — xterm canvas captures key; Voice object exists; cmd-bar present but opacity:0", "found": "2026-03-21", "status": "open", "runs_seen": 3 },
+    { "id": "BUG-4", "element": "#f-session validation", "description": "error border used var(--w4)=#b8c0cc (same as default, invisible) — fixed run 2 with #c75878. Note: i-sn has required attr so browser native validation intercepts when both fields empty; JS validation runs when i-sn is filled but i-proj is not.", "found": "2026-03-21", "status": "fixed", "commit": "b9c0b51", "fix_validated": true, "ab_confidence": 0.97 },
+    { "id": "BUG-7", "element": "/api/nonexistent", "description": "unknown routes return 401 instead of 404 — auth middleware runs before 404 handler", "found": "2026-03-21", "status": "open", "runs_seen": 3 }
   ],
-  "removed_since_last_run": []
+  "removed_since_last_run": [],
+  "bug_prone_zones": {
+    "session_modal": { "bugs_found": 1, "last_bug_run": 2, "weight": "medium" },
+    "api_routes": { "bugs_found": 0, "last_bug_run": null, "weight": "low" },
+    "modals": { "bugs_found": 0, "last_bug_run": null, "weight": "low" }
+  },
+  "pattern_library": [
+    {
+      "pattern": "zero_size_element",
+      "description": "Invisible/dead DOM elements with offsetWidth=0 or offsetHeight=0",
+      "query": "Array.from(document.querySelectorAll('button,a')).filter(el => el.offsetWidth === 0 || el.offsetHeight === 0).map(el => el.id || el.outerHTML.substring(0,50))",
+      "found_count": 1,
+      "elements_found": ["open-side-panel"],
+      "expected_zero_size": ["btn-new-sess", "btn-wf", "btn-clone", "btn-wf-go", "login-btn", ".layout-btn buttons", "modal close/submit buttons (inside closed modals)"],
+      "check_every_run": true
+    },
+    {
+      "pattern": "invisible_error_color",
+      "description": "CSS error border resolves to same value as default (invisible validation feedback)",
+      "found_count": 1,
+      "elements_found": ["#f-session (pre-fix)"],
+      "check_every_run": false,
+      "notes": "Fixed in run 2. Verify via form submit event dispatch (bypasses i-sn required attr native validation): form.dispatchEvent(new Event('submit', {bubbles:true, cancelable:true})) then check getComputedStyle(#i-proj).borderColor === 'rgb(199, 88, 120)'"
+    },
+    {
+      "pattern": "native_vs_custom_validation_conflict",
+      "description": "Field with required attr causes browser native validation to fire before JS submit handler, masking custom error states",
+      "found_count": 1,
+      "elements_found": ["#i-sn (required attr blocks JS handler when empty)"],
+      "check_every_run": false,
+      "notes": "i-sn has required attribute. When both i-proj and i-sn are empty, browser shows native popup on i-sn, JS handler never runs. Custom #c75878 border only shows when i-sn filled but i-proj missing."
+    }
+  ],
+  "test_artifacts": {
+    "run_2": [],
+    "run_3": []
+  },
+  "health_history": {
+    "run_3": { "service_status": "unknown", "ssh_key_blocked": true, "note": "SSH health check skipped — key path unresolvable on Windows Git Bash; app responding normally via browser" }
+  }
 }
