@@ -703,12 +703,14 @@
       <h3>Assign Session to Pane</h3>
       <form id="f-assign">
         <div class="ff"><label>Existing session</label><select id="i-assign-sess" style="font-family:var(--sans);font-size:13px;"><option value="">Select a session...</option></select></div>
-        <div class="ff" style="text-align:center;padding:4px 0;color:var(--tx3);font-size:12px;">— or start a new session —</div>
-        <div class="ff"><label>Project</label><select id="i-assign-proj-main" style="font-family:var(--sans);font-size:13px;color:var(--tx1);background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;width:100%;"><option value="">Select a cloned project...</option></select></div>
-        <div class="ff"><label>Session name</label><input id="i-assign-name" placeholder="my-project" pattern="[a-zA-Z0-9_-]+" /></div>
-        <div class="ff"><label>Mode</label><select id="i-assign-mode" style="font-family:var(--sans);font-size:13px;"><option value="claude">Claude Code</option><option value="bash">Terminal (bash)</option></select></div>
+        <div class="assign-new-fields">
+          <div class="ff" style="text-align:center;padding:4px 0;color:var(--tx3);font-size:12px;">— or start a new session —</div>
+          <div class="ff"><label>Project</label><select id="i-assign-proj-main" style="font-family:var(--sans);font-size:13px;color:var(--tx1);background:var(--sf);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;width:100%;"><option value="">Select a cloned project...</option></select></div>
+          <div class="ff"><label>Session name</label><input id="i-assign-name" placeholder="my-project" pattern="[a-zA-Z0-9_-]+" /></div>
+          <div class="ff"><label>Mode</label><select id="i-assign-mode" style="font-family:var(--sans);font-size:13px;"><option value="claude">Claude Code</option><option value="bash">Terminal (bash)</option></select></div>
+          <details style="margin-top:4px"><summary style="font-size:12px;color:var(--tx3);cursor:pointer;padding:6px 0;user-select:none">Custom path</summary><div style="margin-top:8px"><input id="i-assign-dir" placeholder="/home/claude/projects/my-app" autocomplete="off" style="width:100%;box-sizing:border-box" /></div></details>
+        </div>
         <div class="ff"><label>Alias (display name)</label><input id="i-assign-alias" placeholder="platform" /></div>
-        <details style="margin-top:4px"><summary style="font-size:12px;color:var(--tx3);cursor:pointer;padding:6px 0;user-select:none">Custom path</summary><div style="margin-top:8px"><input id="i-assign-dir" placeholder="/home/claude/projects/my-app" autocomplete="off" style="width:100%;box-sizing:border-box" /></div></details>
         <input type="hidden" id="i-assign-pane" />
         <div class="mo-act">
           <button type="button" class="btn" onclick="closeMo('mo-assign')">Cancel</button>
@@ -1113,8 +1115,17 @@
       const ps=$('i-assign-proj-main');ps.innerHTML='<option value="">Select a cloned project...</option>';
       if(DEV){['loop','clawdbot','seafin-hq'].forEach(n=>{const o=document.createElement('option');o.value='/home/claude/projects/'+n;o.textContent=n;ps.appendChild(o)})}
       else{api('/api/projects').then(l=>l.forEach(p=>{const o=document.createElement('option');o.value=p.path;o.textContent=p.name;ps.appendChild(o)})).catch(()=>{})}
-      $('i-assign-pane').value=paneIdx;$('i-assign-alias').value='';$('i-assign-dir').value='';$('i-assign-name').value='';$('i-assign-mode').value='claude';openMo('mo-assign');
+      $('i-assign-pane').value=paneIdx;$('i-assign-alias').value='';$('i-assign-dir').value='';$('i-assign-name').value='';$('i-assign-mode').value='claude';
+      ps.value='';
+      toggleAssignNewFields();
+      openMo('mo-assign');
     }
+    function toggleAssignNewFields(){
+      const hasExisting=!!$('i-assign-sess').value;
+      const newFields=$('mo-assign').querySelector('.assign-new-fields');
+      if(newFields)newFields.style.display=hasExisting?'none':'block';
+    }
+    $('i-assign-sess').addEventListener('change',toggleAssignNewFields);
     $('i-assign-proj-main').addEventListener('change',e=>{const v=e.target.value;if(v&&!$('i-assign-name').value)$('i-assign-name').value=v.split('/').pop()});
     $('i-assign-dir').addEventListener('input',e=>{const v=e.target.value.trim();if(v&&!$('i-assign-name').value)$('i-assign-name').value=v.split('/').pop().replace(/[^a-zA-Z0-9_-]/g,'-')});
 
@@ -1338,7 +1349,7 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
       try{const r=await api('/api/projects/clone',{method:'POST',body:{repo}});toast(`Cloned ${r.name}`);$('i-sd').value=r.path;$('i-sn').value=r.name;loadProjects()}catch(e){toast(e.message)}
     });
 
-    function openSession(){$('i-sd').value='';$('i-sn').value='';$('i-clone').value='';loadProjects();openMo('mo-session')}
+    function openSession(){$('i-sd').value='';$('i-sn').value='';$('i-clone').value='';$('i-proj').value='';loadProjects();openMo('mo-session')}
     $('btn-new-sess').addEventListener('click',openSession);
     function openWorkflowModal(){editingWfId=null;$('mo-wf-title').textContent='New Workflow';$('i-wfn').value='';$('i-wfl').value='single';$('btn-wf-go').textContent='Create';openMo('mo-workflow')}
     $('btn-wf').addEventListener('click',openWorkflowModal);
