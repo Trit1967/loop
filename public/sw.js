@@ -1,20 +1,6 @@
 'use strict';
-const CACHE = 'loop-mobile-v1';
-const SHELL = ['/mobile', '/manifest.json'];
-
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-  ));
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', e => {
-  // Network-first for everything — never serve stale shell
-  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-});
+// v2 — no caching, network only. Exists solely for PWA installability.
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', () => self.clients.claim());
+// All requests go straight to network — no cache, never stale.
+self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));
