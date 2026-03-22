@@ -16,7 +16,7 @@ const cookieParser = require('cookie-parser');
 const { WebSocketServer } = require('ws');
 const jwt = require('jsonwebtoken');
 
-const { router: authRouter, requireAuth, validateJWT } = require('./lib/auth');
+const { router: authRouter, requireAuth, validateJWT, getGhToken } = require('./lib/auth');
 const sessions = require('./lib/sessions');
 const skills = require('./lib/skills');
 
@@ -36,6 +36,10 @@ if (!JWT_SECRET) {
   console.error('FATAL: JWT_SECRET is required');
   process.exit(1);
 }
+if (JWT_SECRET.length < 32) {
+  console.error('FATAL: JWT_SECRET must be at least 32 characters');
+  process.exit(1);
+}
 
 // ---------------------------------------------------------------------------
 // Express app
@@ -51,16 +55,8 @@ app.use(cookieParser());
 // Static files — served before auth so the login page can load assets
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Direct logout route — bypasses caching
-app.get('/logout', (req, res) => {
-  res.cookie('claude_session', '', { maxAge: 0, path: '/' });
-  res.setHeader('Cache-Control', 'no-store, no-cache');
-  res.send(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Logged out</title>
-    <style>body{background:#151820;color:#f0eee8;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
-    .b{text-align:center}h1{font-size:24px;margin-bottom:8px}p{color:#b8b5ac;margin-bottom:24px}
-    a{color:#5ec4ce;border:1px solid #5ec4ce;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:600}a:hover{background:#5ec4ce;color:#151820}</style>
-    </head><body><div class="b"><h1>Logged out</h1><p>Session ended successfully.</p><a href="/auth/login">Sign in again</a></div></body></html>`);
-});
+// Canonical logout lives at /auth/logout — redirect legacy path
+app.get('/logout', (_req, res) => res.redirect('/auth/logout'));
 
 // Auth routes (login, callback, logout, me)
 app.use('/auth', authRouter);
@@ -72,6 +68,20 @@ app.use('/api', (req, res, next) => {
   res.status(404).json({ error: 'Not found' });
 });
 
+// CSRF: reject cross-origin state-changing requests
+app.use('/api', (req, res, next) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+    const origin = req.headers.origin;
+    if (origin) {
+      const host = req.headers.host;
+      if (origin !== `https://${host}` && origin !== `http://${host}`) {
+        return res.status(403).json({ error: 'CSRF check failed' });
+      }
+    }
+  }
+  next();
+});
+
 // All /api/* routes require authentication
 app.use('/api', requireAuth);
 
@@ -79,12 +89,25 @@ app.use('/api', requireAuth);
 // REST API — GitHub Repos + Projects
 // ---------------------------------------------------------------------------
 
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
+
+// ---------------------------------------------------------------------------
+// Rate limiter — input endpoint: max 20 req/s per session
+// ---------------------------------------------------------------------------
+const _inputRate = new Map();
+function checkInputRate(id) {
+  const now = Date.now();
+  const e = _inputRate.get(id) || { n: 0, reset: now + 1000 };
+  if (now > e.reset) { e.n = 0; e.reset = now + 1000; }
+  e.n++;
+  _inputRate.set(id, e);
+  return e.n <= 20;
+}
 
 // List user's GitHub repos using their OAuth token from JWT
 app.get('/api/repos', async (req, res, next) => {
   try {
-    const ghToken = req.user && req.user.gh;
+    const ghToken = getGhToken(req.user.sub);
     if (!ghToken) return res.status(400).json({ error: 'No GitHub token — re-login to enable repo listing' });
     const resp = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated&affiliation=owner', {
       headers: { 'Authorization': `token ${ghToken}`, 'User-Agent': 'LoopTerminal/1.0' }
@@ -107,25 +130,31 @@ app.get('/api/projects', async (_req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// Strict GitHub URL/owner-name allowlist — no arbitrary hosts or shell chars
+const REPO_OWNER_NAME = /^[a-zA-Z0-9_.-]{1,100}\/[a-zA-Z0-9_.-]{1,100}$/;
+const REPO_GH_URL     = /^https:\/\/github\.com\/[a-zA-Z0-9_.-]{1,100}\/[a-zA-Z0-9_.-]{1,100}(?:\.git)?$/;
+
 app.post('/api/projects/clone', async (req, res, next) => {
   try {
     const { repo } = req.body;
-    if (!repo) return res.status(400).json({ error: 'repo is required (owner/name or full URL)' });
+    if (!repo || typeof repo !== 'string') return res.status(400).json({ error: 'repo is required' });
+    if (!REPO_OWNER_NAME.test(repo) && !REPO_GH_URL.test(repo)) {
+      return res.status(400).json({ error: 'repo must be owner/name or a https://github.com/ URL' });
+    }
     const dir = process.env.PROJECTS_DIR || '/home/claude/projects';
-    const ghToken = req.user && req.user.gh;
-    // Use token in URL for private repo access
+    const ghToken = getGhToken(req.user.sub);
+    // Build authenticated HTTPS URL without shell interpolation
     let url;
     if (repo.includes('://')) {
       url = ghToken ? repo.replace('https://', `https://${ghToken}@`) : repo;
     } else {
       url = ghToken ? `https://${ghToken}@github.com/${repo}.git` : `https://github.com/${repo}.git`;
     }
-    const name = repo.split('/').pop().replace('.git', '');
+    const name = repo.split('/').pop().replace(/\.git$/, '');
     const target = `${dir}/${name}`;
-    const fs = require('fs');
     if (fs.existsSync(target)) return res.status(409).json({ error: 'Project already exists', path: target });
-    console.log(`[Clone] Cloning ${repo} to ${target}`);
-    execSync(`git clone --depth 1 "${url}" "${target}"`, { timeout: 120000, stdio: 'pipe' });
+    console.log(`[Clone] Cloning ${repo} → ${target}`);
+    execFileSync('git', ['clone', '--depth', '1', '--', url, target], { timeout: 120000, stdio: 'pipe' });
     console.log(`[Clone] Success: ${name}`);
     res.status(201).json({ name, path: target });
   } catch (err) { next(err); }
@@ -175,8 +204,7 @@ app.get('/api/sessions/:id/output', async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) return res.status(400).json({ error: 'invalid session id' });
-    const escapedId = id.replace(/'/g, "'\\''");
-    const raw = execSync(`tmux capture-pane -t '${escapedId}' -p -J -S -100`, { encoding: 'utf-8', timeout: 5000 });
+    const raw = execFileSync('tmux', ['capture-pane', '-t', id, '-p', '-J', '-S', '-100'], { encoding: 'utf-8', timeout: 5000 });
     res.json({ output: raw });
   } catch (err) { next(err); }
 });
@@ -187,13 +215,14 @@ app.post('/api/sessions/:id/input', async (req, res, next) => {
     const { text } = req.body;
     if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) return res.status(400).json({ error: 'invalid session id' });
     if (typeof text !== 'string' || text.length > 200) return res.status(400).json({ error: 'invalid text' });
-    const escapedId = id.replace(/'/g, "'\\''");
-    const escapedText = text.trim().replace(/['"\\]/g, '');
-    // Empty text = just press Enter (useful for interactive prompts like trust dialogs)
-    if (escapedText) {
-      execSync(`tmux send-keys -t '${escapedId}' '${escapedText}' Enter`, { timeout: 3000 });
+    if (!checkInputRate(id)) return res.status(429).json({ error: 'rate limit exceeded' });
+    // Strip non-printable chars; allow full printable ASCII (space–~)
+    const clean = text.trim().replace(/[^\x20-\x7E]/g, '');
+    // Empty = bare Enter (confirms interactive prompts); non-empty = text + Enter
+    if (clean) {
+      execFileSync('tmux', ['send-keys', '-t', id, clean, 'Enter'], { timeout: 3000 });
     } else {
-      execSync(`tmux send-keys -t '${escapedId}' Enter`, { timeout: 3000 });
+      execFileSync('tmux', ['send-keys', '-t', id, 'Enter'], { timeout: 3000 });
     }
     res.json({ ok: true });
   } catch (err) { next(err); }
