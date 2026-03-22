@@ -518,7 +518,11 @@ function renderHeader() {
 function renderTerminal(raw) {
   noSessionMsg.style.display = 'none';
   const clean = stripAnsi(raw);
-  const lines = clean.split('\n');
+  let lines = clean.split('\n');
+  // Drop leading blank lines (printf padding artifact)
+  while (lines.length && !lines[0].trim()) lines.shift();
+  // Drop trailing Claude Code ❯ prompt — our input bar replaces it
+  while (lines.length && /^\s*[❯>]\s*$/.test(lines[lines.length - 1])) lines.pop();
   // Keep last 200 lines
   const shown = lines.slice(-200).join('\n');
   termContent.textContent = shown;
