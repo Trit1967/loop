@@ -66,7 +66,7 @@ app.get('/logout', (req, res) => {
 app.use('/auth', authRouter);
 
 // Return 404 for unknown /api paths before auth runs
-const API_PATHS = /^\/(repos|projects|sessions|user-state|stats|claude-usage|skills)(\/.*)?$/;
+const API_PATHS = /^\/(repos|projects|sessions|user-state|stats|claude-usage|skills|summarize)(\/.*)?$/;
 app.use('/api', (req, res, next) => {
   if (API_PATHS.test(req.path)) return next();
   res.status(404).json({ error: 'Not found' });
@@ -164,6 +164,29 @@ app.post('/api/sessions/:id/skill', async (req, res, next) => {
       return res.status(400).json({ error: 'skill is required' });
     }
     await sessions.sendSkill(req.params.id, skill);
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+app.get('/api/sessions/:id/output', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) return res.status(400).json({ error: 'invalid session id' });
+    const escapedId = id.replace(/'/g, "'\\''");
+    const raw = execSync(`tmux capture-pane -t '${escapedId}' -p -J -S -100`, { encoding: 'utf-8', timeout: 5000 });
+    res.json({ output: raw });
+  } catch (err) { next(err); }
+});
+
+app.post('/api/sessions/:id/input', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { text } = req.body;
+    if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) return res.status(400).json({ error: 'invalid session id' });
+    if (!text || typeof text !== 'string' || text.length > 200) return res.status(400).json({ error: 'invalid text' });
+    const escapedId = id.replace(/'/g, "'\\''");
+    const escapedText = text.replace(/['"\\]/g, '');
+    execSync(`tmux send-keys -t '${escapedId}' '${escapedText}' Enter`, { timeout: 3000 });
     res.json({ ok: true });
   } catch (err) { next(err); }
 });
@@ -304,6 +327,51 @@ app.get('/api/skills', async (_req, res, next) => {
   } catch (err) { next(err); }
 });
 
+
+// ---------------------------------------------------------------------------
+// REST API — Summarize (Claude Haiku, for mobile voice companion)
+// ---------------------------------------------------------------------------
+
+app.post('/api/summarize', async (req, res, next) => {
+  try {
+    const { text, question } = req.body;
+    if (!text) return res.status(400).json({ error: 'text is required' });
+    const credsPath = path.join(process.env.HOME || '/root', '.claude', '.credentials.json');
+    let token;
+    try {
+      const creds = JSON.parse(fs.readFileSync(credsPath, 'utf-8'));
+      token = creds?.claudeAiOauth?.accessToken;
+      if (!token) throw new Error('no token');
+    } catch {
+      return res.status(503).json({ error: 'Claude credentials unavailable' });
+    }
+    const prompt = question
+      ? `${question}\n\nTerminal context:\n${text}`
+      : `Summarize what Claude Code is doing in 2-3 sentences. Be concise and specific.\n\n${text}`;
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'oauth-2025-04-20'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 256,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!resp.ok) return res.status(resp.status).json({ error: 'Summarization failed' });
+    const data = await resp.json();
+    res.json({ summary: data.content?.[0]?.text || '' });
+  } catch (err) { next(err); }
+});
+
+// Mobile PWA — clean URL (shell served without auth, API calls require claude_session cookie)
+app.get('/mobile', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'mobile.html'));
+});
 
 // ---------------------------------------------------------------------------
 // 404 for unknown /api routes

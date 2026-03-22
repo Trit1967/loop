@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#151820">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  <title>Loop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:   #151820;
+      --bg2:  #1c2030;
+      --bg3:  #242840;
+      --text: #f0eee8;
+      --muted:#8c8a84;
+      --teal: #4db8c2;
+      --rose: #c75878;
+      --sage: #5cb87a;
+      --gold: #c9a040;
+      --idle: #454340;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding-top: env(safe-area-inset-top, 16px);
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    /* ── Header ── */
+    #header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px 10px;
+      flex-shrink: 0;
+    }
+    #logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: var(--teal); }
+    #conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sage); transition: background 0.3s; }
+    #conn-dot.offline { background: var(--rose); }
+
+    /* ── Sessions ── */
+    #orbs-section { padding: 0 20px 8px; flex-shrink: 0; }
+    #orbs-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+      color: var(--muted); text-transform: uppercase; margin-bottom: 10px;
+    }
+    #orbs { display: flex; gap: 10px; flex-wrap: wrap; min-height: 80px; align-items: flex-start; }
+
+    .orb { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
+    .orb-circle {
+      width: 54px; height: 54px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; position: relative;
+      transition: transform 0.12s ease, border-color 0.2s;
+    }
+    .orb:active .orb-circle { transform: scale(0.88); }
+    .orb-circle.idle    { background: var(--bg3); border: 1.5px solid var(--idle); }
+    .orb-circle.active  { background: rgba(92,184,122,0.12); border: 1.5px solid var(--sage); }
+    .orb-circle.waiting { background: rgba(201,160,64,0.12); border: 1.5px solid var(--gold); }
+
+    .orb-circle.active::after, .orb-circle.waiting::after {
+      content: ''; position: absolute; inset: -5px; border-radius: 50%; opacity: 0;
+    }
+    .orb-circle.active::after  { border: 1.5px solid var(--sage);  animation: orb-pulse 2s ease-in-out infinite; }
+    .orb-circle.waiting::after { border: 1.5px solid var(--gold); animation: orb-pulse 1s ease-in-out infinite; }
+    @keyframes orb-pulse { 0% { opacity: 0.7; transform: scale(1); } 100% { opacity: 0; transform: scale(1.35); } }
+
+    .orb-name { font-size: 11px; color: var(--muted); max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .orb.selected .orb-name   { color: var(--teal); }
+    .orb.selected .orb-circle { border-color: var(--teal) !important; }
+
+    #no-sessions { font-size: 13px; color: var(--muted); padding: 20px 0; line-height: 1.5; display: none; }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent); margin: 12px 20px; flex-shrink: 0; }
+
+    /* ── Stage (mic + summary) ── */
+    #stage {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 0 24px; gap: 28px; min-height: 0;
+    }
+
+    #summary-card {
+      background: var(--bg2); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px; padding: 16px 20px; width: 100%;
+      min-height: 76px; display: flex; align-items: center;
+    }
+    #summary-card.empty { border-style: dashed; opacity: 0.5; }
+    #summary-text { font-size: 15px; line-height: 1.55; color: var(--text); }
+    #summary-card.empty #summary-text { color: var(--muted); font-size: 14px; }
+
+    /* mic + waveform wrapper */
+    #mic-stage { position: relative; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    #waveform { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+
+    #mic-btn {
+      width: 84px; height: 84px; border-radius: 50%; border: none;
+      background: var(--bg3); color: var(--text); font-size: 34px;
+      cursor: pointer; position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, border 0.2s, transform 0.1s;
+      box-shadow: 0 4px 28px rgba(0,0,0,0.35);
+    }
+    #mic-btn:active { transform: scale(0.91); }
+    #mic-btn.listening  { background: rgba(199,88,120,0.18); border: 1.5px solid var(--rose); }
+    #mic-btn.processing { background: rgba(77,184,194,0.14); border: 1.5px solid var(--teal); }
+
+    #mic-ring {
+      position: absolute; width: 84px; height: 84px; border-radius: 50%;
+      border: 2px solid var(--rose); opacity: 0; pointer-events: none; z-index: 0;
+    }
+    #mic-btn.listening ~ #mic-ring { animation: ring-pulse 1.3s ease-out infinite; }
+    @keyframes ring-pulse { 0% { opacity: 0.6; transform: scale(1); } 100% { opacity: 0; transform: scale(2); } }
+
+    #mic-label { position: absolute; bottom: 4px; font-size: 11px; color: var(--muted); white-space: nowrap; letter-spacing: 0.03em; }
+
+    /* ── Action bar ── */
+    #action-bar { padding: 0 20px 12px; flex-shrink: 0; display: none; }
+    #action-title { font-size: 12px; color: var(--gold); font-weight: 600; text-align: center; margin-bottom: 10px; letter-spacing: 0.04em; }
+    #action-btns { display: flex; gap: 10px; }
+    #btn-approve, #btn-reject {
+      flex: 1; padding: 15px; border-radius: 12px; border: none;
+      font-family: inherit; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+    }
+    #btn-approve:active, #btn-reject:active { transform: scale(0.95); }
+    #btn-approve { background: rgba(92,184,122,0.14); border: 1.5px solid var(--sage); color: var(--sage); }
+    #btn-reject  { background: rgba(199,88,120,0.10); border: 1.5px solid var(--rose); color: var(--rose); }
+
+    /* ── No voice fallback ── */
+    #no-voice {
+      background: rgba(199,88,120,0.08); border: 1px solid rgba(199,88,120,0.25);
+      border-radius: 10px; padding: 10px 14px; font-size: 13px;
+      color: var(--rose); text-align: center; display: none; width: 100%;
+    }
+
+    /* ── Spinner ── */
+    .spin {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(77,184,194,0.25); border-top-color: var(--teal);
+      border-radius: 50%; animation: spin 0.65s linear infinite; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <div id="header">
+    <div id="logo">Loop</div>
+    <div id="conn-dot" title="Connected"></div>
+  </div>
+
+  <div id="orbs-section">
+    <div id="orbs-label">Sessions</div>
+    <div id="orbs">
+      <div id="no-sessions">No sessions running.<br>Open Loop on desktop to start one.</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div id="stage">
+    <div id="summary-card" class="empty">
+      <div id="summary-text">Tap the mic and ask what's going on</div>
+    </div>
+
+    <div id="mic-stage">
+      <canvas id="waveform" width="180" height="180"></canvas>
+      <button id="mic-btn" aria-label="Voice command">🎤</button>
+      <div id="mic-ring"></div>
+      <div id="mic-label">tap to speak</div>
+    </div>
+
+    <div id="no-voice">Voice not supported — use Chrome or Edge</div>
+  </div>
+
+  <div id="action-bar">
+    <div id="action-title">Waiting for your input</div>
+    <div id="action-btns">
+      <button id="btn-approve">✓ Approve</button>
+      <button id="btn-reject">✗ Reject</button>
+    </div>
+  </div>
+
+</div>
+<script>
+'use strict';
+
+// ── State ────────────────────────────────────────────────────────────────────
+let sessionData  = [];
+let selectedId   = null;
+let voiceState   = 'idle'; // idle | listening | processing
+let audioCtx     = null;
+let analyser     = null;
+let waveRaf      = null;
+let micStream    = null;
+
+// ── DOM ───────────────────────────────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const orbsEl     = $('orbs');
+const summaryCard= $('summary-card');
+const summaryTxt = $('summary-text');
+const micBtn     = $('mic-btn');
+const micLabel   = $('mic-label');
+const actionBar  = $('action-bar');
+const connDot    = $('conn-dot');
+const noSessions = $('no-sessions');
+const noVoice    = $('no-voice');
+const waveCanvas = $('waveform');
+const waveCtx2d  = waveCanvas.getContext('2d');
+
+// ── Session polling ───────────────────────────────────────────────────────────
+async function poll() {
+  try {
+    const list = await fetch('/api/sessions').then(r => {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    });
+    connDot.classList.remove('offline');
+    if (!Array.isArray(list)) return;
+
+    const outputs = await Promise.all(list.map(async s => {
+      try {
+        const d = await fetch(`/api/sessions/${s.id}/output`).then(r => r.json());
+        return { ...s, output: d.output || '', state: classify(d.output || '') };
+      } catch {
+        return { ...s, output: '', state: 'idle' };
+      }
+    }));
+
+    sessionData = outputs;
+    renderOrbs();
+    renderActionBar();
+  } catch {
+    connDot.classList.add('offline');
+  }
+}
+
+function classify(raw) {
+  const text = stripAnsi(raw);
+  const lines = text.split('\n').filter(l => l.trim());
+  const tail  = lines.slice(-10).join('\n');
+  if (/Do you want|Should I|\[Y\/n\]|\(y\/n\)|\(Y\/N\)|Press Enter|Continue\?|proceed\?|Approve\?|confirm\?/i.test(tail)) return 'waiting';
+  if (lines.length > 3) return 'active';
+  return 'idle';
+}
+
+function stripAnsi(str) {
+  return (str || '').replace(/\x1b\[[0-9;]*[mGKHFJKSTsuA-Z]/g, '').replace(/\x1b\][^\x07]*\x07/g, '');
+}
+
+// ── Render orbs ───────────────────────────────────────────────────────────────
+const ICON = { active: '⚡', waiting: '💬', idle: '·' };
+
+function renderOrbs() {
+  if (sessionData.length === 0) {
+    noSessions.style.display = 'block';
+    orbsEl.querySelectorAll('.orb').forEach(e => e.remove());
+    return;
+  }
+  noSessions.style.display = 'none';
+
+  const seen = new Set(sessionData.map(s => s.id));
+  orbsEl.querySelectorAll('.orb').forEach(el => { if (!seen.has(el.dataset.id)) el.remove(); });
+
+  sessionData.forEach(s => {
+    let el = orbsEl.querySelector(`.orb[data-id="${s.id}"]`);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'orb';
+      el.dataset.id = s.id;
+      el.innerHTML = `<div class="orb-circle ${s.state}">${ICON[s.state] || '·'}</div><div class="orb-name">${s.name}</div>`;
+      el.addEventListener('click', () => onOrbTap(s.id));
+      orbsEl.appendChild(el);
+    } else {
+      const c = el.querySelector('.orb-circle');
+      c.className = `orb-circle ${s.state}`;
+      c.textContent = ICON[s.state] || '·';
+    }
+    el.classList.toggle('selected', s.id === selectedId);
+  });
+}
+
+function renderActionBar() {
+  const waiting = sessionData.filter(s => s.state === 'waiting');
+  if (waiting.length) {
+    actionBar.style.display = 'block';
+    $('action-title').textContent = `⏳  ${waiting[0].name} is waiting for input`;
+    actionBar.dataset.sid = waiting[0].id;
+  } else {
+    actionBar.style.display = 'none';
+  }
+}
+
+function onOrbTap(id) {
+  selectedId = id;
+  renderOrbs();
+  const s = sessionData.find(s => s.id === id);
+  if (s) summarizeOne(s);
+}
+
+// ── Summarize ─────────────────────────────────────────────────────────────────
+async function summarizeAll() {
+  if (!sessionData.length) { showSummary('No sessions running.'); speak('No sessions running.'); return; }
+  showSummary('<span class="spin"></span>');
+  const combined = sessionData.map(s => `[${s.name} — ${s.state}]\n${stripAnsi(s.output)}`).join('\n---\n').slice(0, 4000);
+  const q = 'In 2-3 sentences, what are all Claude sessions currently doing? Be specific and brief.';
+  const txt = await callSummarize(combined, q);
+  showSummary(txt);
+  speak(txt);
+}
+
+async function summarizeOne(s) {
+  showSummary('<span class="spin"></span>');
+  const text = stripAnsi(s.output).slice(0, 3000);
+  const q = `In 2 sentences, what is the Claude session "${s.name}" doing right now?`;
+  const txt = await callSummarize(text, q);
+  showSummary(txt);
+  speak(txt);
+}
+
+async function callSummarize(text, question) {
+  try {
+    const r = await fetch('/api/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, question })
+    });
+    if (!r.ok) return 'Could not reach the summarization service.';
+    const d = await r.json();
+    return d.summary || 'No summary available.';
+  } catch {
+    return 'Network error — check your connection.';
+  }
+}
+
+function showSummary(html) {
+  summaryCard.classList.remove('empty');
+  summaryTxt.innerHTML = html;
+}
+
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 1.05;
+  window.speechSynthesis.speak(u);
+}
+
+// ── Approve / Reject ──────────────────────────────────────────────────────────
+async function sendInput(text) {
+  const id = actionBar.dataset.sid || (sessionData.find(s => s.state === 'waiting') || {}).id;
+  if (!id) { speak('No session is waiting for input.'); return; }
+  try {
+    await fetch(`/api/sessions/${id}/input`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    actionBar.style.display = 'none';
+    setTimeout(poll, 1500);
+  } catch { speak('Failed to send — check your connection.'); }
+}
+
+$('btn-approve').addEventListener('click', () => { showSummary('Approved.'); speak('Approved.'); sendInput('y'); });
+$('btn-reject').addEventListener('click',  () => { showSummary('Rejected.'); speak('Rejected.'); sendInput('n'); });
+
+// ── Voice ─────────────────────────────────────────────────────────────────────
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (!SR) {
+  micBtn.style.display = 'none';
+  noVoice.style.display = 'block';
+} else {
+  const rec = new SR();
+  rec.lang = 'en-US';
+  rec.interimResults = false;
+  rec.continuous = false;
+
+  rec.onresult = async e => {
+    const transcript = e.results[e.results.length - 1][0].transcript.trim();
+    setVoice('processing');
+    await dispatch(transcript);
+    setVoice('idle');
+  };
+
+  rec.onerror = e => { console.warn('[voice]', e.error); setVoice('idle'); };
+  rec.onend   = () => { if (voiceState === 'listening') setVoice('idle'); };
+
+  micBtn.addEventListener('click', () => {
+    if (voiceState === 'listening') {
+      rec.stop(); setVoice('idle');
+    } else if (voiceState === 'idle') {
+      startAudio(); rec.start(); setVoice('listening');
+    }
+  });
+
+  async function dispatch(t) {
+    // Status
+    if (/what.*(going on|happening|status|up|doing)|give me (a )?update|status|summary/i.test(t)) {
+      const s = selectedId && sessionData.find(s => s.id === selectedId);
+      if (s) { await summarizeOne(s); return; }
+      await summarizeAll(); return;
+    }
+    // Specific session "what is X doing"
+    const m = t.match(/what (is|about|['']s) (.+?) (doing|up to|working on|running)/i);
+    if (m) {
+      const name = m[2].trim().toLowerCase();
+      const s = sessionData.find(s => s.name.toLowerCase().includes(name));
+      if (s) { await summarizeOne(s); return; }
+    }
+    // Approve
+    if (/\b(go ahead|approve|yes|proceed|confirm|do it|ok(ay)?|sure|yep|yup)\b/i.test(t)) {
+      showSummary('Approved.'); speak('Approved.'); await sendInput('y'); return;
+    }
+    // Reject
+    if (/\b(stop|no|cancel|reject|abort|don'?t|nope)\b/i.test(t)) {
+      showSummary('Rejected.'); speak('Rejected.'); await sendInput('n'); return;
+    }
+    // Fallback
+    const hint = 'Try: "What\'s going on?", "Go ahead", or "Stop".';
+    showSummary(`Heard: "${t}". ${hint}`);
+    speak(hint);
+  }
+}
+
+function setVoice(state) {
+  voiceState = state;
+  micBtn.classList.remove('listening', 'processing');
+  if (state === 'listening') {
+    micBtn.classList.add('listening');
+    micBtn.textContent = '🎙️';
+    micLabel.textContent = 'listening…';
+    waveCanvas.style.opacity = '1';
+  } else if (state === 'processing') {
+    micBtn.classList.add('processing');
+    micBtn.textContent = '⏳';
+    micLabel.textContent = 'thinking…';
+    stopAudio();
+  } else {
+    micBtn.textContent = '🎤';
+    micLabel.textContent = 'tap to speak';
+    waveCanvas.style.opacity = '0';
+    stopAudio();
+  }
+}
+
+// ── Waveform ──────────────────────────────────────────────────────────────────
+async function startAudio() {
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
+    const src = audioCtx.createMediaStreamSource(micStream);
+    analyser  = audioCtx.createAnalyser();
+    analyser.fftSize = 64;
+    src.connect(analyser);
+    drawWave();
+  } catch { /* mic permission denied — voice still works */ }
+}
+
+function stopAudio() {
+  if (waveRaf)   { cancelAnimationFrame(waveRaf); waveRaf = null; }
+  if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+  if (audioCtx)  { audioCtx.close(); audioCtx = null; }
+  analyser = null;
+  waveCtx2d.clearRect(0, 0, 180, 180);
+}
+
+function drawWave() {
+  if (!analyser) return;
+  waveRaf = requestAnimationFrame(drawWave);
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+  waveCtx2d.clearRect(0, 0, 180, 180);
+  const cx = 90, cy = 90, r = 48;
+  data.forEach((v, i) => {
+    const angle = (i / data.length) * Math.PI * 2 - Math.PI / 2;
+    const len   = 5 + (v / 255) * 30;
+    const cos   = Math.cos(angle), sin = Math.sin(angle);
+    waveCtx2d.beginPath();
+    waveCtx2d.moveTo(cx + cos * r, cy + sin * r);
+    waveCtx2d.lineTo(cx + cos * (r + len), cy + sin * (r + len));
+    waveCtx2d.strokeStyle = `rgba(199,88,120,${0.35 + (v / 255) * 0.65})`;
+    waveCtx2d.lineWidth = 2.5;
+    waveCtx2d.lineCap = 'round';
+    waveCtx2d.stroke();
+  });
+}
+
+// ── Service worker ────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+poll();
+setInterval(poll, 4000);
+</script>
+</body>
+</html>
