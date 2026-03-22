@@ -233,10 +233,10 @@ const waveCtx2d  = waveCanvas.getContext('2d');
 // ── Session polling ───────────────────────────────────────────────────────────
 async function poll() {
   try {
-    const list = await fetch('/api/sessions').then(r => {
-      if (!r.ok) throw new Error(r.status);
-      return r.json();
-    });
+    const sessResp = await fetch('/api/sessions');
+    if (sessResp.status === 401) { window.location.href = '/auth/login'; return; }
+    if (!sessResp.ok) throw new Error(sessResp.status);
+    const list = await sessResp.json();
     connDot.classList.remove('offline');
     if (!Array.isArray(list)) return;
 

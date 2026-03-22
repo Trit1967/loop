@@ -368,8 +368,11 @@ app.post('/api/summarize', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Mobile PWA — clean URL (shell served without auth, API calls require claude_session cookie)
-app.get('/mobile', (_req, res) => {
+// Mobile PWA — redirect to login if not authenticated
+app.get('/mobile', (req, res) => {
+  const token = req.cookies && req.cookies.claude_session;
+  if (!token) return res.redirect('/auth/login');
+  try { validateJWT(token); } catch { return res.redirect('/auth/login'); }
   res.sendFile(path.join(__dirname, 'public', 'mobile.html'));
 });
 
