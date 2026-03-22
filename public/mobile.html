@@ -527,14 +527,26 @@ function renderHeader() {
 }
 
 // ── Render terminal ───────────────────────────────────────────────────────────
+// Lines that are part of Claude Code's bottom chrome (not real content)
+function isChromeLine(line) {
+  const t = line.trim();
+  if (!t) return true;                                       // blank
+  if (/^[─━═╌┄\-─]{4,}$/.test(t)) return true;             // separator bar
+  if (/^[❯>]\s*$/.test(t)) return true;                     // prompt cursor
+  if (t.includes('? for shortcuts')) return true;            // status bar
+  if (t.includes('◐') || t.includes('◑') || t.includes('◒') || t.includes('◓')) return true; // spinner
+  if (t.includes('· /effort') || t.includes('medium') && t.includes('effort')) return true;
+  return false;
+}
+
 function renderTerminal(raw) {
   noSessionMsg.style.display = 'none';
   const clean = stripAnsi(raw);
   let lines = clean.split('\n');
   // Drop leading blank lines (printf padding artifact)
   while (lines.length && !lines[0].trim()) lines.shift();
-  // Drop trailing Claude Code ❯ prompt — our input bar replaces it
-  while (lines.length && /^\s*[❯>]\s*$/.test(lines[lines.length - 1])) lines.pop();
+  // Strip Claude Code bottom chrome: blank lines, separators, prompt, status bar
+  while (lines.length && isChromeLine(lines[lines.length - 1])) lines.pop();
   // Keep last 200 lines
   const shown = lines.slice(-200).join('\n');
   termContent.textContent = shown;
