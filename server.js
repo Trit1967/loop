@@ -114,9 +114,12 @@ app.post('/api/projects/clone', async (req, res, next) => {
     const dir = process.env.PROJECTS_DIR || '/home/claude/projects';
     const ghToken = req.user && req.user.gh;
     // Use token in URL for private repo access
-    const url = repo.includes('://') ? repo
-      : ghToken ? `https://${ghToken}@github.com/${repo}.git`
-      : `https://github.com/${repo}.git`;
+    let url;
+    if (repo.includes('://')) {
+      url = ghToken ? repo.replace('https://', `https://${ghToken}@`) : repo;
+    } else {
+      url = ghToken ? `https://${ghToken}@github.com/${repo}.git` : `https://github.com/${repo}.git`;
+    }
     const name = repo.split('/').pop().replace('.git', '');
     const target = `${dir}/${name}`;
     const fs = require('fs');
