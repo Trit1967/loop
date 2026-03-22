@@ -323,7 +323,7 @@ function onOrbTap(id) {
 // ── Summarize ─────────────────────────────────────────────────────────────────
 async function summarizeAll() {
   if (!sessionData.length) { showSummary('No sessions running.'); speak('No sessions running.'); return; }
-  showSummary('<span class="spin"></span>');
+  showSummary('<span class="spin"></span>', true);
   const combined = sessionData.map(s => `[${s.name} — ${s.state}]\n${stripAnsi(s.output)}`).join('\n---\n').slice(0, 4000);
   const q = 'In 2-3 sentences, what are all Claude sessions currently doing? Be specific and brief.';
   const txt = await callSummarize(combined, q);
@@ -332,7 +332,7 @@ async function summarizeAll() {
 }
 
 async function summarizeOne(s) {
-  showSummary('<span class="spin"></span>');
+  showSummary('<span class="spin"></span>', true);
   const text = stripAnsi(s.output).slice(0, 3000);
   const q = `In 2 sentences, what is the Claude session "${s.name}" doing right now?`;
   const txt = await callSummarize(text, q);
@@ -355,9 +355,13 @@ async function callSummarize(text, question) {
   }
 }
 
-function showSummary(html) {
+function showSummary(text, isHtml = false) {
   summaryCard.classList.remove('empty');
-  summaryTxt.innerHTML = html;
+  if (isHtml) {
+    summaryTxt.innerHTML = text; // only for internal spinner markup
+  } else {
+    summaryTxt.textContent = text;
+  }
 }
 
 function speak(text) {
@@ -440,7 +444,7 @@ if (!SR) {
     }
     // Fallback
     const hint = 'Try: "What\'s going on?", "Go ahead", or "Stop".';
-    showSummary(`Heard: "${t}". ${hint}`);
+    showSummary(`Heard: "${t.replace(/[<>&"]/g, '')}". ${hint}`);
     speak(hint);
   }
 }
