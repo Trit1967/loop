@@ -3,162 +3,261 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#151820">
+  <meta name="theme-color" content="#0f1117">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="/manifest.json">
   <title>Loop</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:   #151820;
-      --bg2:  #1c2030;
-      --bg3:  #242840;
-      --text: #f0eee8;
-      --muted:#8c8a84;
-      --teal: #4db8c2;
-      --rose: #c75878;
-      --sage: #5cb87a;
-      --gold: #c9a040;
-      --idle: #454340;
+      --bg:    #0f1117;
+      --bg2:   #171b26;
+      --bg3:   #1e2235;
+      --text:  #e8e6e0;
+      --dim:   #6b6966;
+      --teal:  #4db8c2;
+      --rose:  #c75878;
+      --sage:  #5cb87a;
+      --gold:  #c9a040;
+      --mono:  'JetBrains Mono', 'Courier New', monospace;
+      --ui:    'Space Grotesk', system-ui, sans-serif;
     }
 
     html, body {
       height: 100%;
       background: var(--bg);
       color: var(--text);
-      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-family: var(--ui);
       overflow: hidden;
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
     }
 
     #app {
       display: flex;
       flex-direction: column;
       height: 100%;
-      padding-top: env(safe-area-inset-top, 16px);
-      padding-bottom: env(safe-area-inset-bottom, 16px);
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    /* ── Header ── */
+    /* ── Header ─────────────────────────────────────────── */
     #header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px 10px;
+      gap: 10px;
+      padding: 10px 14px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+      min-height: 44px;
+    }
+
+    #logo {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--teal);
+      letter-spacing: -0.3px;
       flex-shrink: 0;
     }
-    #logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: var(--teal); }
-    #conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sage); transition: background 0.3s; }
-    #conn-dot.offline { background: var(--rose); }
 
-    /* ── Sessions ── */
-    #orbs-section { padding: 0 20px 8px; flex-shrink: 0; }
-    #orbs-label {
-      font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
-      color: var(--muted); text-transform: uppercase; margin-bottom: 10px;
-    }
-    #orbs { display: flex; gap: 10px; flex-wrap: wrap; min-height: 80px; align-items: flex-start; }
-
-    .orb { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
-    .orb-circle {
-      width: 54px; height: 54px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; position: relative;
-      transition: transform 0.12s ease, border-color 0.2s;
-    }
-    .orb:active .orb-circle { transform: scale(0.88); }
-    .orb-circle.idle    { background: var(--bg3); border: 1.5px solid var(--idle); }
-    .orb-circle.active  { background: rgba(92,184,122,0.12); border: 1.5px solid var(--sage); }
-    .orb-circle.waiting { background: rgba(201,160,64,0.12); border: 1.5px solid var(--gold); }
-
-    .orb-circle.active::after, .orb-circle.waiting::after {
-      content: ''; position: absolute; inset: -5px; border-radius: 50%; opacity: 0;
-    }
-    .orb-circle.active::after  { border: 1.5px solid var(--sage);  animation: orb-pulse 2s ease-in-out infinite; }
-    .orb-circle.waiting::after { border: 1.5px solid var(--gold); animation: orb-pulse 1s ease-in-out infinite; }
-    @keyframes orb-pulse { 0% { opacity: 0.7; transform: scale(1); } 100% { opacity: 0; transform: scale(1.35); } }
-
-    .orb-name { font-size: 11px; color: var(--muted); max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .orb.selected .orb-name   { color: var(--teal); }
-    .orb.selected .orb-circle { border-color: var(--teal) !important; }
-
-    #no-sessions { font-size: 13px; color: var(--muted); padding: 20px 0; line-height: 1.5; display: none; }
-
-    /* ── Divider ── */
-    .divider { height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent); margin: 12px 20px; flex-shrink: 0; }
-
-    /* ── Stage (mic + summary) ── */
-    #stage {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 0 24px; gap: 28px; min-height: 0;
+    #session-selector {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      min-width: 0;
     }
 
-    #summary-card {
-      background: var(--bg2); border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 16px; padding: 16px 20px; width: 100%;
-      min-height: 76px; display: flex; align-items: center;
+    #state-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--dim); flex-shrink: 0;
+      transition: background 0.3s;
     }
-    #summary-card.empty { border-style: dashed; opacity: 0.5; }
-    #summary-text { font-size: 15px; line-height: 1.55; color: var(--text); }
-    #summary-card.empty #summary-text { color: var(--muted); font-size: 14px; }
+    #state-dot.active  { background: var(--sage); }
+    #state-dot.waiting { background: var(--gold); animation: blink 1s ease-in-out infinite; }
+    #state-dot.idle    { background: var(--dim); }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    /* mic + waveform wrapper */
-    #mic-stage { position: relative; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    #session-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-    #waveform { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    #session-name.placeholder { color: var(--dim); font-weight: 400; }
+
+    #session-arrow { font-size: 10px; color: var(--dim); flex-shrink: 0; }
+
+    #conn-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--sage); flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    #conn-dot.err { background: var(--rose); }
+
+    /* ── Session picker overlay ──────────────────────────── */
+    #picker {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.7);
+      display: flex; align-items: flex-end;
+      display: none;
+    }
+    #picker-sheet {
+      background: var(--bg2);
+      border-radius: 16px 16px 0 0;
+      padding: 8px 0 calc(env(safe-area-inset-bottom, 0px) + 12px);
+      width: 100%;
+    }
+    #picker-title {
+      font-size: 12px; color: var(--dim); font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 10px 18px 6px;
+    }
+    .picker-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 18px; cursor: pointer;
+      font-size: 15px;
+    }
+    .picker-item:active { background: rgba(255,255,255,0.05); }
+    .picker-item.active-session { color: var(--teal); }
+    .picker-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Terminal output ─────────────────────────────────── */
+    #terminal {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px 6px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    #terminal::-webkit-scrollbar { width: 3px; }
+    #terminal::-webkit-scrollbar-track { background: transparent; }
+    #terminal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    #terminal-content { min-height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
+
+    #no-session-msg {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 100%; gap: 8px;
+      color: var(--dim); font-family: var(--ui); text-align: center; padding: 24px;
+    }
+    #no-session-msg strong { font-size: 16px; color: var(--text); font-weight: 600; }
+    #no-session-msg span   { font-size: 13px; line-height: 1.5; }
+
+    #waiting-banner {
+      display: none;
+      background: rgba(201,160,64,0.1);
+      border-top: 1px solid rgba(201,160,64,0.25);
+      padding: 8px 14px;
+      font-size: 13px; color: var(--gold);
+      font-family: var(--ui);
+      display: none;
+      align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    #waiting-banner.show { display: flex; }
+    #waiting-btns { display: flex; gap: 8px; margin-left: auto; }
+    .w-btn {
+      padding: 4px 14px; border-radius: 6px; border: 1px solid;
+      font-family: var(--ui); font-size: 13px; font-weight: 600; cursor: pointer;
+      background: transparent;
+    }
+    #btn-y { border-color: var(--sage); color: var(--sage); }
+    #btn-n { border-color: var(--rose); color: var(--rose); }
+    #btn-y:active, #btn-n:active { opacity: 0.7; }
+
+    /* ── Input bar ───────────────────────────────────────── */
+    #input-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px 8px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: var(--bg2);
+      flex-shrink: 0;
+    }
 
     #mic-btn {
-      width: 84px; height: 84px; border-radius: 50%; border: none;
-      background: var(--bg3); color: var(--text); font-size: 34px;
-      cursor: pointer; position: relative; z-index: 1;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s, border 0.2s, transform 0.1s;
-      box-shadow: 0 4px 28px rgba(0,0,0,0.35);
+      width: 40px; height: 40px; border-radius: 50%; border: none; flex-shrink: 0;
+      background: var(--bg3); color: var(--text); font-size: 18px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+      -webkit-tap-highlight-color: transparent;
     }
-    #mic-btn:active { transform: scale(0.91); }
-    #mic-btn.listening  { background: rgba(199,88,120,0.18); border: 1.5px solid var(--rose); }
-    #mic-btn.processing { background: rgba(77,184,194,0.14); border: 1.5px solid var(--teal); }
+    #mic-btn:active     { opacity: 0.75; }
+    #mic-btn.listening  { background: rgba(199,88,120,0.25); border: 1.5px solid var(--rose); }
+    #mic-btn.processing { background: rgba(77,184,194,0.15); border: 1.5px solid var(--teal); }
 
-    #mic-ring {
-      position: absolute; width: 84px; height: 84px; border-radius: 50%;
-      border: 2px solid var(--rose); opacity: 0; pointer-events: none; z-index: 0;
+    #cmd-input {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 9px 12px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+      -webkit-appearance: none;
+      caret-color: var(--teal);
     }
-    #mic-btn.listening ~ #mic-ring { animation: ring-pulse 1.3s ease-out infinite; }
-    @keyframes ring-pulse { 0% { opacity: 0.6; transform: scale(1); } 100% { opacity: 0; transform: scale(2); } }
+    #cmd-input::placeholder { color: var(--dim); }
+    #cmd-input:focus { border-color: rgba(77,184,194,0.35); }
 
-    #mic-label { position: absolute; bottom: 4px; font-size: 11px; color: var(--muted); white-space: nowrap; letter-spacing: 0.03em; }
-
-    /* ── Action bar ── */
-    #action-bar { padding: 0 20px 12px; flex-shrink: 0; display: none; }
-    #action-title { font-size: 12px; color: var(--gold); font-weight: 600; text-align: center; margin-bottom: 10px; letter-spacing: 0.04em; }
-    #action-btns { display: flex; gap: 10px; }
-    #btn-approve, #btn-reject {
-      flex: 1; padding: 15px; border-radius: 12px; border: none;
-      font-family: inherit; font-size: 15px; font-weight: 600;
-      cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+    #send-btn {
+      width: 36px; height: 36px; border-radius: 8px; border: none; flex-shrink: 0;
+      background: var(--teal); color: #0f1117; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      opacity: 0.5; transition: opacity 0.15s;
     }
-    #btn-approve:active, #btn-reject:active { transform: scale(0.95); }
-    #btn-approve { background: rgba(92,184,122,0.14); border: 1.5px solid var(--sage); color: var(--sage); }
-    #btn-reject  { background: rgba(199,88,120,0.10); border: 1.5px solid var(--rose); color: var(--rose); }
+    #send-btn.ready { opacity: 1; }
+    #send-btn:active { opacity: 0.75; }
 
-    /* ── No voice fallback ── */
-    #no-voice {
-      background: rgba(199,88,120,0.08); border: 1px solid rgba(199,88,120,0.25);
-      border-radius: 10px; padding: 10px 14px; font-size: 13px;
-      color: var(--rose); text-align: center; display: none; width: 100%;
+    /* ── Voice indicator ────────────────────────────────── */
+    #voice-bar {
+      display: none;
+      align-items: center; justify-content: center; gap: 8px;
+      padding: 5px 14px;
+      background: rgba(199,88,120,0.1);
+      font-family: var(--ui); font-size: 13px; color: var(--rose);
+      flex-shrink: 0;
+    }
+    #voice-bar.show { display: flex; }
+    #voice-dots span {
+      display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+      background: var(--rose); margin: 0 2px;
+      animation: vdot 1.2s ease-in-out infinite;
+    }
+    #voice-dots span:nth-child(2) { animation-delay: 0.2s; }
+    #voice-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes vdot { 0%,80%,100%{transform:scale(0.5);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+
+    /* ── No voice fallback ──────────────────────────────── */
+    #no-voice-msg {
+      display: none;
+      font-size: 11px; color: var(--rose); text-align: center;
+      padding: 4px 14px; font-family: var(--ui);
     }
 
-    /* ── Spinner ── */
+    /* ── Spinner ──────────────────────────────────────── */
     .spin {
-      display: inline-block; width: 18px; height: 18px;
-      border: 2px solid rgba(77,184,194,0.25); border-top-color: var(--teal);
-      border-radius: 50%; animation: spin 0.65s linear infinite; vertical-align: middle;
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(77,184,194,0.2); border-top-color: var(--teal);
+      border-radius: 50%; animation: spin 0.65s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
@@ -168,285 +267,288 @@
 
   <div id="header">
     <div id="logo">Loop</div>
+    <div id="session-selector">
+      <div id="state-dot"></div>
+      <div id="session-name" class="placeholder">No sessions</div>
+      <div id="session-arrow">▾</div>
+    </div>
     <div id="conn-dot" title="Connected"></div>
   </div>
 
-  <div id="orbs-section">
-    <div id="orbs-label">Sessions</div>
-    <div id="orbs">
-      <div id="no-sessions">No sessions running.<br>Open Loop on desktop to start one.</div>
+  <div id="terminal">
+    <div id="terminal-content">
+      <div id="no-session-msg">
+        <strong>No sessions running</strong>
+        <span>Open Loop on desktop to start a session, then come back here.</span>
+      </div>
     </div>
   </div>
 
-  <div class="divider"></div>
-
-  <div id="stage">
-    <div id="summary-card" class="empty">
-      <div id="summary-text">Tap the mic and ask what's going on</div>
-    </div>
-
-    <div id="mic-stage">
-      <canvas id="waveform" width="180" height="180"></canvas>
-      <button id="mic-btn" aria-label="Voice command">🎤</button>
-      <div id="mic-ring"></div>
-      <div id="mic-label">tap to speak</div>
-    </div>
-
-    <div id="no-voice">Voice not supported — use Chrome or Edge</div>
-  </div>
-
-  <div id="action-bar">
-    <div id="action-title">Waiting for your input</div>
-    <div id="action-btns">
-      <button id="btn-approve">✓ Approve</button>
-      <button id="btn-reject">✗ Reject</button>
+  <div id="waiting-banner">
+    <span>⏳ Waiting for input</span>
+    <div id="waiting-btns">
+      <button class="w-btn" id="btn-y">Yes</button>
+      <button class="w-btn" id="btn-n">No</button>
     </div>
   </div>
+
+  <div id="voice-bar">
+    <div id="voice-dots"><span></span><span></span><span></span></div>
+    <span id="voice-label">listening…</span>
+  </div>
+
+  <div id="input-bar">
+    <button id="mic-btn" aria-label="Voice input">🎤</button>
+    <input id="cmd-input" type="text" placeholder="type a command…" autocomplete="off" autocorrect="off" spellcheck="false">
+    <button id="send-btn" aria-label="Send">↑</button>
+  </div>
+
+  <div id="no-voice-msg">Voice not supported — use Chrome or Edge</div>
 
 </div>
+
+<!-- Session picker -->
+<div id="picker">
+  <div id="picker-sheet">
+    <div id="picker-title">Switch Session</div>
+    <div id="picker-list"></div>
+  </div>
+</div>
+
 <script>
 'use strict';
 
-// ── State ────────────────────────────────────────────────────────────────────
-let sessionData  = [];
-let selectedId   = null;
+// ── State ─────────────────────────────────────────────────────────────────────
+let sessions     = [];
+let activeId     = null;
+let lastOutput   = '';
 let voiceState   = 'idle'; // idle | listening | processing
-let audioCtx     = null;
-let analyser     = null;
-let waveRaf      = null;
-let micStream    = null;
+let autoScroll   = true;
+let pollTimer    = null;
 
 // ── DOM ───────────────────────────────────────────────────────────────────────
-const $  = id => document.getElementById(id);
-const orbsEl     = $('orbs');
-const summaryCard= $('summary-card');
-const summaryTxt = $('summary-text');
-const micBtn     = $('mic-btn');
-const micLabel   = $('mic-label');
-const actionBar  = $('action-bar');
-const connDot    = $('conn-dot');
-const noSessions = $('no-sessions');
-const noVoice    = $('no-voice');
-const waveCanvas = $('waveform');
-const waveCtx2d  = waveCanvas.getContext('2d');
+const stateDot     = document.getElementById('state-dot');
+const sessionName  = document.getElementById('session-name');
+const sessionSel   = document.getElementById('session-selector');
+const connDot      = document.getElementById('conn-dot');
+const terminal     = document.getElementById('terminal');
+const termContent  = document.getElementById('terminal-content');
+const noSessionMsg = document.getElementById('no-session-msg');
+const waitBanner   = document.getElementById('waiting-banner');
+const voiceBar     = document.getElementById('voice-bar');
+const voiceLabel   = document.getElementById('voice-label');
+const micBtn       = document.getElementById('mic-btn');
+const cmdInput     = document.getElementById('cmd-input');
+const sendBtn      = document.getElementById('send-btn');
+const picker       = document.getElementById('picker');
+const pickerList   = document.getElementById('picker-list');
+const noVoiceMsg   = document.getElementById('no-voice-msg');
+
+// ── Auto-scroll detection ─────────────────────────────────────────────────────
+terminal.addEventListener('scroll', () => {
+  const atBottom = terminal.scrollHeight - terminal.scrollTop - terminal.clientHeight < 40;
+  autoScroll = atBottom;
+});
+
+function scrollToBottom() {
+  if (autoScroll) terminal.scrollTop = terminal.scrollHeight;
+}
 
 // ── Session polling ───────────────────────────────────────────────────────────
-async function poll() {
+async function pollSessions() {
   try {
-    const sessResp = await fetch('/api/sessions');
-    if (sessResp.status === 401) { window.location.href = '/auth/login'; return; }
-    if (!sessResp.ok) throw new Error(sessResp.status);
-    const list = await sessResp.json();
-    connDot.classList.remove('offline');
-    if (!Array.isArray(list)) return;
+    const resp = await fetch('/api/sessions');
+    if (resp.status === 401) { location.href = '/auth/login'; return; }
+    if (!resp.ok) throw new Error(resp.status);
+    const list = await resp.json();
+    connDot.classList.remove('err');
+    sessions = Array.isArray(list) ? list : [];
 
-    const outputs = await Promise.all(list.map(async s => {
-      try {
-        const d = await fetch(`/api/sessions/${s.id}/output`).then(r => r.json());
-        return { ...s, output: d.output || '', state: classify(d.output || '') };
-      } catch {
-        return { ...s, output: '', state: 'idle' };
-      }
-    }));
+    // Auto-select: keep current if still exists, else pick first
+    if (sessions.length && (!activeId || !sessions.find(s => s.id === activeId))) {
+      activeId = sessions[0].id;
+    }
+    if (!sessions.length) activeId = null;
 
-    sessionData = outputs;
-    renderOrbs();
-    renderActionBar();
+    renderHeader();
+    if (activeId) await pollOutput();
+    else          renderEmpty();
   } catch {
-    connDot.classList.add('offline');
+    connDot.classList.add('err');
   }
 }
 
-function classify(raw) {
-  const text = stripAnsi(raw);
-  const lines = text.split('\n').filter(l => l.trim());
-  const tail  = lines.slice(-10).join('\n');
-  if (/Do you want|Should I|\[Y\/n\]|\(y\/n\)|\(Y\/N\)|Press Enter|Continue\?|proceed\?|Approve\?|confirm\?/i.test(tail)) return 'waiting';
-  if (lines.length > 3) return 'active';
+async function pollOutput() {
+  if (!activeId) return;
+  try {
+    const resp = await fetch(`/api/sessions/${activeId}/output`);
+    if (!resp.ok) return;
+    const { output } = await resp.json();
+    if (output === lastOutput) return; // nothing changed
+    lastOutput = output;
+    renderTerminal(output);
+  } catch {}
+}
+
+// ── Classify session state ────────────────────────────────────────────────────
+function classify(output) {
+  const text = stripAnsi(output || '');
+  const tail = text.split('\n').slice(-8).join('\n');
+  if (/Do you want|Should I|\[Y\/n\]|\(y\/n\)|\(Y\/N\)|Press Enter|Continue\?|proceed\?|Approve\?/i.test(tail)) return 'waiting';
+  if (text.trim().length > 10) return 'active';
   return 'idle';
 }
 
 function stripAnsi(str) {
-  return (str || '').replace(/\x1b\[[0-9;]*[mGKHFJKSTsuA-Z]/g, '').replace(/\x1b\][^\x07]*\x07/g, '');
+  return str.replace(/\x1b\[[0-9;]*[mGKHFJKSTsuA-Za-z]/g, '')
+            .replace(/\x1b\][^\x07]*\x07/g, '')
+            .replace(/\r/g, '');
 }
 
-// ── Render orbs ───────────────────────────────────────────────────────────────
-const ICON = { active: '⚡', waiting: '💬', idle: '·' };
-
-function renderOrbs() {
-  if (sessionData.length === 0) {
-    noSessions.style.display = 'block';
-    orbsEl.querySelectorAll('.orb').forEach(e => e.remove());
+// ── Render header ─────────────────────────────────────────────────────────────
+function renderHeader() {
+  if (!activeId) {
+    sessionName.textContent = 'No sessions';
+    sessionName.classList.add('placeholder');
+    stateDot.className = '';
+    sessionSel.style.cursor = 'default';
+    document.getElementById('session-arrow').style.opacity = '0';
     return;
   }
-  noSessions.style.display = 'none';
+  const s = sessions.find(s => s.id === activeId);
+  if (!s) return;
+  sessionName.textContent = s.name;
+  sessionName.classList.remove('placeholder');
+  document.getElementById('session-arrow').style.opacity = sessions.length > 1 ? '1' : '0';
+  sessionSel.style.cursor = sessions.length > 1 ? 'pointer' : 'default';
+  const state = classify(lastOutput);
+  stateDot.className = state;
+  waitBanner.classList.toggle('show', state === 'waiting');
+}
 
-  const seen = new Set(sessionData.map(s => s.id));
-  orbsEl.querySelectorAll('.orb').forEach(el => { if (!seen.has(el.dataset.id)) el.remove(); });
+// ── Render terminal ───────────────────────────────────────────────────────────
+function renderTerminal(raw) {
+  noSessionMsg.style.display = 'none';
+  const clean = stripAnsi(raw);
+  const lines = clean.split('\n');
+  // Keep last 200 lines
+  const shown = lines.slice(-200).join('\n');
+  termContent.textContent = shown;
+  scrollToBottom();
+  renderHeader(); // update state dot + waiting banner
+}
 
-  sessionData.forEach(s => {
-    let el = orbsEl.querySelector(`.orb[data-id="${s.id}"]`);
-    if (!el) {
-      el = document.createElement('div');
-      el.className = 'orb';
-      el.dataset.id = s.id;
-      el.innerHTML = `<div class="orb-circle ${s.state}">${ICON[s.state] || '·'}</div><div class="orb-name">${s.name}</div>`;
-      el.addEventListener('click', () => onOrbTap(s.id));
-      orbsEl.appendChild(el);
-    } else {
-      const c = el.querySelector('.orb-circle');
-      c.className = `orb-circle ${s.state}`;
-      c.textContent = ICON[s.state] || '·';
-    }
-    el.classList.toggle('selected', s.id === selectedId);
+function renderEmpty() {
+  termContent.textContent = '';
+  noSessionMsg.style.display = 'flex';
+  waitBanner.classList.remove('show');
+  stateDot.className = '';
+}
+
+// ── Session picker ────────────────────────────────────────────────────────────
+sessionSel.addEventListener('click', () => {
+  if (sessions.length <= 1) return;
+  pickerList.innerHTML = '';
+  sessions.forEach(s => {
+    const state = s.id === activeId ? classify(lastOutput) : 'idle';
+    const colors = { active: '#5cb87a', waiting: '#c9a040', idle: '#454340' };
+    const el = document.createElement('div');
+    el.className = 'picker-item' + (s.id === activeId ? ' active-session' : '');
+    el.innerHTML = `<div class="picker-dot" style="background:${colors[state] || colors.idle}"></div>${escText(s.name)}`;
+    el.addEventListener('click', () => {
+      activeId = s.id;
+      lastOutput = '';
+      picker.style.display = 'none';
+      pollOutput();
+      renderHeader();
+    });
+    pickerList.appendChild(el);
   });
-}
+  picker.style.display = 'flex';
+});
 
-function renderActionBar() {
-  const waiting = sessionData.filter(s => s.state === 'waiting');
-  if (waiting.length) {
-    actionBar.style.display = 'block';
-    $('action-title').textContent = `⏳  ${waiting[0].name} is waiting for input`;
-    actionBar.dataset.sid = waiting[0].id;
-  } else {
-    actionBar.style.display = 'none';
-  }
-}
+picker.addEventListener('click', e => { if (e.target === picker) picker.style.display = 'none'; });
 
-function onOrbTap(id) {
-  selectedId = id;
-  renderOrbs();
-  const s = sessionData.find(s => s.id === id);
-  if (s) summarizeOne(s);
-}
-
-// ── Summarize ─────────────────────────────────────────────────────────────────
-async function summarizeAll() {
-  if (!sessionData.length) { showSummary('No sessions running.'); speak('No sessions running.'); return; }
-  showSummary('<span class="spin"></span>', true);
-  const combined = sessionData.map(s => `[${s.name} — ${s.state}]\n${stripAnsi(s.output)}`).join('\n---\n').slice(0, 4000);
-  const q = 'In 2-3 sentences, what are all Claude sessions currently doing? Be specific and brief.';
-  const txt = await callSummarize(combined, q);
-  showSummary(txt);
-  speak(txt);
-}
-
-async function summarizeOne(s) {
-  showSummary('<span class="spin"></span>', true);
-  const text = stripAnsi(s.output).slice(0, 3000);
-  const q = `In 2 sentences, what is the Claude session "${s.name}" doing right now?`;
-  const txt = await callSummarize(text, q);
-  showSummary(txt);
-  speak(txt);
-}
-
-async function callSummarize(text, question) {
-  try {
-    const r = await fetch('/api/summarize', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, question })
-    });
-    if (!r.ok) return 'Could not reach the summarization service.';
-    const d = await r.json();
-    return d.summary || 'No summary available.';
-  } catch {
-    return 'Network error — check your connection.';
-  }
-}
-
-function showSummary(text, isHtml = false) {
-  summaryCard.classList.remove('empty');
-  if (isHtml) {
-    summaryTxt.innerHTML = text; // only for internal spinner markup
-  } else {
-    summaryTxt.textContent = text;
-  }
-}
-
-function speak(text) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 1.05;
-  window.speechSynthesis.speak(u);
-}
-
-// ── Approve / Reject ──────────────────────────────────────────────────────────
+// ── Send input to session ─────────────────────────────────────────────────────
 async function sendInput(text) {
-  const id = actionBar.dataset.sid || (sessionData.find(s => s.state === 'waiting') || {}).id;
-  if (!id) { speak('No session is waiting for input.'); return; }
+  if (!activeId || !text.trim()) return;
   try {
-    await fetch(`/api/sessions/${id}/input`, {
+    await fetch(`/api/sessions/${activeId}/input`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text: text.trim() })
     });
-    actionBar.style.display = 'none';
-    setTimeout(poll, 1500);
-  } catch { speak('Failed to send — check your connection.'); }
+    setTimeout(pollOutput, 600);
+  } catch {}
 }
 
-$('btn-approve').addEventListener('click', () => { showSummary('Approved.'); speak('Approved.'); sendInput('y'); });
-$('btn-reject').addEventListener('click',  () => { showSummary('Rejected.'); speak('Rejected.'); sendInput('n'); });
+// Text input
+cmdInput.addEventListener('input', () => {
+  sendBtn.classList.toggle('ready', cmdInput.value.trim().length > 0);
+});
+
+cmdInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && cmdInput.value.trim()) {
+    sendInput(cmdInput.value);
+    cmdInput.value = '';
+    sendBtn.classList.remove('ready');
+  }
+});
+
+sendBtn.addEventListener('click', () => {
+  if (cmdInput.value.trim()) {
+    sendInput(cmdInput.value);
+    cmdInput.value = '';
+    sendBtn.classList.remove('ready');
+  }
+});
+
+// Waiting buttons
+document.getElementById('btn-y').addEventListener('click', () => sendInput('y'));
+document.getElementById('btn-n').addEventListener('click', () => sendInput('n'));
 
 // ── Voice ─────────────────────────────────────────────────────────────────────
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 if (!SR) {
   micBtn.style.display = 'none';
-  noVoice.style.display = 'block';
+  noVoiceMsg.style.display = 'block';
 } else {
   const rec = new SR();
   rec.lang = 'en-US';
-  rec.interimResults = false;
+  rec.interimResults = true;
   rec.continuous = false;
 
-  rec.onresult = async e => {
-    const transcript = e.results[e.results.length - 1][0].transcript.trim();
-    setVoice('processing');
-    await dispatch(transcript);
-    setVoice('idle');
+  let interimEl = null;
+
+  rec.onresult = e => {
+    let interim = '', final = '';
+    for (const r of e.results) {
+      if (r.isFinal) final += r[0].transcript;
+      else interim += r[0].transcript;
+    }
+    // Show interim in the input box as preview
+    cmdInput.value = interim || final;
+    sendBtn.classList.toggle('ready', cmdInput.value.trim().length > 0);
+    if (final) {
+      sendInput(final);
+      cmdInput.value = '';
+      sendBtn.classList.remove('ready');
+      setVoice('idle');
+    }
   };
 
   rec.onerror = e => { console.warn('[voice]', e.error); setVoice('idle'); };
   rec.onend   = () => { if (voiceState === 'listening') setVoice('idle'); };
 
   micBtn.addEventListener('click', () => {
+    if (!activeId) { cmdInput.focus(); return; }
     if (voiceState === 'listening') {
       rec.stop(); setVoice('idle');
-    } else if (voiceState === 'idle') {
-      startAudio(); rec.start(); setVoice('listening');
+    } else {
+      rec.start(); setVoice('listening');
     }
   });
-
-  async function dispatch(t) {
-    // Status
-    if (/what.*(going on|happening|status|up|doing)|give me (a )?update|status|summary/i.test(t)) {
-      const s = selectedId && sessionData.find(s => s.id === selectedId);
-      if (s) { await summarizeOne(s); return; }
-      await summarizeAll(); return;
-    }
-    // Specific session "what is X doing"
-    const m = t.match(/what (is|about|['']s) (.+?) (doing|up to|working on|running)/i);
-    if (m) {
-      const name = m[2].trim().toLowerCase();
-      const s = sessionData.find(s => s.name.toLowerCase().includes(name));
-      if (s) { await summarizeOne(s); return; }
-    }
-    // Approve
-    if (/\b(go ahead|approve|yes|proceed|confirm|do it|ok(ay)?|sure|yep|yup)\b/i.test(t)) {
-      showSummary('Approved.'); speak('Approved.'); await sendInput('y'); return;
-    }
-    // Reject
-    if (/\b(stop|no|cancel|reject|abort|don'?t|nope)\b/i.test(t)) {
-      showSummary('Rejected.'); speak('Rejected.'); await sendInput('n'); return;
-    }
-    // Fallback
-    const hint = 'Try: "What\'s going on?", "Go ahead", or "Stop".';
-    showSummary(`Heard: "${t.replace(/[<>&"]/g, '')}". ${hint}`);
-    speak(hint);
-  }
 }
 
 function setVoice(state) {
@@ -455,61 +557,19 @@ function setVoice(state) {
   if (state === 'listening') {
     micBtn.classList.add('listening');
     micBtn.textContent = '🎙️';
-    micLabel.textContent = 'listening…';
-    waveCanvas.style.opacity = '1';
-  } else if (state === 'processing') {
-    micBtn.classList.add('processing');
-    micBtn.textContent = '⏳';
-    micLabel.textContent = 'thinking…';
-    stopAudio();
+    voiceBar.classList.add('show');
+    voiceLabel.textContent = 'listening…';
   } else {
     micBtn.textContent = '🎤';
-    micLabel.textContent = 'tap to speak';
-    waveCanvas.style.opacity = '0';
-    stopAudio();
+    voiceBar.classList.remove('show');
+    cmdInput.value = '';
+    sendBtn.classList.remove('ready');
   }
 }
 
-// ── Waveform ──────────────────────────────────────────────────────────────────
-async function startAudio() {
-  try {
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
-    const src = audioCtx.createMediaStreamSource(micStream);
-    analyser  = audioCtx.createAnalyser();
-    analyser.fftSize = 64;
-    src.connect(analyser);
-    drawWave();
-  } catch { /* mic permission denied — voice still works */ }
-}
-
-function stopAudio() {
-  if (waveRaf)   { cancelAnimationFrame(waveRaf); waveRaf = null; }
-  if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
-  if (audioCtx)  { audioCtx.close(); audioCtx = null; }
-  analyser = null;
-  waveCtx2d.clearRect(0, 0, 180, 180);
-}
-
-function drawWave() {
-  if (!analyser) return;
-  waveRaf = requestAnimationFrame(drawWave);
-  const data = new Uint8Array(analyser.frequencyBinCount);
-  analyser.getByteFrequencyData(data);
-  waveCtx2d.clearRect(0, 0, 180, 180);
-  const cx = 90, cy = 90, r = 48;
-  data.forEach((v, i) => {
-    const angle = (i / data.length) * Math.PI * 2 - Math.PI / 2;
-    const len   = 5 + (v / 255) * 30;
-    const cos   = Math.cos(angle), sin = Math.sin(angle);
-    waveCtx2d.beginPath();
-    waveCtx2d.moveTo(cx + cos * r, cy + sin * r);
-    waveCtx2d.lineTo(cx + cos * (r + len), cy + sin * (r + len));
-    waveCtx2d.strokeStyle = `rgba(199,88,120,${0.35 + (v / 255) * 0.65})`;
-    waveCtx2d.lineWidth = 2.5;
-    waveCtx2d.lineCap = 'round';
-    waveCtx2d.stroke();
-  });
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function escText(str) {
+  return str.replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
 }
 
 // ── Service worker ────────────────────────────────────────────────────────────
@@ -518,8 +578,10 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
-poll();
-setInterval(poll, 4000);
+pollSessions();
+// Poll sessions list every 10s, output every 2s
+setInterval(pollSessions, 10000);
+setInterval(() => { if (activeId) pollOutput(); }, 2000);
 </script>
 </body>
 </html>
