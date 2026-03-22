@@ -186,10 +186,15 @@ app.post('/api/sessions/:id/input', async (req, res, next) => {
     const { id } = req.params;
     const { text } = req.body;
     if (!id || !/^[a-zA-Z0-9_-]+$/.test(id)) return res.status(400).json({ error: 'invalid session id' });
-    if (!text || typeof text !== 'string' || text.length > 200) return res.status(400).json({ error: 'invalid text' });
+    if (typeof text !== 'string' || text.length > 200) return res.status(400).json({ error: 'invalid text' });
     const escapedId = id.replace(/'/g, "'\\''");
-    const escapedText = text.replace(/['"\\]/g, '');
-    execSync(`tmux send-keys -t '${escapedId}' '${escapedText}' Enter`, { timeout: 3000 });
+    const escapedText = text.trim().replace(/['"\\]/g, '');
+    // Empty text = just press Enter (useful for interactive prompts like trust dialogs)
+    if (escapedText) {
+      execSync(`tmux send-keys -t '${escapedId}' '${escapedText}' Enter`, { timeout: 3000 });
+    } else {
+      execSync(`tmux send-keys -t '${escapedId}' Enter`, { timeout: 3000 });
+    }
     res.json({ ok: true });
   } catch (err) { next(err); }
 });
