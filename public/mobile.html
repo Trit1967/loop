@@ -545,6 +545,9 @@ function renderTerminal(raw) {
   let lines = clean.split('\n');
   // Drop leading blank lines (printf padding artifact)
   while (lines.length && !lines[0].trim()) lines.shift();
+  // Strip Claude Code startup block (| Opus 4.6... | table at top of session)
+  while (lines.length && /^\|/.test(lines[0])) lines.shift();
+  while (lines.length && !lines[0].trim()) lines.shift();
   // Strip Claude Code bottom chrome: blank lines, separators, prompt, status bar
   while (lines.length && isChromeLine(lines[lines.length - 1])) lines.pop();
   // Keep last 200 lines
@@ -618,9 +621,30 @@ sendBtn.addEventListener('click', () => {
   sendBtn.classList.remove('ready');
 });
 
-// Waiting buttons
-document.getElementById('btn-y').addEventListener('click', () => sendInput('y'));
-document.getElementById('btn-n').addEventListener('click', () => sendInput('n'));
+// Detect whether the current waiting prompt is a numbered list (> 1.) or y/n style
+function detectPromptType(output) {
+  const tail = stripAnsi(output || '').split('\n').slice(-12).join('\n');
+  if (/^>\s*1\./m.test(tail)) return 'numbered';
+  return 'yn';
+}
+
+// Waiting buttons — smart: numbered dialogs use Enter / option number; y/n use y/n
+document.getElementById('btn-y').addEventListener('click', () => {
+  if (detectPromptType(lastOutput) === 'numbered') {
+    sendInput(''); // bare Enter selects pre-highlighted "> 1. Yes"
+  } else {
+    sendInput('y');
+  }
+});
+document.getElementById('btn-n').addEventListener('click', () => {
+  if (detectPromptType(lastOutput) === 'numbered') {
+    const tail = stripAnsi(lastOutput || '').split('\n').slice(-12).join('\n');
+    const noMatch = tail.match(/(\d+)\.\s*(?:No|Don't|Cancel)/i);
+    sendInput(noMatch ? noMatch[1] : '3');
+  } else {
+    sendInput('n');
+  }
+});
 
 // ── Voice ─────────────────────────────────────────────────────────────────────
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
