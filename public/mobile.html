@@ -531,7 +531,9 @@ function renderHeader() {
 function isChromeLine(line) {
   const t = line.trim();
   if (!t) return true;                                       // blank
-  if (/^[─━═╌┄\-─]{4,}$/.test(t)) return true;             // separator bar
+  if (/^[─━═╌┄\-─]{4,}$/.test(t)) return true;             // ──── separator bar
+  if (/^[╰╯╭╮][─━═╌┄\s]*[╰╯╭╮]?$/.test(t)) return true;   // ╰────╯ box borders
+  if (/^[│|][\s]*[│|]?$/.test(t)) return true;              // │   │ empty box row
   if (/^[❯>]\s*$/.test(t)) return true;                     // prompt cursor
   if (t.includes('? for shortcuts')) return true;            // status bar
   if (t.includes('◐') || t.includes('◑') || t.includes('◒') || t.includes('◓')) return true; // spinner
@@ -545,8 +547,12 @@ function renderTerminal(raw) {
   let lines = clean.split('\n');
   // Drop leading blank lines (printf padding artifact)
   while (lines.length && !lines[0].trim()) lines.shift();
-  // Strip Claude Code startup block (| Opus 4.6... | table at top of session)
+  // Strip Claude Code startup/welcome block — both old (| pipe |) and new (╭─ box ─╮) formats
   while (lines.length && /^\|/.test(lines[0])) lines.shift();
+  if (lines.length && /^╭/.test(lines[0])) {
+    while (lines.length && !/^╰/.test(lines[0])) lines.shift();
+    if (lines.length) lines.shift(); // remove ╰────╯ itself
+  }
   while (lines.length && !lines[0].trim()) lines.shift();
   // Strip Claude Code bottom chrome: blank lines, separators, prompt, status bar
   while (lines.length && isChromeLine(lines[lines.length - 1])) lines.pop();
