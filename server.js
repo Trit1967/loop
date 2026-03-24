@@ -410,6 +410,7 @@ app.get('/mobile', (req, res) => {
   const token = req.cookies && req.cookies.claude_session;
   if (!token) return res.redirect('/auth/login');
   try { validateJWT(token); } catch { return res.redirect('/auth/login'); }
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(__dirname, 'public', 'mobile.html'));
 });
 
