@@ -549,9 +549,11 @@ function renderTerminal(raw) {
   while (lines.length && !lines[0].trim()) lines.shift();
   // Strip Claude Code startup/welcome block — both old (| pipe |) and new (╭─ box ─╮) formats
   while (lines.length && /^\|/.test(lines[0])) lines.shift();
-  if (lines.length && /^╭/.test(lines[0])) {
-    while (lines.length && !/^╰/.test(lines[0])) lines.shift();
-    if (lines.length) lines.shift(); // remove ╰────╯ itself
+  // Find ╭─── Claude Code ───╮ block anywhere in first 100 lines (bash prompt may precede it)
+  const boxStart = lines.slice(0, 100).findIndex(l => /^╭/.test(l.trim()));
+  if (boxStart !== -1) {
+    const boxEnd = lines.findIndex((l, i) => i > boxStart && /^╰/.test(l.trim()));
+    if (boxEnd !== -1) lines.splice(boxStart, boxEnd - boxStart + 1);
   }
   while (lines.length && !lines[0].trim()) lines.shift();
   // Strip Claude Code bottom chrome: blank lines, separators, prompt, status bar
