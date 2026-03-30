@@ -34,6 +34,17 @@
       --w2glow: rgba(0,230,77,0.35);
       --w3glow: rgba(155,107,255,0.35);
       --w4glow: rgba(184,192,204,0.25);
+      /* ── Brand Accent Colors ── */
+      --teal: #4db8c2;
+      --tealSub: rgba(77,184,194,0.10);
+      --tealGlow: rgba(77,184,194,0.35);
+      --rose: #c75878;
+      --roseSub: rgba(199,88,120,0.10);
+      --roseGlow: rgba(199,88,120,0.35);
+      --sage: #5cb87a;
+      --sageSub: rgba(92,184,122,0.10);
+      --gold: #c9a040;
+      --goldSub: rgba(201,160,64,0.10);
       /* ── Text ── */
       --tx:  #f5f3ee;
       --tx2: #d2d6e0;
@@ -183,7 +194,7 @@
       color: var(--tx); outline: none; transition: all var(--t);
     }
     .sb-search::placeholder { color: var(--tx3); }
-    .sb-search:focus { border-color: var(--w1); box-shadow: 0 0 6px rgba(255,107,26,0.15); }
+    .sb-search:focus { border-color: var(--teal); box-shadow: 0 0 6px var(--tealGlow); }
 
     .sk {
       display: flex; align-items: center; gap: 10px;
@@ -197,6 +208,10 @@
     .sk-wire.w2 { background: var(--w2); width: 5px; box-shadow: 0 0 3px var(--w2glow); }
     .sk-wire.w3 { background: var(--w3); box-shadow: 0 0 3px var(--w3glow); }
     .sk-wire.w4 { background: var(--w4); }
+    .sk-wire.teal { background: var(--teal); box-shadow: 0 0 3px var(--tealGlow); }
+    .sk-wire.rose { background: var(--rose); box-shadow: 0 0 3px var(--roseGlow); }
+    .sk-wire.sage { background: var(--sage); box-shadow: 0 0 3px var(--sageSub); }
+    .sk-wire.gold { background: var(--gold); box-shadow: 0 0 3px var(--goldSub); }
     .sk-name { font-size: 14px; font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--tx2); }
     .sk:hover .sk-name { color: var(--tx); }
     .sk-tag { font-size: 12px; color: var(--tx3); opacity: 0; transition: opacity var(--t); flex-shrink: 0; }
@@ -333,9 +348,9 @@
       font-size: 11px; cursor: pointer; padding: 2px 6px; border-radius: 3px;
       transition: all var(--t);
     }
-    .pane-assign:hover { color: var(--w1); background: var(--w1sub); }
+    .pane-assign:hover { color: var(--teal); background: var(--tealSub); }
     .pane-body { flex: 1; position: relative; overflow: hidden; }
-    .pane-body .ti { position: absolute; inset: 0; padding: 4px 6px; background: var(--base); }
+    .pane-body .ti { position: absolute; inset: 0; padding: 4px 6px; background: #0e0b08; }
     .pane-body .ti.hidden { visibility: hidden; pointer-events: none; }
     .pane-empty {
       position: absolute; inset: 0; display: flex; flex-direction: column;
@@ -387,7 +402,7 @@
     .te-kbd {
       font-family: var(--mono); font-size: 11px; font-weight: 600;
       background: var(--sf2); border: 1px solid var(--line2); border-radius: 4px;
-      padding: 2px 8px; color: var(--w1);
+      padding: 2px 8px; color: var(--gold);
     }
 
     /* ═ Right Panel ═ */
@@ -510,8 +525,8 @@
     .cmd-bar {
       position: absolute; bottom: 0; left: 0; right: 0; z-index: 15;
       display: flex; align-items: center; gap: 8px;
-      background: rgba(10,10,14,0.93); border-top: 1px solid rgba(255,255,255,0.07);
-      padding: 7px 10px 7px 12px; backdrop-filter: blur(6px);
+      background: #f5f0e8; border-top: 2px solid var(--teal);
+      padding: 7px 10px 7px 12px;
       transform: translateY(100%); opacity: 0; pointer-events: none;
       transition: transform 200ms ease-out, opacity 200ms ease-out;
     }
@@ -527,15 +542,15 @@
     }
     .cmd-bar-input {
       flex: 1; background: transparent; border: none; outline: none;
-      font-family: var(--mono); font-size: 14px; color: var(--tx); caret-color: var(--teal);
+      font-family: var(--mono); font-size: 14px; color: #1c1810; caret-color: var(--teal);
     }
-    .cmd-bar-input::placeholder { color: var(--tx3); font-style: italic; }
+    .cmd-bar-input::placeholder { color: #9a8a75; font-style: italic; }
     .cmd-bar-send {
-      background: rgba(77,184,194,0.1); border: 1px solid rgba(77,184,194,0.22);
-      color: var(--teal); font-family: var(--sans); font-size: 12px; font-weight: 600;
+      background: var(--tealSub); border: 1px solid var(--teal);
+      color: #1a6a70; font-family: var(--sans); font-size: 12px; font-weight: 600;
       border-radius: var(--r); padding: 3px 10px; cursor: pointer; transition: all var(--t); flex-shrink: 0;
     }
-    .cmd-bar-send:hover { background: rgba(77,184,194,0.2); border-color: var(--teal); }
+    .cmd-bar-send:hover { background: rgba(77,184,194,0.25); }
   </style>
 </head>
 <body>
