@@ -672,6 +672,7 @@
         </div>
         <div class="ff"><label>Session name</label><input id="i-sn" required placeholder="my-project" pattern="[a-zA-Z0-9_-]+" /></div>
         <div class="ff"><label>Mode</label><select id="i-mode" style="font-family:var(--sans);font-size:13px;"><option value="claude">Claude Code</option><option value="bash">Terminal (bash)</option></select></div>
+        <div class="ff"><label>Provider</label><select id="i-provider" style="font-family:var(--sans);font-size:13px;"><option value="claude">Claude (Anthropic)</option><option value="glm">GLM 5.1 (z.ai)</option></select></div>
         <details style="margin-top:4px" open>
           <summary style="font-size:12px;color:var(--tx3);cursor:pointer;padding:6px 0;user-select:none">Custom path or clone a repo</summary>
           <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
@@ -1423,8 +1424,8 @@ function log(msg){const t=new Date().toLocaleTimeString([],{hour:'2-digit',minut
         toast('Select a project and enter a session name');return}
       $('i-proj').style.borderColor='';$('i-sn').style.borderColor='';
       closeMo('mo-session');
-      const mode=$('i-mode').value;
-      try{const s=await api('/api/sessions',{method:'POST',body:{name,directory:dir,mode}});mkTerm(s.id||name,name,dir);toast(`"${name}" started`)}catch(e){toast(e.message)}
+      const mode=$('i-mode').value,provider=$('i-provider').value;
+      try{const s=await api('/api/sessions',{method:'POST',body:{name,directory:dir,mode,provider}});mkTerm(s.id||name,name,dir);toast(`"${name}" started`)}catch(e){toast(e.message)}
     });
 
     document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));

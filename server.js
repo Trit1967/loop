@@ -173,11 +173,11 @@ app.get('/api/sessions', async (_req, res, next) => {
 
 app.post('/api/sessions', async (req, res, next) => {
   try {
-    const { name, directory, mode } = req.body;
+    const { name, directory, mode, provider } = req.body;
     if (!name || !directory) {
       return res.status(400).json({ error: 'name and directory are required' });
     }
-    const session = await sessions.create({ name, directory, mode: mode || 'claude' });
+    const session = await sessions.create({ name, directory, mode: mode || 'claude', provider: provider || 'claude' });
     res.status(201).json(session);
   } catch (err) { next(err); }
 });
